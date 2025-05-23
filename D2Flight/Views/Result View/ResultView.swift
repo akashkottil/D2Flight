@@ -6,7 +6,6 @@ struct ResultView: View {
             ResultCard()
         }
         .padding()
-        
         .background(.gray)
         
     }
