@@ -1,17 +1,4 @@
-//
-//  PassengerSheet.swift
-//  M2-Flight-Ios
-//
-//  Created by Akash Kottill on 22/05/25.
-//
 
-
-//
-//  PassengerSheet.swift
-//  M2-Flight-Ios
-//
-//  Created by Assistant on 22/05/25.
-//
 
 import SwiftUI
 

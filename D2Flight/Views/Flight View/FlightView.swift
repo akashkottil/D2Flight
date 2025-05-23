@@ -1,9 +1,4 @@
-//
-//  FlightView.swift
-//  M2-Flight-Ios
-//
-//  Updated to integrate with LocationSelectionView
-//
+
 
 import SwiftUI
 

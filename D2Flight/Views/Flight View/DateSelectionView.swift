@@ -1,9 +1,3 @@
-//
-//  DateSelectionView.swift
-//  M2-Flight-Ios
-//
-//  Date selection screen with customized calendar
-//
 
 import SwiftUI
 

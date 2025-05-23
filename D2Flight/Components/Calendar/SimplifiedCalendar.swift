@@ -1,9 +1,3 @@
-//
-//  SimplifiedCalendar.swift
-//  M2-Flight-Ios
-//
-//  Simplified calendar component for date selection
-//
 
 import SwiftUI
 
