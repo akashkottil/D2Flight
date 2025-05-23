@@ -42,94 +42,9 @@ struct LocationSelectionView: View {
             
             Divider()
             
-            // Location Input Section
-            VStack(spacing: 1) {
-                // Origin Location
-                Button(action: {
-                    isOriginSelection = true
-                }) {
-                    HStack {
-                        Image(systemName: "location.circle")
-                            .foregroundColor(.gray)
-                            .frame(width: 20, height: 20)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            if originLocation.isEmpty {
-                                Text("New York, United States")
-                                    .foregroundColor(.gray)
-                                    .fontWeight(.medium)
-                                    .font(.system(size: 14))
-                            } else {
-                                Text(originLocation)
-                                    .foregroundColor(.black)
-                                    .fontWeight(.bold)
-                                    .font(.system(size: 14))
-                            }
-                        }
-                        
-                        Spacer()
-                        
-                        // Swap button
-                        Button(action: {
-                            let temp = originLocation
-                            originLocation = destinationLocation
-                            destinationLocation = temp
-                        }) {
-                            Image(systemName: "arrow.up.arrow.down")
-                                .foregroundColor(Color("Violet"))
-                                .font(.system(size: 16, weight: .medium))
-                                .frame(width: 32, height: 32)
-                                .background(
-                                    Circle()
-                                        .fill(Color("Violet").opacity(0.1))
-                                )
-                        }
-                    }
-                    .padding(.vertical, 18)
-                    .padding(.horizontal)
-                    .background(isOriginSelection ? Color("Violet").opacity(0.05) : Color.clear)
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-                Divider()
-                    .background(Color.gray.opacity(0.3))
-                    .padding(.leading, 52)
-                
-                // Destination Location
-                Button(action: {
-                    isOriginSelection = false
-                }) {
-                    HStack {
-                        Image(systemName: "location.circle.fill")
-                            .foregroundColor(.gray)
-                            .frame(width: 20, height: 20)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            if destinationLocation.isEmpty {
-                                Text("Drop-off location")
-                                    .foregroundColor(.gray)
-                                    .fontWeight(.medium)
-                                    .font(.system(size: 14))
-                            } else {
-                                Text(destinationLocation)
-                                    .foregroundColor(.black)
-                                    .fontWeight(.bold)
-                                    .font(.system(size: 14))
-                            }
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.vertical, 18)
-                    .padding(.horizontal)
-                    .background(!isOriginSelection ? Color("Violet").opacity(0.05) : Color.clear)
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-            .background(Color.white)
-            .cornerRadius(12)
-            .padding(.horizontal)
-            .padding(.top, 16)
+            LocationInput(originLocation: $originLocation, destinationLocation: $destinationLocation)
+
+            Divider()
             
             // Search Results
             ScrollView {
@@ -186,7 +101,7 @@ struct AirportRowView: View {
         Button(action: onTap) {
             HStack(spacing: 16) {
                 // Airport Icon
-                Image(systemName: airport.type.iconName)
+                Image("FlightIcon")
                     .foregroundColor(Color("Violet"))
                     .font(.system(size: 18))
                     .frame(width: 24, height: 24)

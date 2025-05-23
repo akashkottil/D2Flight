@@ -153,6 +153,8 @@ struct FlightView: View {
                 .cornerRadius(20)
                 
                 FlightExploreCard()
+                
+                LocationSelectionViews(originLocation: $originLocation, destinationLocation: $destinationLocation)
             }
             .scrollIndicators(.hidden)
             .ignoresSafeArea()

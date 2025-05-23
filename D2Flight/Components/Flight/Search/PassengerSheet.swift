@@ -33,6 +33,9 @@ struct PassengerSheet: View {
             .padding(.top, 24)
             .padding(.bottom, 16)
             
+            Divider()
+                .padding(.bottom,20)
+            
             ScrollView {
                 VStack(spacing: 32) {
                     // Select Class Section
