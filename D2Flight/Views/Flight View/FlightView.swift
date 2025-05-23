@@ -151,10 +151,7 @@ struct FlightView: View {
                 .padding(.bottom, 30)
                 .background(GradientColor.Primary)
                 .cornerRadius(20)
-                
                 FlightExploreCard()
-                
-                LocationSelectionViews(originLocation: $originLocation, destinationLocation: $destinationLocation)
             }
             .scrollIndicators(.hidden)
             .ignoresSafeArea()
