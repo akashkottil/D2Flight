@@ -1,36 +1,28 @@
 import Foundation
 import Combine
 
-class LocationSearchViewModel: ObservableObject {
+class LocationViewModel: ObservableObject {
     @Published var searchText: String = ""
-    @Published var suggestions: [LocationData] = []
-
+    @Published var locations: [Location] = []
+    
     private var cancellables = Set<AnyCancellable>()
-
+    
     init() {
         $searchText
             .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .removeDuplicates()
-            .sink { [weak self] term in
-                guard let self = self, !term.isEmpty else {
-                    self?.suggestions = []
+            .sink { [weak self] text in
+                guard !text.isEmpty else {
+                    self?.locations = []
                     return
                 }
-                self.fetchAutocomplete(for: term)
-            }
-            .store(in: &cancellables)
-    }
-
-    func fetchAutocomplete(for term: String) {
-        LocationAPI.shared.fetchLocations(search: term) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let data):
-                    self.suggestions = data
-                case .failure:
-                    self.suggestions = []
+                
+                LocationAPI.fetchLocations(searchQuery: text) { results in
+                    DispatchQueue.main.async {
+                        self?.locations = results
+                    }
                 }
             }
-        }
+            .store(in: &cancellables)
     }
 }

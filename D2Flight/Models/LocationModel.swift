@@ -1,11 +1,11 @@
 import Foundation
 
 struct LocationResponse: Codable {
-    let data: [LocationData]
+    let data: [Location]
 }
 
-struct LocationData: Codable, Identifiable {
-    let id = UUID() // Required for List rendering
+struct Location: Codable, Identifiable {
+    var id: String { iataCode }
     let iataCode: String
     let airportName: String
     let type: String
@@ -13,16 +13,11 @@ struct LocationData: Codable, Identifiable {
     let cityName: String
     let countryName: String
     let countryCode: String
-    let imageUrl: String?
+    let imageUrl: String
     let coordinates: Coordinates
+}
 
-    struct Coordinates: Codable {
-        let latitude: String
-        let longitude: String
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case iataCode, airportName, type, displayName, cityName,
-             countryName, countryCode, imageUrl, coordinates
-    }
+struct Coordinates: Codable {
+    let latitude: String
+    let longitude: String
 }

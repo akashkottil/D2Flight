@@ -315,7 +315,7 @@ struct FlightView: View {
     @Namespace private var animationNamespace
     
     @State private var isOneWay = true
-    @State private var originLocation = "New York, United States"
+    @State private var originLocation = "" 
     @State private var destinationLocation = ""
     @State private var departureDate = "Sat 23 Oct"
     @State private var returnDate = "Tue 26 Oct"

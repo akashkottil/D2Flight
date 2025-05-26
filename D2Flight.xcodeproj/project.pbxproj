@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		8C487FB12DE3A88A00E903D0 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 8C487FB02DE3A88A00E903D0 /* Alamofire */; };
-		8C487FB32DE3A88A00E903D0 /* AlamofireDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 8C487FB22DE3A88A00E903D0 /* AlamofireDynamic */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,6 +26,19 @@
 			remoteInfo = D2Flight;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8C4880372DE472BD00E903D0 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		8CD5352F2DE0410900F3FD75 /* D2Flight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = D2Flight.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -58,7 +70,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8C487FB12DE3A88A00E903D0 /* Alamofire in Frameworks */,
-				8C487FB32DE3A88A00E903D0 /* AlamofireDynamic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,12 +90,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8C4880352DE472A300E903D0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		8CD535262DE0410900F3FD75 = {
 			isa = PBXGroup;
 			children = (
 				8CD535312DE0410900F3FD75 /* D2Flight */,
 				8CD5353F2DE0410B00F3FD75 /* D2FlightTests */,
 				8CD535492DE0410B00F3FD75 /* D2FlightUITests */,
+				8C4880352DE472A300E903D0 /* Frameworks */,
 				8CD535302DE0410900F3FD75 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -109,6 +128,7 @@
 				8CD5352B2DE0410900F3FD75 /* Sources */,
 				8CD5352C2DE0410900F3FD75 /* Frameworks */,
 				8CD5352D2DE0410900F3FD75 /* Resources */,
+				8C4880372DE472BD00E903D0 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -120,7 +140,6 @@
 			name = D2Flight;
 			packageProductDependencies = (
 				8C487FB02DE3A88A00E903D0 /* Alamofire */,
-				8C487FB22DE3A88A00E903D0 /* AlamofireDynamic */,
 			);
 			productName = D2Flight;
 			productReference = 8CD5352F2DE0410900F3FD75 /* D2Flight.app */;
@@ -581,11 +600,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8C487FAF2DE3A88A00E903D0 /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
-		};
-		8C487FB22DE3A88A00E903D0 /* AlamofireDynamic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8C487FAF2DE3A88A00E903D0 /* XCRemoteSwiftPackageReference "Alamofire" */;
-			productName = AlamofireDynamic;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
