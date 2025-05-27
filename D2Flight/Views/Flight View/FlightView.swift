@@ -149,6 +149,14 @@ struct FlightView: View {
                                   verticalPadding: 20,
                                   cornerRadius: 16,
                                   action: {
+                        print("🚀 Search Flights button tapped!")
+                        
+                        // Validate inputs before search
+                        guard !originIATACode.isEmpty, !destinationIATACode.isEmpty else {
+                            print("⚠️ Missing IATA codes - Origin: '\(originIATACode)', Destination: '\(destinationIATACode)'")
+                            return
+                        }
+                        
                         // Update ViewModel properties before search
                         flightSearchVM.departureIATACode = originIATACode
                         flightSearchVM.destinationIATACode = destinationIATACode
@@ -165,10 +173,10 @@ struct FlightView: View {
                         flightSearchVM.childrenAges = Array(repeating: 2, count: children) // Default child age to 2
                         flightSearchVM.cabinClass = selectedClass.rawValue
                         
+                        // Start the search
                         flightSearchVM.searchFlights()
                         
-                        // Navigate to Results after searchId received or you can navigate immediately
-                        // For now, navigating immediately:
+                        // Navigate to Results after starting search
                         navigateToResults = true
                     })
 
@@ -185,6 +193,20 @@ struct FlightView: View {
             // Add navigation destination for ResultView
             .navigationDestination(isPresented: $navigateToResults) {
                 ResultView()
+            }
+        }
+        // Add search observation
+        .onReceive(flightSearchVM.$searchId) { searchId in
+            if let searchId = searchId {
+                print("🔍 FlightView received Search ID: \(searchId)")
+            }
+        }
+        .onReceive(flightSearchVM.$isLoading) { isLoading in
+            print("📡 FlightView - Search loading state: \(isLoading)")
+        }
+        .onReceive(flightSearchVM.$errorMessage) { errorMessage in
+            if let error = errorMessage {
+                print("⚠️ FlightView received error: \(error)")
             }
         }
         .sheet(isPresented: $showPassengerSheet) {
@@ -211,14 +233,15 @@ struct FlightView: View {
             LocationSelectionView(
                 originLocation: $originLocation,
                 destinationLocation: $destinationLocation
-            ) { selectedLocation, isOrigin in
+            ) { selectedLocation, isOrigin, iataCode in
                 if isOrigin {
                     originLocation = selectedLocation
-                    // You'll need to store the IATA code from the location selection
-                    // This would need to be modified in LocationSelectionView to pass the IATA code
+                    originIATACode = iataCode
+                    print("📍 Origin location selected: \(selectedLocation) (\(iataCode))")
                 } else {
                     destinationLocation = selectedLocation
-                    // Same here for destination IATA code
+                    destinationIATACode = iataCode
+                    print("📍 Destination location selected: \(selectedLocation) (\(iataCode))")
                 }
             }
         }
@@ -276,6 +299,8 @@ struct FlightView: View {
                 let tempIATA = originIATACode
                 originIATACode = destinationIATACode
                 destinationIATACode = tempIATA
+                
+                print("🔄 Swapped locations - Origin: \(originLocation), Destination: \(destinationLocation)")
             }) {
                 Image("SwapIcon")
             }

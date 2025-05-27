@@ -37,15 +37,36 @@ class FlightSearchViewModel: ObservableObject {
             children_ages: childrenAges
         )
         
+        // Print the search request for debugging
+        print("🛫 Starting flight search with request:")
+        print("   Origin: \(departureIATACode)")
+        print("   Destination: \(destinationIATACode)")
+        print("   Date: \(dateString)")
+        print("   Cabin Class: \(cabinClass)")
+        print("   Adults: \(adults)")
+        print("   Children Ages: \(childrenAges)")
+        
         FlightSearchApi.shared.startSearch(request: request) { [weak self] result in
             DispatchQueue.main.async {
                 self?.isLoading = false
                 switch result {
                 case .success(let response):
                     self?.searchId = response.search_id
+                    
+                    // Print the successful response
+                    print("✅ Flight search successful!")
+                    print("   Search ID: \(response.search_id)")
+                    print("   Language: \(response.language)")
+                    print("   Currency: \(response.currency)")
+                    print("   Mode: \(response.mode)")
+                    
                 case .failure(let error):
                     self?.errorMessage = "Search failed: \(error.localizedDescription)"
                     self?.searchId = nil
+                    
+                    // Print the error
+                    print("❌ Flight search failed:")
+                    print("   Error: \(error.localizedDescription)")
                 }
             }
         }

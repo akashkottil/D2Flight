@@ -12,9 +12,9 @@ class FlightSearchApi {
         userId: String = "-0",
         currency: String = "INR",
         language: String = "en-GB",
-        appCode: String = "DW1F",
+        appCode: String = "D1WF",
         country: String = "IN",
-        csrfToken: String = "5T0SlYIxaKlAkRtdYep2mWPQ6m59AltKEM7TnzXhacX1W7gz1CeI0gqBbXEg8m7z",
+//        csrfToken: String = "5T0SlYIxaKlAkRtdYep2mWPQ6m59AltKEM7TnzXhacX1W7gz1CeI0gqBbXEg8m7z",
         completion: @escaping (Result<SearchResponse, Error>) -> Void
     ) {
         let url = "\(baseURL)/search/?user_id=\(userId)&currency=\(currency)&language=\(language)&app_code=\(appCode)"
@@ -23,7 +23,7 @@ class FlightSearchApi {
             "accept": "application/json",
             "country": country,
             "Content-Type": "application/json",
-            "X-CSRFTOKEN": csrfToken
+//            "X-CSRFTOKEN": csrfToken
         ]
 
         AF.request(
