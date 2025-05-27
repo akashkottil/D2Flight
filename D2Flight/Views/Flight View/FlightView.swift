@@ -33,7 +33,6 @@ struct FlightView: View {
     @State private var originIATACode: String = ""
     @State private var destinationIATACode: String = ""
 
-
     
     var body: some View {
         NavigationStack {
@@ -151,18 +150,19 @@ struct FlightView: View {
                                   cornerRadius: 16,
                                   action: {
                         // Update ViewModel properties before search
-                        flightSearchVM.departureIATACode = /* set origin IATA code here */
-                        flightSearchVM.destinationIATACode = /* set destination IATA code here */
+                        flightSearchVM.departureIATACode = originIATACode
+                        flightSearchVM.destinationIATACode = destinationIATACode
                         
                         // Convert selectedDates[0] or departureDate string to Date object if needed
                         if let firstDate = selectedDates.first {
                             flightSearchVM.travelDate = firstDate
                         } else {
-                            // fallback date handling if needed
+                            // Use current date as fallback
+                            flightSearchVM.travelDate = Date()
                         }
                         
                         flightSearchVM.adults = adults
-                        flightSearchVM.childrenAges = Array(repeating: 0, count: children) // assume child ages 0 for now
+                        flightSearchVM.childrenAges = Array(repeating: 2, count: children) // Default child age to 2
                         flightSearchVM.cabinClass = selectedClass.rawValue
                         
                         flightSearchVM.searchFlights()
@@ -211,13 +211,14 @@ struct FlightView: View {
             LocationSelectionView(
                 originLocation: $originLocation,
                 destinationLocation: $destinationLocation
-            ) { selectedLocation, isOrigin, iataCode in
+            ) { selectedLocation, isOrigin in
                 if isOrigin {
                     originLocation = selectedLocation
-                    originIATACode = iataCode      // <-- store origin IATA here
+                    // You'll need to store the IATA code from the location selection
+                    // This would need to be modified in LocationSelectionView to pass the IATA code
                 } else {
                     destinationLocation = selectedLocation
-                    destinationIATACode = iataCode // <-- store destination IATA here
+                    // Same here for destination IATA code
                 }
             }
         }
@@ -270,6 +271,11 @@ struct FlightView: View {
                 let temp = originLocation
                 originLocation = destinationLocation
                 destinationLocation = temp
+                
+                // Also swap IATA codes
+                let tempIATA = originIATACode
+                originIATACode = destinationIATACode
+                destinationIATACode = tempIATA
             }) {
                 Image("SwapIcon")
             }
