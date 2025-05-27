@@ -6,6 +6,10 @@ struct LocationSelectionView: View {
     @Binding var destinationLocation: String
     @StateObject private var viewModel = LocationViewModel()
     
+    @State private var originIATACode = ""
+    @State private var destinationIATACode = ""
+
+    
     
     
     var onLocationSelected: (String, Bool) -> Void // location, isOrigin

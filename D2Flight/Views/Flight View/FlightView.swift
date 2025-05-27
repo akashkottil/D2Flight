@@ -6,6 +6,7 @@ struct FlightView: View {
     @State private var isOneWay = true
     @State private var originLocation = ""
     @State private var destinationLocation = ""
+    @State private var iataCode = ""
     @State private var departureDate = "Sat 23 Oct"
     @State private var returnDate = "Tue 26 Oct"
     @State private var travelersCount = "2 Travellers, Economy"
@@ -26,6 +27,12 @@ struct FlightView: View {
     
     // Navigation to ResultView
     @State private var navigateToResults = false
+    
+    @StateObject private var flightSearchVM = FlightSearchViewModel()
+    
+    @State private var originIATACode: String = ""
+    @State private var destinationIATACode: String = ""
+
     
     var body: some View {
         NavigationStack {
@@ -142,15 +149,29 @@ struct FlightView: View {
                                   verticalPadding: 20,
                                   cornerRadius: 16,
                                   action: {
-                        // Trigger navigation to ResultView
-                        navigateToResults = true
+                        // Update ViewModel properties before search
+                        flightSearchVM.departureIATACode = originIATACode
+                        flightSearchVM.destinationIATACode = destinationIATACode
                         
-                        // Optional: Keep your existing prints for debugging
-                        print("Search button tapped")
-                        print("Selected dates: \(selectedDates)")
-                        print("Origin: \(originLocation)")
-                        print("Destination: \(destinationLocation)")
+                        // Convert selectedDates[0] or departureDate string to Date object if needed
+                        if let firstDate = selectedDates.first {
+                            flightSearchVM.travelDate = firstDate
+                        } else {
+                            // Use current date as fallback
+                            flightSearchVM.travelDate = Date()
+                        }
+                        
+                        flightSearchVM.adults = adults
+                        flightSearchVM.childrenAges = Array(repeating: 2, count: children) // Default child age to 2
+                        flightSearchVM.cabinClass = selectedClass.rawValue
+                        
+                        flightSearchVM.searchFlights()
+                        
+                        // Navigate to Results after searchId received or you can navigate immediately
+                        // For now, navigating immediately:
+                        navigateToResults = true
                     })
+
                 }
                 .padding()
                 .padding(.top, 50)
@@ -191,8 +212,14 @@ struct FlightView: View {
                 originLocation: $originLocation,
                 destinationLocation: $destinationLocation
             ) { selectedLocation, isOrigin in
-                // Handle location selection callback
-                print("Location selected: \(selectedLocation), isOrigin: \(isOrigin)")
+                if isOrigin {
+                    originLocation = selectedLocation
+                    // You'll need to store the IATA code from the location selection
+                    // This would need to be modified in LocationSelectionView to pass the IATA code
+                } else {
+                    destinationLocation = selectedLocation
+                    // Same here for destination IATA code
+                }
             }
         }
     }
@@ -244,6 +271,11 @@ struct FlightView: View {
                 let temp = originLocation
                 originLocation = destinationLocation
                 destinationLocation = temp
+                
+                // Also swap IATA codes
+                let tempIATA = originIATACode
+                originIATACode = destinationIATACode
+                destinationIATACode = tempIATA
             }) {
                 Image("SwapIcon")
             }
