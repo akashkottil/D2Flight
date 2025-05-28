@@ -176,8 +176,8 @@ struct FlightView: View {
                         // Start the search
                         flightSearchVM.searchFlights()
                         
-                        // Navigate to Results after starting search
-                        navigateToResults = true
+                        // Don't navigate immediately - wait for search to complete
+                        // Navigation will be triggered by the searchId observer
                     })
 
                 }
@@ -192,13 +192,19 @@ struct FlightView: View {
             .ignoresSafeArea()
             // Add navigation destination for ResultView
             .navigationDestination(isPresented: $navigateToResults) {
-                ResultView()
+                if let searchId = flightSearchVM.searchId {
+                    ResultView(searchId: searchId)
+                } else {
+                    ResultView(searchId: nil)
+                }
             }
         }
         // Add search observation
         .onReceive(flightSearchVM.$searchId) { searchId in
             if let searchId = searchId {
                 print("🔍 FlightView received Search ID: \(searchId)")
+                // Navigate to results once we have a search ID
+                navigateToResults = true
             }
         }
         .onReceive(flightSearchVM.$isLoading) { isLoading in
