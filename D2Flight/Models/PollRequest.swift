@@ -93,8 +93,8 @@ struct PollResponse: Codable {
     let passengerCount: Int
     let minDuration: Int
     let maxDuration: Int
-    let minPrice: Int
-    let maxPrice: Int
+    let minPrice: Double
+    let maxPrice: Double
     let airlines: [Airline]
     let agencies: [Agency]
     let cheapestFlight: FlightSummary
@@ -136,15 +136,15 @@ struct Agency: Codable, Identifiable {
 }
 
 struct FlightSummary: Codable {
-    let price: Int
+    let price: Double
     let duration: Int
 }
 
 struct FlightResult: Codable, Identifiable {
     let id: String
     let totalDuration: Int
-    let minPrice: Int
-    let maxPrice: Int
+    let minPrice: Double
+    let maxPrice: Double
     let legs: [FlightLeg]
     let providers: [Provider]
     
@@ -227,6 +227,6 @@ struct SplitProvider: Codable, Identifiable {
     
     enum CodingKeys: String, CodingKey {
         case name, price, deeplink, rating, ratingCount, fareFamily
-        case imageURL = "imageURL"
+        case imageURL = "image"
     }
 }
