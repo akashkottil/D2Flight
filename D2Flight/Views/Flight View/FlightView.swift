@@ -29,168 +29,162 @@ struct FlightView: View {
     @State private var navigateToResults = false
     
     @StateObject private var flightSearchVM = FlightSearchViewModel()
+    @StateObject private var networkMonitor = NetworkMonitor()
     
     @State private var originIATACode: String = ""
     @State private var destinationIATACode: String = ""
-    
     @State private var currentSearchId: String? = nil
+    
+    // Notification States
+    @State private var showNoInternet = false
+    @State private var showEmptySearch = false
+    @State private var lastNetworkStatus = true
 
-    
-    
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading) {
-                    // Header
-                    HStack {
-                        Image("HomeLogo")
-                            .frame(width: 32, height: 32)
-                        Text("Last Minute Flights")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(Color.white)
-                    }
-                    .padding(.vertical, 10)
-                    
-                    // Tabs
-                    HStack {
-                        Button(action: {
-                            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
-                                isOneWay = true
-                            }
-                        }) {
-                            Text("One Way")
-                                .foregroundColor(isOneWay ? .white : .gray)
-                                .font(.system(size: 12))
-                                .fontWeight(.semibold)
-                                .frame(width: 87, height: 31)
-                                .background(
-                                    Group {
-                                        if isOneWay {
-                                            Color("Violet")
-                                                .matchedGeometryEffect(id: "tab", in: animationNamespace)
-                                        } else {
-                                            Color("Violet").opacity(0.15)
-                                        }
-                                    }
-                                )
-                                .cornerRadius(100)
-                        }
-                        
-                        Button(action: {
-                            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
-                                isOneWay = false
-                            }
-                        }) {
-                            Text("Round Trip")
-                                .foregroundColor(!isOneWay ? .white : .gray)
-                                .font(.system(size: 12))
-                                .fontWeight(.semibold)
-                                .frame(width: 87, height: 31)
-                                .background(
-                                    Group {
-                                        if !isOneWay {
-                                            Color("Violet")
-                                                .matchedGeometryEffect(id: "tab", in: animationNamespace)
-                                        } else {
-                                            Color("Violet").opacity(0.15)
-                                        }
-                                    }
-                                )
-                                .cornerRadius(100)
-                        }
-                    }
-                    .padding(.vertical, 10)
-                    
-                    // Location Input - Updated to navigate to LocationSelectionView
-                    locationSection
-                    
-                    // Date Section with Date Selection Integration
-                    if isOneWay {
+            ZStack {
+                ScrollView {
+                    VStack(alignment: .leading) {
+                        // Header
                         HStack {
-                            dateView(
-                                label: formatSelectedDate(for: .departure),
-                                icon: "CalenderIcon"
-                            )
+                            Image("HomeLogo")
+                                .frame(width: 32, height: 32)
+                            Text("Last Minute Flights")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(Color.white)
                         }
-                    } else {
-                        HStack(spacing: 10) {
-                            dateView(
-                                label: formatSelectedDate(for: .departure),
-                                icon: "CalenderIcon"
-                            )
-                            dateView(
-                                label: formatSelectedDate(for: .return),
-                                icon: "CalenderIcon"
-                            )
-                        }
-                    }
-                    
-                    // Passenger Section
-                    Button(action: {
-                        showPassengerSheet = true
-                    }) {
+                        .padding(.vertical, 10)
+                        
+                        // Tabs
                         HStack {
-                            Image("PassengerIcon")
-                                .foregroundColor(.gray)
-                                .frame(width: 22)
-                            Text(travelersCount)
-                                .foregroundColor(.gray)
-                                .fontWeight(.medium)
-                                .font(.system(size: 14))
-                            Spacer()
+                            Button(action: {
+                                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                    isOneWay = true
+                                }
+                            }) {
+                                Text("One Way")
+                                    .foregroundColor(isOneWay ? .white : .gray)
+                                    .font(.system(size: 12))
+                                    .fontWeight(.semibold)
+                                    .frame(width: 87, height: 31)
+                                    .background(
+                                        Group {
+                                            if isOneWay {
+                                                Color("Violet")
+                                                    .matchedGeometryEffect(id: "tab", in: animationNamespace)
+                                            } else {
+                                                Color("Violet").opacity(0.15)
+                                            }
+                                        }
+                                    )
+                                    .cornerRadius(100)
+                            }
+                            
+                            Button(action: {
+                                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                    isOneWay = false
+                                }
+                            }) {
+                                Text("Round Trip")
+                                    .foregroundColor(!isOneWay ? .white : .gray)
+                                    .font(.system(size: 12))
+                                    .fontWeight(.semibold)
+                                    .frame(width: 87, height: 31)
+                                    .background(
+                                        Group {
+                                            if !isOneWay {
+                                                Color("Violet")
+                                                    .matchedGeometryEffect(id: "tab", in: animationNamespace)
+                                            } else {
+                                                Color("Violet").opacity(0.15)
+                                            }
+                                        }
+                                    )
+                                    .cornerRadius(100)
+                            }
                         }
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(12)
-                    }
-                    
-                    // Updated Search Flights Button with Navigation
-                    PrimaryButton(title: "Search Flights",
-                                  font: .system(size: 16),
-                                  fontWeight: .bold,
-                                  textColor: .white,
-                                  verticalPadding: 20,
-                                  cornerRadius: 16,
-                                  action: {
-                        print("🚀 Search Flights button tapped!")
+                        .padding(.vertical, 10)
                         
-                        // Validate inputs before search
-                        guard !originIATACode.isEmpty, !destinationIATACode.isEmpty else {
-                            print("⚠️ Missing IATA codes - Origin: '\(originIATACode)', Destination: '\(destinationIATACode)'")
-                            return
-                        }
+                        // Location Input - Updated to navigate to LocationSelectionView
+                        locationSection
                         
-                        // Update ViewModel properties before search
-                        flightSearchVM.departureIATACode = originIATACode
-                        flightSearchVM.destinationIATACode = destinationIATACode
-                        
-                        if let firstDate = selectedDates.first {
-                            flightSearchVM.travelDate = firstDate
+                        // Date Section with Date Selection Integration
+                        if isOneWay {
+                            HStack {
+                                dateView(
+                                    label: formatSelectedDate(for: .departure),
+                                    icon: "CalenderIcon"
+                                )
+                            }
                         } else {
-                            flightSearchVM.travelDate = Date()
+                            HStack(spacing: 10) {
+                                dateView(
+                                    label: formatSelectedDate(for: .departure),
+                                    icon: "CalenderIcon"
+                                )
+                                dateView(
+                                    label: formatSelectedDate(for: .return),
+                                    icon: "CalenderIcon"
+                                )
+                            }
                         }
                         
-                        flightSearchVM.adults = adults
-                        flightSearchVM.childrenAges = Array(repeating: 2, count: children)
-                        flightSearchVM.cabinClass = selectedClass.rawValue
+                        // Passenger Section
+                        Button(action: {
+                            showPassengerSheet = true
+                        }) {
+                            HStack {
+                                Image("PassengerIcon")
+                                    .foregroundColor(.gray)
+                                    .frame(width: 22)
+                                Text(travelersCount)
+                                    .foregroundColor(.gray)
+                                    .fontWeight(.medium)
+                                    .font(.system(size: 14))
+                                Spacer()
+                            }
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                        }
                         
-                        // Start the search
-                        flightSearchVM.searchFlights()
-                        
-                        // Do NOT navigate here immediately.
-                        // Navigation will be triggered when searchId updates (in onReceive).
-                    })
-
-                    
+                        // Updated Search Flights Button with validation
+                        PrimaryButton(title: "Search Flights",
+                                      font: .system(size: 16),
+                                      fontWeight: .bold,
+                                      textColor: .white,
+                                      verticalPadding: 20,
+                                      cornerRadius: 16,
+                                      action: {
+                            handleSearchFlights()
+                        })
+                    }
+                    .padding()
+                    .padding(.top, 50)
+                    .padding(.bottom, 30)
+                    .background(GradientColor.Primary)
+                    .cornerRadius(20)
+                    FlightExploreCard()
                 }
-                .padding()
-                .padding(.top, 50)
-                .padding(.bottom, 30)
-                .background(GradientColor.Primary)
-                .cornerRadius(20)
-                FlightExploreCard()
+                .scrollIndicators(.hidden)
+                
+                // Notification Components Overlay
+                VStack {
+                    Spacer()
+                    
+                    if showNoInternet {
+                        NoInternet(isVisible: $showNoInternet)
+                            .padding(.bottom, 100) // Space above tab bar
+                    }
+                    
+                    if showEmptySearch {
+                        EmptySearch(isVisible: $showEmptySearch)
+                            .padding(.bottom, 100) // Space above tab bar
+                    }
+                }
+                .animation(.easeInOut(duration: 0.3), value: showNoInternet)
+                .animation(.easeInOut(duration: 0.3), value: showEmptySearch)
             }
-            .scrollIndicators(.hidden)
             .ignoresSafeArea()
             // Add navigation destination for ResultView with search ID
             .navigationDestination(isPresented: Binding(
@@ -208,7 +202,17 @@ struct FlightView: View {
                     Text("Invalid Search ID")
                 }
             }
-
+        }
+        // Network monitoring
+        .onReceive(networkMonitor.$isConnected) { isConnected in
+            // Show no internet notification when connection is lost
+            if lastNetworkStatus && !isConnected {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showNoInternet = true
+                    showEmptySearch = false // Hide other notifications
+                }
+            }
+            lastNetworkStatus = isConnected
         }
         // Add search observation
         .onReceive(flightSearchVM.$searchId) { searchId in
@@ -218,8 +222,6 @@ struct FlightView: View {
                 print("🔍 FlightView updated currentSearchId and triggered navigation: \(searchId)")
             }
         }
-
-
         .onReceive(flightSearchVM.$isLoading) { isLoading in
             print("📡 FlightView - Search loading state: \(isLoading)")
         }
@@ -264,6 +266,63 @@ struct FlightView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Search Handler
+    private func handleSearchFlights() {
+        print("🚀 Search Flights button tapped!")
+        
+        // Check internet connection first
+        if !networkMonitor.isConnected {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showNoInternet = true
+                showEmptySearch = false
+            }
+            return
+        }
+        
+        // Validate locations
+        guard !originIATACode.isEmpty, !destinationIATACode.isEmpty else {
+            print("⚠️ Missing IATA codes - Origin: '\(originIATACode)', Destination: '\(destinationIATACode)'")
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showEmptySearch = true
+                showNoInternet = false
+            }
+            return
+        }
+        
+        // Update ViewModel properties before search
+        flightSearchVM.departureIATACode = originIATACode
+        flightSearchVM.destinationIATACode = destinationIATACode
+        flightSearchVM.isRoundTrip = !isOneWay
+        
+        if let firstDate = selectedDates.first {
+            flightSearchVM.travelDate = firstDate
+        } else {
+            flightSearchVM.travelDate = Date()
+        }
+        
+        // Set return date for round trip
+        if !isOneWay && selectedDates.count > 1 {
+            flightSearchVM.returnDate = selectedDates[1]
+        } else if !isOneWay {
+            // Default return date if not selected
+            flightSearchVM.returnDate = (selectedDates.first ?? Date()).addingTimeInterval(86400 * 7)
+        }
+        
+        flightSearchVM.adults = adults
+        flightSearchVM.childrenAges = Array(repeating: 2, count: children)
+        flightSearchVM.cabinClass = selectedClass.rawValue
+        
+        print("🎯 Search parameters:")
+        print("   Round Trip: \(!isOneWay)")
+        print("   Selected Dates: \(selectedDates.count)")
+        if !isOneWay && selectedDates.count > 1 {
+            print("   Return Date: \(selectedDates[1])")
+        }
+        
+        // Start the search
+        flightSearchVM.searchFlights()
     }
     
     // MARK: Location section with swap - Updated to navigate to LocationSelectionView

@@ -16,7 +16,7 @@ struct ResultView: View {
                 .background(Color.white)
                 .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                 .zIndex(1)
-
+            
             // Content
             if viewModel.isLoading {
                 // Show shimmer while loading
@@ -66,7 +66,7 @@ struct ResultView: View {
                     Image(systemName: "airplane.slash")
                         .font(.system(size: 50))
                         .foregroundColor(.gray)
-
+                    
                     Text("No flights found")
                         .font(.system(size: 20, weight: .semibold))
                     
@@ -87,7 +87,9 @@ struct ResultView: View {
                                 selectedFlight = flight
                                 navigateToDetails = true
                             } label: {
-                                ResultCard(flight: flight, isRoundTrip: flight.legs.count > 1)
+                                // Determine if it's round trip based on number of legs
+                                let isRoundTrip = flight.legs.count > 1
+                                ResultCard(flight: flight, isRoundTrip: isRoundTrip)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }

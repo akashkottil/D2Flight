@@ -1,5 +1,7 @@
 import SwiftUI
 
+// Your existing ResultCard should work, but make sure this section is correct:
+
 struct ResultCard: View {
     let flight: FlightResult
     var isRoundTrip: Bool
@@ -56,6 +58,8 @@ struct ResultCard: View {
                         .fontWeight(.light)
                 }
                 Spacer()
+                
+
             }
             .padding(.leading)
         }

@@ -13,10 +13,11 @@ class ResultViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     private let pollApi = PollApi.shared
+    private var pollTimer: Timer?
+    private var maxRetries = 10
+    private var currentRetries = 0
     
     init() {}
-    
-    
     
     func pollFlights(searchId: String) {
         guard !searchId.isEmpty else {
@@ -27,31 +28,66 @@ class ResultViewModel: ObservableObject {
         self.searchId = searchId
         isLoading = true
         errorMessage = nil
+        currentRetries = 0
+        flightResults = [] // Clear previous results
         
         print("🚀 Starting poll for search_id: \(searchId)")
         
-        // Initial poll without filters
+        // Start polling with retry mechanism
+        startPollingWithRetry(searchId: searchId)
+    }
+    
+    private func startPollingWithRetry(searchId: String) {
         let emptyRequest = PollRequest()
         
         pollApi.pollFlights(searchId: searchId, request: emptyRequest) { [weak self] result in
             DispatchQueue.main.async {
-                self?.isLoading = false
+                guard let self = self else { return }
                 
                 switch result {
                 case .success(let response):
-                    self?.pollResponse = response
-                    self?.flightResults = response.results
+                    self.pollResponse = response
                     
                     print("✅ Poll successful!")
                     print("   Total flights: \(response.count)")
                     print("   Results count: \(response.results.count)")
                     print("   Airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
-                    print("   Price range: $\(response.cheapest_flight?.price ?? 0) - $\(response.results.first?.max_price ?? 0)")
+                    print("   Price range: $\(response.cheapest_flight?.price ?? 0)")
+                    
+                    if response.results.isEmpty && response.count == 0 && self.currentRetries < self.maxRetries {
+                        // If no results but API indicates there should be flights, retry
+                        print("🔄 No results yet, retrying... (\(self.currentRetries + 1)/\(self.maxRetries))")
+                        self.currentRetries += 1
+                        
+                        // Retry after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            self.startPollingWithRetry(searchId: searchId)
+                        }
+                    } else {
+                        // We have results or max retries reached
+                        self.isLoading = false
+                        self.flightResults = response.results
+                        
+                        if response.results.isEmpty {
+                            print("⚠️ No flights found after \(self.currentRetries) retries")
+                        }
+                    }
                     
                 case .failure(let error):
-                    self?.errorMessage = "Failed to fetch flights: \(error.localizedDescription)"
-                    self?.flightResults = []
-                    print("❌ Poll failed: \(error)")
+                    if self.currentRetries < self.maxRetries {
+                        print("❌ Poll failed, retrying... (\(self.currentRetries + 1)/\(self.maxRetries)): \(error)")
+                        self.currentRetries += 1
+                        
+                        // Retry after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            self.startPollingWithRetry(searchId: searchId)
+                        }
+                    } else {
+                        self.isLoading = false
+                        self.errorMessage = "Failed to fetch flights: \(error.localizedDescription)"
+                        self.flightResults = []
+                        print("❌ Poll failed after \(self.maxRetries) retries: \(error)")
+                    }
                 }
             }
         }
@@ -95,5 +131,9 @@ class ResultViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    deinit {
+        pollTimer?.invalidate()
     }
 }
