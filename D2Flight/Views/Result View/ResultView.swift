@@ -87,7 +87,7 @@ struct ResultView: View {
                                 selectedFlight = flight
                                 navigateToDetails = true
                             } label: {
-                                FlightResultCard(flight: flight)
+                                ResultCard(flight: flight, isRoundTrip: flight.legs.count > 1)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
