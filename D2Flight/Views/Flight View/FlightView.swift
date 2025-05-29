@@ -32,7 +32,10 @@ struct FlightView: View {
     
     @State private var originIATACode: String = ""
     @State private var destinationIATACode: String = ""
+    
+    @State private var currentSearchId: String? = nil
 
+    
     
     var body: some View {
         NavigationStack {
@@ -161,25 +164,24 @@ struct FlightView: View {
                         flightSearchVM.departureIATACode = originIATACode
                         flightSearchVM.destinationIATACode = destinationIATACode
                         
-                        // Convert selectedDates[0] or departureDate string to Date object if needed
                         if let firstDate = selectedDates.first {
                             flightSearchVM.travelDate = firstDate
                         } else {
-                            // Use current date as fallback
                             flightSearchVM.travelDate = Date()
                         }
                         
                         flightSearchVM.adults = adults
-                        flightSearchVM.childrenAges = Array(repeating: 2, count: children) // Default child age to 2
+                        flightSearchVM.childrenAges = Array(repeating: 2, count: children)
                         flightSearchVM.cabinClass = selectedClass.rawValue
                         
                         // Start the search
                         flightSearchVM.searchFlights()
                         
-                        // Navigate to Results after starting search
-                        navigateToResults = true
+                        // Do NOT navigate here immediately.
+                        // Navigation will be triggered when searchId updates (in onReceive).
                     })
 
+                    
                 }
                 .padding()
                 .padding(.top, 50)
@@ -190,17 +192,34 @@ struct FlightView: View {
             }
             .scrollIndicators(.hidden)
             .ignoresSafeArea()
-            // Add navigation destination for ResultView
-            .navigationDestination(isPresented: $navigateToResults) {
-                ResultView()
+            // Add navigation destination for ResultView with search ID
+            .navigationDestination(isPresented: Binding(
+                get: { currentSearchId != nil && navigateToResults },
+                set: { newValue in
+                    if !newValue {
+                        currentSearchId = nil
+                        navigateToResults = false
+                    }
+                }
+            )) {
+                if let validSearchId = currentSearchId {
+                    ResultView(searchId: validSearchId)
+                } else {
+                    Text("Invalid Search ID")
+                }
             }
+
         }
         // Add search observation
         .onReceive(flightSearchVM.$searchId) { searchId in
             if let searchId = searchId {
-                print("🔍 FlightView received Search ID: \(searchId)")
+                currentSearchId = searchId
+                navigateToResults = true
+                print("🔍 FlightView updated currentSearchId and triggered navigation: \(searchId)")
             }
         }
+
+
         .onReceive(flightSearchVM.$isLoading) { isLoading in
             print("📡 FlightView - Search loading state: \(isLoading)")
         }
