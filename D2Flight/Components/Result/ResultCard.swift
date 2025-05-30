@@ -1,23 +1,28 @@
 import SwiftUI
 
+// Your existing ResultCard should work, but make sure this section is correct:
+
 struct ResultCard: View {
-    var isRoundTrip: Bool = true
-    
+    let flight: FlightResult
+    var isRoundTrip: Bool
+
     var body: some View {
         VStack(spacing: 20) {
             HStack {
                 VStack(spacing: 20) {
-                    RouteRow()
-
-                    if isRoundTrip {
-                        RouteRow()
+                    // Show first leg
+                    RouteRow(leg: flight.legs.first!)
+                    
+                    // Show second leg if round trip and exists
+                    if isRoundTrip && flight.legs.count > 1 {
+                        RouteRow(leg: flight.legs[1])
                     }
                 }
                 
                 Spacer()
                 
                 VStack(alignment: .trailing) {
-                    Text("$234")
+                    Text(flight.formattedPrice)
                         .font(.system(size: 16))
                         .fontWeight(.bold)
                         .foregroundColor(Color("PriceGreen"))
@@ -31,14 +36,30 @@ struct ResultCard: View {
             Divider()
             
             HStack {
-                Image("AirlinesImg")
-                    .resizable()
+                if let firstSegment = flight.legs.first?.segments.first {
+                    AsyncImage(url: URL(string: firstSegment.airlineLogo)) { image in
+                        image.resizable()
+                    } placeholder: {
+                        Image("AirlinesImg").resizable()
+                    }
                     .frame(width: 21, height: 21)
-                Text("Indigo Airways")
-                    .font(.system(size: 12))
-                    .foregroundColor(.black.opacity(0.8))
-                    .fontWeight(.light)
+                    
+                    Text(firstSegment.airlineName)
+                        .font(.system(size: 12))
+                        .foregroundColor(.black.opacity(0.8))
+                        .fontWeight(.light)
+                } else {
+                    Image("AirlinesImg")
+                        .resizable()
+                        .frame(width: 21, height: 21)
+                    Text("Unknown Airline")
+                        .font(.system(size: 12))
+                        .foregroundColor(.black.opacity(0.8))
+                        .fontWeight(.light)
+                }
                 Spacer()
+                
+
             }
             .padding(.leading)
         }
@@ -48,14 +69,17 @@ struct ResultCard: View {
     }
 }
 
+
 // MARK: - Reusable RouteRow View
 struct RouteRow: View {
+    let leg: FlightLeg
+    
     var body: some View {
         HStack(spacing: 20) {
-            LocationTimeColumn(time: "18:50", code: "COK")
+            LocationTimeColumn(time: leg.formattedDepartureTime, code: leg.originCode)
             
             VStack {
-                Text("2h 15m")
+                Text(formatDuration(leg.duration))
                     .font(.system(size: 11))
                     .fontWeight(.semibold)
                     .foregroundColor(.gray)
@@ -63,16 +87,23 @@ struct RouteRow: View {
                 Divider()
                     .frame(width: 100)
                 
-                Text("1 Stop")
+                Text(leg.stopsText)
                     .font(.system(size: 11))
                     .fontWeight(.medium)
                     .foregroundColor(.gray)
             }
             
-            LocationTimeColumn(time: "18:50", code: "COK")
+            LocationTimeColumn(time: leg.formattedArrivalTime, code: leg.destinationCode)
         }
     }
+    
+    private func formatDuration(_ minutes: Int) -> String {
+        let hours = minutes / 60
+        let mins = minutes % 60
+        return "\(hours)h \(mins)m"
+    }
 }
+
 
 // MARK: - Reusable LocationTimeColumn View
 struct LocationTimeColumn: View {
@@ -92,12 +123,12 @@ struct LocationTimeColumn: View {
         }
     }
 }
-
-#Preview {
-    VStack(spacing: 40) {
-        ResultCard(isRoundTrip: true)
-        ResultCard(isRoundTrip: false)
-    }
-    .padding()
-    .background(Color.gray.opacity(0.1))
-}
+//
+//#Preview {
+//    VStack(spacing: 40) {
+//        ResultCard(isRoundTrip: true)
+//        ResultCard(isRoundTrip: false)
+//    }
+//    .padding()
+//    .background(Color.gray.opacity(0.1))
+//}
