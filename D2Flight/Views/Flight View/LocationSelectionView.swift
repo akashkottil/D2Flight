@@ -6,9 +6,11 @@ struct LocationSelectionView: View {
     @Binding var destinationLocation: String
     @StateObject private var viewModel = LocationViewModel()
     
+    @State private var originIATACode = ""
+    @State private var destinationIATACode = ""
     
-    
-    var onLocationSelected: (String, Bool) -> Void // location, isOrigin
+    // Updated closure to include IATA code
+    var onLocationSelected: (String, Bool, String) -> Void // location, isOrigin, iataCode
     
     var body: some View {
         VStack(spacing: 0) {
@@ -40,30 +42,7 @@ struct LocationSelectionView: View {
             searchText: $viewModel.searchText
             )
 
-
-
             Divider()
-            
-            // Search Input
-//            HStack {
-//                Image(viewModel.isSelectingOrigin ? "DepartureLightIcon" : "DestinationLightIcon")
-//                    .resizable()
-//                    .frame(width: 20, height: 20)
-//                
-//                TextField(viewModel.getCurrentPlaceholder(), text: $viewModel.searchText)
-//                    .font(.system(size: 16))
-//                    .textFieldStyle(PlainTextFieldStyle())
-//                
-//                if viewModel.isLoading {
-//                    ProgressView()
-//                        .scaleEffect(0.8)
-//                }
-//            }
-//            .padding()
-//            .background(Color.gray.opacity(0.1))
-//            .cornerRadius(8)
-//            .padding(.horizontal)
-//            .padding(.top)
             
             // Error Message
             if let errorMessage = viewModel.errorMessage {
@@ -119,15 +98,19 @@ struct LocationSelectionView: View {
     private func selectLocation(_ location: Location) {
         if viewModel.isSelectingOrigin {
             originLocation = location.displayName
+            originIATACode = location.iataCode
+            print("✈️ Origin selected: \(location.displayName) (\(location.iataCode))")
+            onLocationSelected(location.displayName, true, location.iataCode)
             viewModel.isSelectingOrigin = false
             viewModel.searchText = destinationLocation // Prepare destination search text (can be empty or last typed)
         } else {
             destinationLocation = location.displayName
-            onLocationSelected(destinationLocation, false)
+            destinationIATACode = location.iataCode
+            print("🎯 Destination selected: \(location.displayName) (\(location.iataCode))")
+            onLocationSelected(location.displayName, false, location.iataCode)
             presentationMode.wrappedValue.dismiss()
         }
     }
-
 }
 
 // MARK: - Location Row View (Updated)
@@ -184,7 +167,5 @@ struct LocationRowView: View {
     LocationSelectionView(
         originLocation: .constant("New York, United States"),
         destinationLocation: .constant("")
-    ) { _, _ in }
+    ) { _, _, _ in }
 }
-
-
