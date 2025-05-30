@@ -5,9 +5,11 @@ class FlightSearchViewModel: ObservableObject {
     @Published var departureIATACode: String = ""
     @Published var destinationIATACode: String = ""
     @Published var travelDate: Date = Date()
+    @Published var returnDate: Date = Date().addingTimeInterval(86400 * 7) // Default 7 days later
     @Published var cabinClass: String = "economy"
     @Published var adults: Int = 1
     @Published var childrenAges: [Int] = []
+    @Published var isRoundTrip: Bool = false // Add this property
     
     @Published var searchId: String? = nil
     @Published var isLoading: Bool = false
@@ -27,11 +29,31 @@ class FlightSearchViewModel: ObservableObject {
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        let dateString = dateFormatter.string(from: travelDate)
+        let departureDateString = dateFormatter.string(from: travelDate)
         
-        let leg = SearchLeg(origin: departureIATACode, destination: destinationIATACode, date: dateString)
+        var legs: [SearchLeg] = []
+        
+        // First leg (departure)
+        let departureLeg = SearchLeg(
+            origin: departureIATACode,
+            destination: destinationIATACode,
+            date: departureDateString
+        )
+        legs.append(departureLeg)
+        
+        // Second leg (return) - only if round trip
+        if isRoundTrip {
+            let returnDateString = dateFormatter.string(from: returnDate)
+            let returnLeg = SearchLeg(
+                origin: destinationIATACode, // Swap origin and destination
+                destination: departureIATACode,
+                date: returnDateString
+            )
+            legs.append(returnLeg)
+        }
+        
         let request = SearchRequest(
-            legs: [leg],
+            legs: legs,
             cabin_class: cabinClass,
             adults: adults,
             children_ages: childrenAges
@@ -39,12 +61,17 @@ class FlightSearchViewModel: ObservableObject {
         
         // Print the search request for debugging
         print("🛫 Starting flight search with request:")
+        print("   Trip Type: \(isRoundTrip ? "Round Trip" : "One Way")")
         print("   Origin: \(departureIATACode)")
         print("   Destination: \(destinationIATACode)")
-        print("   Date: \(dateString)")
+        print("   Departure Date: \(departureDateString)")
+        if isRoundTrip {
+            print("   Return Date: \(dateFormatter.string(from: returnDate))")
+        }
         print("   Cabin Class: \(cabinClass)")
         print("   Adults: \(adults)")
         print("   Children Ages: \(childrenAges)")
+        print("   Number of legs: \(legs.count)")
         
         FlightSearchApi.shared.startSearch(request: request) { [weak self] result in
             DispatchQueue.main.async {
