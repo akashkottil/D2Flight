@@ -19,7 +19,7 @@ struct ResultView: View {
             
             // Content
             if viewModel.isLoading {
-                // Show shimmer while loading
+                // Show shimmer while loading initial results
                 ScrollView {
                     VStack(spacing: 16) {
                         ForEach(0..<5, id: \.self) { _ in
@@ -60,7 +60,6 @@ struct ResultView: View {
                 }
                 .frame(maxHeight: .infinity)
             } else if viewModel.flightResults.isEmpty {
-                
                 // Show empty state
                 VStack(spacing: 20) {
                     Image(systemName: "airplane.slash")
@@ -76,9 +75,9 @@ struct ResultView: View {
                 }
                 .frame(maxHeight: .infinity)
             } else {
-                // Show flight results
+                // Show flight results with pagination
                 ScrollView {
-                    VStack(spacing: 16) {
+                    LazyVStack(spacing: 16) {
                         ForEach(viewModel.flightResults) { flight in
                             Button {
                                 // Log and navigate to details
@@ -92,15 +91,62 @@ struct ResultView: View {
                                 ResultCard(flight: flight, isRoundTrip: isRoundTrip)
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .onAppear {
+                                // Check if we should load more when this item appears
+                                if viewModel.shouldLoadMore(currentItem: flight) {
+                                    print("📄 Triggering load more for item: \(flight.id)")
+                                    viewModel.loadMoreResults()
+                                }
+                            }
+                        }
+                        
+                        // Loading more indicator
+                        if viewModel.isLoadingMore {
+                            VStack(spacing: 16) {
+                                // Show 2 shimmer cards when loading more
+                                ForEach(0..<2, id: \.self) { _ in
+                                    ShimmerResultCard()
+                                }
+                                
+                                HStack(spacing: 8) {
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                    Text("Loading more flights...")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.vertical, 8)
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        }
+                        
+                        // Results summary at the bottom
+                        if !viewModel.hasMoreResults && viewModel.totalResultsCount > 0 {
+                            VStack(spacing: 8) {
+                                Divider()
+                                    .padding(.horizontal)
+                                
+                                Text("Showing all \(viewModel.flightResults.count) of \(viewModel.totalResultsCount) flights")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.gray)
+                                    .padding(.vertical, 12)
+                            }
                         }
                     }
                     .padding()
                 }
                 .scrollIndicators(.hidden)
+                .refreshable {
+                    // Pull to refresh - reload from beginning
+                    if let searchId = searchId {
+                        viewModel.pollFlights(searchId: searchId)
+                    }
+                }
             }
         }
         .navigationBarHidden(true)
         .background(.gray.opacity(0.2))
+        .debugPagination(viewModel: viewModel) // Add debug info in debug builds
         .navigationDestination(isPresented: $navigateToDetails) {
             if let flight = selectedFlight {
                 ResultDetails(flight: flight)
@@ -110,7 +156,12 @@ struct ResultView: View {
             // Poll flights when view appears if we have a search ID
             if let searchId = searchId {
                 print("🔍 ResultView appeared with search_id: \(searchId)")
-                viewModel.pollFlights(searchId: searchId)
+                print("📊 Current state - Results: \(viewModel.flightResults.count), HasMore: \(viewModel.hasMoreResults), IsLoading: \(viewModel.isLoading)")
+                
+                // Only start polling if we don't have results yet
+                if viewModel.flightResults.isEmpty && !viewModel.isLoading {
+                    viewModel.pollFlights(searchId: searchId)
+                }
             } else {
                 print("⚠️ No search_id available in ResultView")
             }
@@ -118,143 +169,12 @@ struct ResultView: View {
     }
 }
 
-// MARK: - Updated Flight Result Card
-struct FlightResultCard: View {
-    let flight: FlightResult
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            HStack {
-                VStack(spacing: 20) {
-                    // Show legs
-                    ForEach(flight.legs.indices, id: \.self) { index in
-                        FlightLegRow(leg: flight.legs[index])
-                    }
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing) {
-                    Text(flight.formattedPrice)
-                        .font(.system(size: 16))
-                        .fontWeight(.bold)
-                        .foregroundColor(Color("PriceGreen"))
-                    Text("per Adult")
-                        .font(.system(size: 12))
-                        .fontWeight(.light)
-                }
-            }
-            .padding(.horizontal)
-            
-            Divider()
-            
-            // Airlines info
-            if let firstSegment = flight.legs.first?.segments.first {
-                HStack {
-                    AsyncImage(url: URL(string: firstSegment.airlineLogo)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } placeholder: {
-                        Image("AirlinesImg")
-                            .resizable()
-                    }
-                    .frame(width: 21, height: 21)
-                    
-                    Text(firstSegment.airlineName)
-                        .font(.system(size: 12))
-                        .foregroundColor(.black.opacity(0.8))
-                        .fontWeight(.light)
-                    
-                    Spacer()
-                    
-                    // Show badges
-                    HStack(spacing: 8) {
-                        if flight.is_best {
-                            Badge(text: "Best", color: Color("Violet"))
-                        }
-                        if flight.is_cheapest {
-                            Badge(text: "Cheapest", color: .green)
-                        }
-                        if flight.is_fastest {
-                            Badge(text: "Fastest", color: .orange)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(16)
-    }
-}
-
-// MARK: - Flight Leg Row
-struct FlightLegRow: View {
-    let leg: FlightLeg
-    
-    var body: some View {
-        HStack(spacing: 20) {
-            VStack(alignment: .leading) {
-                Text(leg.formattedDepartureTime)
-                    .font(.system(size: 14))
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                Text(leg.originCode)
-                    .font(.system(size: 12))
-                    .fontWeight(.medium)
-                    .foregroundColor(.gray)
-            }
-            
-            VStack {
-                Text(formatDuration(leg.duration))
-                    .font(.system(size: 11))
-                    .fontWeight(.semibold)
-                    .foregroundColor(.gray)
-                
-                Divider()
-                    .frame(width: 100)
-                
-                Text(leg.stopsText)
-                    .font(.system(size: 11))
-                    .fontWeight(.medium)
-                    .foregroundColor(.gray)
-            }
-            
-            VStack(alignment: .leading) {
-                Text(leg.formattedArrivalTime)
-                    .font(.system(size: 14))
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                Text(leg.destinationCode)
-                    .font(.system(size: 12))
-                    .fontWeight(.medium)
-                    .foregroundColor(.gray)
-            }
-        }
-    }
-    
-    private func formatDuration(_ minutes: Int) -> String {
-        let hours = minutes / 60
-        let mins = minutes % 60
-        return "\(hours)h \(mins)m"
-    }
-}
-
-// MARK: - Badge Component
-struct Badge: View {
-    let text: String
-    let color: Color
-    
-    var body: some View {
-        Text(text)
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundColor(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(color)
-            .cornerRadius(4)
+// MARK: - Updated Flight Result Card (keeping the existing one but adding debug info)
+extension ResultView {
+    private func debugPrint(_ message: String) {
+        #if DEBUG
+        print("🔍 ResultView: \(message)")
+        #endif
     }
 }
 
