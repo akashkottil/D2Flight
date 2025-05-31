@@ -8,14 +8,31 @@ struct ResultView: View {
     // Pass search ID directly
     let searchId: String?
     
+    // Flight search data for header
+    @State private var originCode: String = "KCH"
+    @State private var destinationCode: String = "LON"
+    @State private var isRoundTrip: Bool = false
+    @State private var travelDate: String = "Wed 17 Oct"
+    @State private var travelerInfo: String = "1 Traveler, 1 Economy"
+    
     var body: some View {
         VStack(spacing: 0) {
-            // Fixed Top Filter Bar
-            ResultHeader()
-                .padding()
-                .background(Color.white)
-                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-                .zIndex(1)
+            // Fixed Top Filter Bar with filter functionality
+            ResultHeader(
+                originCode: originCode,
+                destinationCode: destinationCode,
+                isRoundTrip: isRoundTrip,
+                travelDate: travelDate,
+                travelerInfo: travelerInfo,
+                onFiltersChanged: { pollRequest in
+                    print("🔍 Applying filters: \(pollRequest)")
+                    viewModel.applyFilters(request: pollRequest)
+                }
+            )
+            .padding()
+            .background(Color.white)
+            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            .zIndex(1)
             
             // Content
             if viewModel.isLoading {
@@ -69,9 +86,10 @@ struct ResultView: View {
                     Text("No flights found")
                         .font(.system(size: 20, weight: .semibold))
                     
-                    Text("Try adjusting your search criteria")
+                    Text("Try adjusting your search criteria or filters")
                         .font(.system(size: 14))
                         .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
                 }
                 .frame(maxHeight: .infinity)
             } else {
@@ -166,6 +184,25 @@ struct ResultView: View {
                 print("⚠️ No search_id available in ResultView")
             }
         }
+        .onReceive(viewModel.$pollResponse) { response in
+            // Update available airlines when poll response is received
+            if let response = response {
+                updateFlightInfo(from: response)
+            }
+        }
+    }
+    
+    private func updateFlightInfo(from response: PollResponse) {
+        // Extract flight route info from first result if available
+        if let firstResult = response.results.first,
+           let firstLeg = firstResult.legs.first {
+            originCode = firstLeg.originCode
+            destinationCode = firstLeg.destinationCode
+            isRoundTrip = firstResult.legs.count > 1
+        }
+        
+        // You could also update travel date and traveler info if available
+        // For now, keeping default values
     }
 }
 
