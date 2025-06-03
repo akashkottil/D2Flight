@@ -28,6 +28,9 @@ struct FlightView: View {
     // Navigation to ResultView
     @State private var navigateToResults = false
     
+    // AnimatedResultLoader State
+    @State private var showAnimatedLoader = false
+    
     @StateObject private var flightSearchVM = FlightSearchViewModel()
     @StateObject private var networkMonitor = NetworkMonitor()
     
@@ -39,6 +42,8 @@ struct FlightView: View {
     @State private var showNoInternet = false
     @State private var showEmptySearch = false
     @State private var lastNetworkStatus = true
+    
+    @State private var swapButtonRotationAngle: Double = 0
 
     var body: some View {
         NavigationStack {
@@ -55,10 +60,10 @@ struct FlightView: View {
                         }
                         .padding(.vertical, 10)
                         
-                        // Tabs
+                        // Enhanced Tabs with coordinated animations
                         HStack {
                             Button(action: {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                     isOneWay = true
                                 }
                             }) {
@@ -81,7 +86,7 @@ struct FlightView: View {
                             }
                             
                             Button(action: {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                     isOneWay = false
                                 }
                             }) {
@@ -108,26 +113,45 @@ struct FlightView: View {
                         // Location Input - Updated to navigate to LocationSelectionView
                         locationSection
                         
-                        // Date Section with Date Selection Integration
-                        if isOneWay {
-                            HStack {
-                                dateView(
-                                    label: formatSelectedDate(for: .departure),
-                                    icon: "CalenderIcon"
-                                )
-                            }
-                        } else {
+                        // Enhanced Date Section with Smooth Animations
+                        VStack(spacing: 0) {
                             HStack(spacing: 10) {
+                                // Departure Date - Always visible with stable identity
                                 dateView(
                                     label: formatSelectedDate(for: .departure),
                                     icon: "CalenderIcon"
                                 )
-                                dateView(
-                                    label: formatSelectedDate(for: .return),
-                                    icon: "CalenderIcon"
+                                .id("departure_date") // Stable identity prevents recreation
+                                
+                                // Return Date with smooth conditional visibility
+                                Group {
+                                    if !isOneWay {
+                                        dateView(
+                                            label: formatSelectedDate(for: .return),
+                                            icon: "CalenderIcon"
+                                        )
+                                        .transition(
+                                            .asymmetric(
+                                                insertion: .scale(scale: 0.8)
+                                                    .combined(with: .opacity)
+                                                    .combined(with: .move(edge: .trailing)),
+                                                removal: .scale(scale: 0.8)
+                                                    .combined(with: .opacity)
+                                                    .combined(with: .move(edge: .trailing))
+                                            )
+                                        )
+                                    }
+                                }
+                                .frame(maxWidth: !isOneWay ? .infinity : 0)
+                                .opacity(!isOneWay ? 1 : 0)
+                                .scaleEffect(!isOneWay ? 1 : 0.8)
+                                .animation(
+                                    .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
+                                    value: isOneWay
                                 )
                             }
                         }
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
                         
                         // Passenger Section
                         Button(action: {
@@ -214,20 +238,43 @@ struct FlightView: View {
             }
             lastNetworkStatus = isConnected
         }
-        // Add search observation
+        // Add search observation with AnimatedResultLoader integration
         .onReceive(flightSearchVM.$searchId) { searchId in
             if let searchId = searchId {
                 currentSearchId = searchId
-                navigateToResults = true
-                print("🔍 FlightView updated currentSearchId and triggered navigation: \(searchId)")
+                
+                // Delay to show the loader for minimum time, then navigate
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        showAnimatedLoader = false
+                    }
+                    
+                    // Small delay for smooth transition
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        navigateToResults = true
+                    }
+                }
+                
+                print("🔍 FlightView updated currentSearchId and will show loader: \(searchId)")
             }
         }
         .onReceive(flightSearchVM.$isLoading) { isLoading in
             print("📡 FlightView - Search loading state: \(isLoading)")
+            
+            // Show animated loader when search starts
+            if isLoading {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    showAnimatedLoader = true
+                }
+            }
         }
         .onReceive(flightSearchVM.$errorMessage) { errorMessage in
             if let error = errorMessage {
                 print("⚠️ FlightView received error: \(error)")
+                // Hide loader if there's an error
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    showAnimatedLoader = false
+                }
             }
         }
         .sheet(isPresented: $showPassengerSheet) {
@@ -265,6 +312,10 @@ struct FlightView: View {
                     print("📍 Destination location selected: \(selectedLocation) (\(iataCode))")
                 }
             }
+        }
+        // AnimatedResultLoader as full screen cover - hides tab navigation
+        .fullScreenCover(isPresented: $showAnimatedLoader) {
+            AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
     }
     
@@ -321,7 +372,7 @@ struct FlightView: View {
             print("   Return Date: \(selectedDates[1])")
         }
         
-        // Start the search
+        // Start the search - this will trigger the animated loader
         flightSearchVM.searchFlights()
     }
     
@@ -379,8 +430,13 @@ struct FlightView: View {
                 destinationIATACode = tempIATA
                 
                 print("🔄 Swapped locations - Origin: \(originLocation), Destination: \(destinationLocation)")
+                // Toggle rotation state
+                withAnimation(.easeInOut(duration: 0.3)) {
+                        swapButtonRotationAngle -= 180
+                    }
             }) {
                 Image("SwapIcon")
+                    .rotationEffect(.degrees(swapButtonRotationAngle))
             }
             .offset(x: 148)
             .shadow(color: .purple.opacity(0.3), radius: 5)

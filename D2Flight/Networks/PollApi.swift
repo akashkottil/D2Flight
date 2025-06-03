@@ -10,9 +10,11 @@ class PollApi {
     func pollFlights(
         searchId: String,
         request: PollRequest = PollRequest(), // Default empty request for initial poll
+        offset: Int = 0,
+        limit: Int = 15,
         completion: @escaping (Result<PollResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/poll/?search_id=\(searchId)"
+        let url = "\(baseURL)/poll/?search_id=\(searchId)&offset=\(offset)&limit=\(limit)"
         
         let headers: HTTPHeaders = [
             "accept": "application/json",
@@ -44,7 +46,7 @@ class PollApi {
             return params
         }()
         
-        print("🔍 Polling flights with search_id: \(searchId)")
+        print("🔍 Polling flights with search_id: \(searchId), offset: \(offset), limit: \(limit)")
         print("📋 Request parameters: \(parameters)")
         
         print("📡 Poll API Request:")
@@ -64,13 +66,47 @@ class PollApi {
         .responseDecodable(of: PollResponse.self) { response in
             switch response.result {
             case .success(let pollResponse):
-                print("✅ Poll successful! Found \(pollResponse.count) flights")
+                print("✅ Poll successful! Found \(pollResponse.results.count) flights in this batch (total: \(pollResponse.count))")
+                print("   Cache status: \(pollResponse.cache)")
+                print("   Next page: \(pollResponse.next != nil ? "Available" : "None")")
                 completion(.success(pollResponse))
             case .failure(let error):
                 print("❌ Poll failed: \(error)")
                 if let data = response.data {
                     print("Response data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
                 }
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    // Alternative method using next URL if the API provides full URLs
+    func pollFlightsWithURL(
+        nextURL: String,
+        completion: @escaping (Result<PollResponse, Error>) -> Void
+    ) {
+        let headers: HTTPHeaders = [
+            "accept": "application/json",
+            "Content-Type": "application/json"
+        ]
+        
+        print("🔍 Polling flights with next URL: \(nextURL)")
+        
+        AF.request(
+            nextURL,
+            method: .post,
+            parameters: [:],
+            encoding: JSONEncoding.default,
+            headers: headers
+        )
+        .validate()
+        .responseDecodable(of: PollResponse.self) { response in
+            switch response.result {
+            case .success(let pollResponse):
+                print("✅ Poll with URL successful! Found \(pollResponse.results.count) flights in this batch")
+                completion(.success(pollResponse))
+            case .failure(let error):
+                print("❌ Poll with URL failed: \(error)")
                 completion(.failure(error))
             }
         }

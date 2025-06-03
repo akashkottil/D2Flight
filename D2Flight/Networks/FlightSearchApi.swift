@@ -19,6 +19,7 @@ class FlightSearchApi {
     ) {
         let url = "\(baseURL)/search/?user_id=\(userId)&currency=\(currency)&language=\(language)&app_code=\(appCode)"
 
+        print(currency)
         let headers: HTTPHeaders = [
             "accept": "application/json",
             "country": country,

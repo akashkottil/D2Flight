@@ -171,13 +171,13 @@ struct FlightResultCard: View {
                     // Show badges
                     HStack(spacing: 8) {
                         if flight.is_best {
-                            Badge(text: "Best", color: Color("Violet"))
+                            FlightBadge(text: "Best", color: Color("Violet"))
                         }
                         if flight.is_cheapest {
-                            Badge(text: "Cheapest", color: .green)
+                            FlightBadge(text: "Cheapest", color: .green)
                         }
                         if flight.is_fastest {
-                            Badge(text: "Fastest", color: .orange)
+                            FlightBadge(text: "Fastest", color: .orange)
                         }
                     }
                 }
@@ -242,8 +242,8 @@ struct FlightLegRow: View {
     }
 }
 
-// MARK: - Badge Component
-struct Badge: View {
+// MARK: - Flight Badge Component (Renamed to avoid conflicts)
+struct FlightBadge: View {
     let text: String
     let color: Color
     

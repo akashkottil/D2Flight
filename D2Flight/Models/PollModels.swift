@@ -2,17 +2,17 @@ import Foundation
 
 // MARK: - Poll Request Models
 struct PollRequest: Codable {
-    let duration_max: Int?
-    let stop_count_max: Int?
-    let arrival_departure_ranges: [ArrivalDepartureRange]?
-    let iata_codes_exclude: [String]?
-    let iata_codes_include: [String]?
-    let sort_by: String?
-    let sort_order: String?
-    let agency_exclude: [String]?
-    let agency_include: [String]?
-    let price_min: Int?
-    let price_max: Int?
+    var duration_max: Int?
+    var stop_count_max: Int?
+    var arrival_departure_ranges: [ArrivalDepartureRange]?
+    var iata_codes_exclude: [String]?
+    var iata_codes_include: [String]?
+    var sort_by: String?
+    var sort_order: String?
+    var agency_exclude: [String]?
+    var agency_include: [String]?
+    var price_min: Int?
+    var price_max: Int?
     
     // Empty initializer for initial poll without filters
     init() {
@@ -27,6 +27,48 @@ struct PollRequest: Codable {
         self.agency_include = nil
         self.price_min = nil
         self.price_max = nil
+    }
+    
+    // Full initializer for filtered polls
+    init(
+        duration_max: Int? = nil,
+        stop_count_max: Int? = nil,
+        arrival_departure_ranges: [ArrivalDepartureRange]? = nil,
+        iata_codes_exclude: [String]? = nil,
+        iata_codes_include: [String]? = nil,
+        sort_by: String? = nil,
+        sort_order: String? = nil,
+        agency_exclude: [String]? = nil,
+        agency_include: [String]? = nil,
+        price_min: Int? = nil,
+        price_max: Int? = nil
+    ) {
+        self.duration_max = duration_max
+        self.stop_count_max = stop_count_max
+        self.arrival_departure_ranges = arrival_departure_ranges
+        self.iata_codes_exclude = iata_codes_exclude
+        self.iata_codes_include = iata_codes_include
+        self.sort_by = sort_by
+        self.sort_order = sort_order
+        self.agency_exclude = agency_exclude
+        self.agency_include = agency_include
+        self.price_min = price_min
+        self.price_max = price_max
+    }
+    
+    // Helper method to check if request has any filters
+    func hasFilters() -> Bool {
+        return duration_max != nil ||
+               stop_count_max != nil ||
+               arrival_departure_ranges != nil ||
+               iata_codes_exclude != nil ||
+               iata_codes_include != nil ||
+               sort_by != nil ||
+               sort_order != nil ||
+               agency_exclude != nil ||
+               agency_include != nil ||
+               price_min != nil ||
+               price_max != nil
     }
 }
 

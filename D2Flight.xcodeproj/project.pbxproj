@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8C4882442DE4E98300E903D0 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 8C4882432DE4E98300E903D0 /* Alamofire */; };
+		8CF48C6F2DEF2B3600C29A8C /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 8CF48C6E2DEF2B2F00C29A8C /* .gitignore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +32,7 @@
 		8CD5352F2DE0410900F3FD75 /* D2Flight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = D2Flight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CD5353C2DE0410B00F3FD75 /* D2FlightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = D2FlightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CD535462DE0410B00F3FD75 /* D2FlightUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = D2FlightUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8CF48C6E2DEF2B2F00C29A8C /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -80,6 +82,7 @@
 		8CD535262DE0410900F3FD75 = {
 			isa = PBXGroup;
 			children = (
+				8CF48C6E2DEF2B2F00C29A8C /* .gitignore */,
 				8CD535312DE0410900F3FD75 /* D2Flight */,
 				8CD5353F2DE0410B00F3FD75 /* D2FlightTests */,
 				8CD535492DE0410B00F3FD75 /* D2FlightUITests */,
@@ -221,6 +224,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8CF48C6F2DEF2B3600C29A8C /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
