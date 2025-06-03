@@ -1,4 +1,6 @@
 import SwiftUI
+import AVFoundation
+
 
 struct SplashScreen: View {
     @State private var flightPosition = CGSize(width: -600, height: 800)
@@ -8,6 +10,23 @@ struct SplashScreen: View {
     @State private var flyByPosition = CGSize(width: 400, height: -600)
     @State private var flyByOpacity = 1.0
     @State private var showFlyBy = true
+    
+    @State private var audioPlayer: AVAudioPlayer?
+
+    
+    func playSound() {
+        if let soundURL = Bundle.main.url(forResource: "flyin", withExtension: "mp3") {
+            do {
+                audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
+                audioPlayer?.play()
+            } catch {
+                print("Error playing sound: \(error.localizedDescription)")
+            }
+        } else {
+            print("Sound file not found.")
+        }
+    }
+
 
     
 
@@ -51,6 +70,8 @@ struct SplashScreen: View {
 
                 }
                 .onAppear {
+                    playSound()
+                    
                     withAnimation(.easeInOut(duration: 0.8)) {
                         flightPosition = .zero
                         rotationAngle = 0
