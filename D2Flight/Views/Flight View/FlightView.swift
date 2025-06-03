@@ -28,6 +28,9 @@ struct FlightView: View {
     // Navigation to ResultView
     @State private var navigateToResults = false
     
+    // AnimatedResultLoader State
+    @State private var showAnimatedLoader = false
+    
     @StateObject private var flightSearchVM = FlightSearchViewModel()
     @StateObject private var networkMonitor = NetworkMonitor()
     
@@ -214,20 +217,43 @@ struct FlightView: View {
             }
             lastNetworkStatus = isConnected
         }
-        // Add search observation
+        // Add search observation with AnimatedResultLoader integration
         .onReceive(flightSearchVM.$searchId) { searchId in
             if let searchId = searchId {
                 currentSearchId = searchId
-                navigateToResults = true
-                print("🔍 FlightView updated currentSearchId and triggered navigation: \(searchId)")
+                
+                // Delay to show the loader for minimum time, then navigate
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        showAnimatedLoader = false
+                    }
+                    
+                    // Small delay for smooth transition
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        navigateToResults = true
+                    }
+                }
+                
+                print("🔍 FlightView updated currentSearchId and will show loader: \(searchId)")
             }
         }
         .onReceive(flightSearchVM.$isLoading) { isLoading in
             print("📡 FlightView - Search loading state: \(isLoading)")
+            
+            // Show animated loader when search starts
+            if isLoading {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    showAnimatedLoader = true
+                }
+            }
         }
         .onReceive(flightSearchVM.$errorMessage) { errorMessage in
             if let error = errorMessage {
                 print("⚠️ FlightView received error: \(error)")
+                // Hide loader if there's an error
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    showAnimatedLoader = false
+                }
             }
         }
         .sheet(isPresented: $showPassengerSheet) {
@@ -265,6 +291,10 @@ struct FlightView: View {
                     print("📍 Destination location selected: \(selectedLocation) (\(iataCode))")
                 }
             }
+        }
+        // AnimatedResultLoader as full screen cover - hides tab navigation
+        .fullScreenCover(isPresented: $showAnimatedLoader) {
+            AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
     }
     
@@ -321,7 +351,7 @@ struct FlightView: View {
             print("   Return Date: \(selectedDates[1])")
         }
         
-        // Start the search
+        // Start the search - this will trigger the animated loader
         flightSearchVM.searchFlights()
     }
     

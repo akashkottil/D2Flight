@@ -15,7 +15,7 @@ struct SplashScreen: View {
 
     
     func playSound() {
-        if let soundURL = Bundle.main.url(forResource: "flyin", withExtension: "mp3") {
+        if let soundURL = Bundle.main.url(forResource: "woosh", withExtension: "mp3") {
             do {
                 audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
                 audioPlayer?.play()
