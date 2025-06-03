@@ -58,10 +58,10 @@ struct FlightView: View {
                         }
                         .padding(.vertical, 10)
                         
-                        // Tabs
+                        // Enhanced Tabs with coordinated animations
                         HStack {
                             Button(action: {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                     isOneWay = true
                                 }
                             }) {
@@ -84,7 +84,7 @@ struct FlightView: View {
                             }
                             
                             Button(action: {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                     isOneWay = false
                                 }
                             }) {
@@ -111,26 +111,45 @@ struct FlightView: View {
                         // Location Input - Updated to navigate to LocationSelectionView
                         locationSection
                         
-                        // Date Section with Date Selection Integration
-                        if isOneWay {
-                            HStack {
-                                dateView(
-                                    label: formatSelectedDate(for: .departure),
-                                    icon: "CalenderIcon"
-                                )
-                            }
-                        } else {
+                        // Enhanced Date Section with Smooth Animations
+                        VStack(spacing: 0) {
                             HStack(spacing: 10) {
+                                // Departure Date - Always visible with stable identity
                                 dateView(
                                     label: formatSelectedDate(for: .departure),
                                     icon: "CalenderIcon"
                                 )
-                                dateView(
-                                    label: formatSelectedDate(for: .return),
-                                    icon: "CalenderIcon"
+                                .id("departure_date") // Stable identity prevents recreation
+                                
+                                // Return Date with smooth conditional visibility
+                                Group {
+                                    if !isOneWay {
+                                        dateView(
+                                            label: formatSelectedDate(for: .return),
+                                            icon: "CalenderIcon"
+                                        )
+                                        .transition(
+                                            .asymmetric(
+                                                insertion: .scale(scale: 0.8)
+                                                    .combined(with: .opacity)
+                                                    .combined(with: .move(edge: .trailing)),
+                                                removal: .scale(scale: 0.8)
+                                                    .combined(with: .opacity)
+                                                    .combined(with: .move(edge: .trailing))
+                                            )
+                                        )
+                                    }
+                                }
+                                .frame(maxWidth: !isOneWay ? .infinity : 0)
+                                .opacity(!isOneWay ? 1 : 0)
+                                .scaleEffect(!isOneWay ? 1 : 0.8)
+                                .animation(
+                                    .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
+                                    value: isOneWay
                                 )
                             }
                         }
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
                         
                         // Passenger Section
                         Button(action: {
