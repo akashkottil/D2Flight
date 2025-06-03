@@ -8,6 +8,8 @@ struct LocationInput: View {
     
     @FocusState private var focusedField: Field?
     
+    @State private var swapButtonRotationAngle: Double = 0
+    
     enum Field {
         case origin, destination
     }
@@ -30,6 +32,20 @@ struct LocationInput: View {
                         .foregroundColor(originLocation.isEmpty ? .gray : .black)
                         .fontWeight(originLocation.isEmpty ? .medium : .semibold)
                         .font(.system(size: 14))
+                    // Clear button, visible only if the text is not empty
+                    if !(isSelectingOrigin ? searchText.isEmpty : originLocation.isEmpty) {
+                        Button(action: {
+                            if isSelectingOrigin {
+                                searchText = ""
+                            } else {
+                                originLocation = ""
+                            }
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                        }
+                        .padding(.trailing, 8)
+                    }
                     Spacer()
                 }
                 .padding(.vertical, 18)
@@ -55,6 +71,19 @@ struct LocationInput: View {
                         .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
                         .fontWeight(destinationLocation.isEmpty ? .medium : .semibold)
                         .font(.system(size: 14))
+                    if !(!isSelectingOrigin ? searchText.isEmpty : destinationLocation.isEmpty) {
+                        Button(action: {
+                            if !isSelectingOrigin {
+                                searchText = ""
+                            } else {
+                                destinationLocation = ""
+                            }
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                        }
+                        .padding(.trailing, 8)
+                    }
                     Spacer()
                 }
                 .padding(.vertical, 18)
@@ -63,28 +92,33 @@ struct LocationInput: View {
             .background(.gray.opacity(0.1))
             .cornerRadius(12)
             
+            // 🔄 Swap Button with Rotation Animation
             Button(action: {
                 let temp = originLocation
                 originLocation = destinationLocation
                 destinationLocation = temp
                 
-                // Update searchText to match the currently selected field after swap
+                // Update searchText to match current field
                 if isSelectingOrigin {
                     searchText = originLocation
                 } else {
                     searchText = destinationLocation
                 }
+                
+                // 🔁 Rotate swap icon
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    swapButtonRotationAngle -= 180
+                }
             }) {
                 Image("SwapIcon")
+                    .rotationEffect(.degrees(swapButtonRotationAngle)) // 🌀 Animate rotation
             }
-
-
             .offset(x: 135)
             .shadow(color: .purple.opacity(0.3), radius: 5)
+            
         }
         .padding()
         .onAppear {
-            // Set initial focus to origin when view appears
             focusedField = .origin
         }
     }

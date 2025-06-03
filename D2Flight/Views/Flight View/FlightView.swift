@@ -42,6 +42,8 @@ struct FlightView: View {
     @State private var showNoInternet = false
     @State private var showEmptySearch = false
     @State private var lastNetworkStatus = true
+    
+    @State private var swapButtonRotationAngle: Double = 0
 
     var body: some View {
         NavigationStack {
@@ -428,8 +430,13 @@ struct FlightView: View {
                 destinationIATACode = tempIATA
                 
                 print("🔄 Swapped locations - Origin: \(originLocation), Destination: \(destinationLocation)")
+                // Toggle rotation state
+                withAnimation(.easeInOut(duration: 0.3)) {
+                        swapButtonRotationAngle -= 180
+                    }
             }) {
                 Image("SwapIcon")
+                    .rotationEffect(.degrees(swapButtonRotationAngle))
             }
             .offset(x: 148)
             .shadow(color: .purple.opacity(0.3), radius: 5)
