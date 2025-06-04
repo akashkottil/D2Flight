@@ -47,7 +47,11 @@ struct FlightView: View {
     @State private var originIATACode: String = ""
     @State private var destinationIATACode: String = ""
     @State private var currentSearchId: String? = nil
-    @State private var currentSearchParameters: SearchParameters? = nil // NEW: Store search parameters
+    @State private var currentSearchParameters: SearchParameters? = nil
+    
+    // NEW: Recent locations management
+    @StateObject private var recentLocationsManager = RecentLocationsManager.shared
+    @State private var hasPrefilled = false // Prevent multiple prefills
     
     // Notification States
     @State private var showNoInternet = false
@@ -221,7 +225,7 @@ struct FlightView: View {
                 .animation(.easeInOut(duration: 0.3), value: showEmptySearch)
             }
             .ignoresSafeArea()
-            // UPDATED: Add navigation destination for ResultView with search parameters
+            // Add navigation destination for ResultView with search parameters
             .navigationDestination(isPresented: Binding(
                 get: { currentSearchId != nil && navigateToResults && currentSearchParameters != nil },
                 set: { newValue in
@@ -333,9 +337,49 @@ struct FlightView: View {
         .fullScreenCover(isPresented: $showAnimatedLoader) {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
+        // NEW: Auto-prefill recent locations on view appear
+        .onAppear {
+            prefillRecentLocationsIfNeeded()
+        }
     }
     
-    // NEW: Create search parameters from current state
+    // NEW: Auto-prefill recent locations
+    private func prefillRecentLocationsIfNeeded() {
+        // Only prefill if:
+        // 1. We haven't already prefilled this session
+        // 2. Both origin and destination are currently empty
+        // 3. We have recent locations to prefill
+        guard !hasPrefilled,
+              originLocation.isEmpty,
+              destinationLocation.isEmpty else {
+            print("🚫 Skipping prefill - already prefilled or locations not empty")
+            return
+        }
+        
+        let lastLocations = recentLocationsManager.getLastSearchLocations()
+        
+        // Try to prefill origin
+        if let origin = lastLocations.origin {
+            originLocation = origin.displayName
+            originIATACode = origin.iataCode
+            print("🔄 Auto-prefilled origin: \(origin.displayName) (\(origin.iataCode))")
+        }
+        
+        // Try to prefill destination
+        if let destination = lastLocations.destination {
+            destinationLocation = destination.displayName
+            destinationIATACode = destination.iataCode
+            print("🔄 Auto-prefilled destination: \(destination.displayName) (\(destination.iataCode))")
+        }
+        
+        // Mark as prefilled to prevent multiple prefills
+        if lastLocations.origin != nil || lastLocations.destination != nil {
+            hasPrefilled = true
+            print("✅ Auto-prefill completed")
+        }
+    }
+    
+    // Create search parameters from current state
     private func createSearchParameters() {
         let departureDate = selectedDates.first ?? Date()
         let returnDate = (!isOneWay && selectedDates.count > 1) ? selectedDates[1] : nil
