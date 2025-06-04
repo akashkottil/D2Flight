@@ -379,6 +379,38 @@ struct FlightView: View {
         }
     }
     
+    // NEW: Save current search pair when search is initiated
+    private func saveCurrentSearchPair() {
+        // Create Location objects from current selection
+        let originLocation = Location(
+            iataCode: originIATACode,
+            airportName: self.originLocation, // Using the display name as airport name
+            type: "airport", // Default to airport
+            displayName: self.originLocation,
+            cityName: self.originLocation,
+            countryName: "",
+            countryCode: "",
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0")
+        )
+        
+        let destinationLocation = Location(
+            iataCode: destinationIATACode,
+            airportName: self.destinationLocation,
+            type: "airport",
+            displayName: self.destinationLocation,
+            cityName: self.destinationLocation,
+            countryName: "",
+            countryCode: "",
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0")
+        )
+        
+        // Save the complete search pair
+        recentLocationsManager.addSearchPair(origin: originLocation, destination: destinationLocation)
+        print("💾 Saved search pair: \(self.originLocation) → \(self.destinationLocation)")
+    }
+    
     // Create search parameters from current state
     private func createSearchParameters() {
         let departureDate = selectedDates.first ?? Date()
@@ -431,6 +463,9 @@ struct FlightView: View {
             }
             return
         }
+        
+        // NEW: Save complete search pair for proper auto-prefill
+        saveCurrentSearchPair()
         
         // Update ViewModel properties before search
         flightSearchVM.departureIATACode = originIATACode
