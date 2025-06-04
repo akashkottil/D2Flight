@@ -47,6 +47,7 @@ struct FlightView: View {
     @State private var originIATACode: String = ""
     @State private var destinationIATACode: String = ""
     @State private var currentSearchId: String? = nil
+    @State private var currentSearchParameters: SearchParameters? = nil // NEW: Store search parameters
     
     // Notification States
     @State private var showNoInternet = false
@@ -198,7 +199,7 @@ struct FlightView: View {
                     .padding(.bottom, 30)
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
-                    FlightExploreCard()
+                FlightExploreCard()
                 }
                 .scrollIndicators(.hidden)
                 
@@ -220,20 +221,22 @@ struct FlightView: View {
                 .animation(.easeInOut(duration: 0.3), value: showEmptySearch)
             }
             .ignoresSafeArea()
-            // Add navigation destination for ResultView with search ID
+            // UPDATED: Add navigation destination for ResultView with search parameters
             .navigationDestination(isPresented: Binding(
-                get: { currentSearchId != nil && navigateToResults },
+                get: { currentSearchId != nil && navigateToResults && currentSearchParameters != nil },
                 set: { newValue in
                     if !newValue {
                         currentSearchId = nil
                         navigateToResults = false
+                        currentSearchParameters = nil
                     }
                 }
             )) {
-                if let validSearchId = currentSearchId {
-                    ResultView(searchId: validSearchId)
+                if let validSearchId = currentSearchId,
+                   let searchParams = currentSearchParameters {
+                    ResultView(searchId: validSearchId, searchParameters: searchParams)
                 } else {
-                    Text("Invalid Search ID")
+                    Text("Invalid Search Parameters")
                 }
             }
         }
@@ -252,6 +255,9 @@ struct FlightView: View {
         .onReceive(flightSearchVM.$searchId) { searchId in
             if let searchId = searchId {
                 currentSearchId = searchId
+                
+                // Create search parameters when search is successful
+                createSearchParameters()
                 
                 // Delay to show the loader for minimum time, then navigate
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
@@ -327,6 +333,36 @@ struct FlightView: View {
         .fullScreenCover(isPresented: $showAnimatedLoader) {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
+    }
+    
+    // NEW: Create search parameters from current state
+    private func createSearchParameters() {
+        let departureDate = selectedDates.first ?? Date()
+        let returnDate = (!isOneWay && selectedDates.count > 1) ? selectedDates[1] : nil
+        
+        currentSearchParameters = SearchParameters(
+            originCode: originIATACode,
+            destinationCode: destinationIATACode,
+            originName: originLocation,
+            destinationName: destinationLocation,
+            isRoundTrip: !isOneWay,
+            departureDate: departureDate,
+            returnDate: returnDate,
+            adults: adults,
+            children: children,
+            infants: infants,
+            selectedClass: selectedClass
+        )
+        
+        print("🎯 Created search parameters:")
+        print("   Route: \(originIATACode) to \(destinationIATACode)")
+        print("   Trip Type: \(!isOneWay ? "Round Trip" : "One Way")")
+        print("   Departure: \(departureDate)")
+        if let returnDate = returnDate {
+            print("   Return: \(returnDate)")
+        }
+        print("   Travelers: \(adults) adults, \(children) children, \(infants) infants")
+        print("   Class: \(selectedClass.displayName)")
     }
     
     // MARK: - Search Handler

@@ -5,17 +5,27 @@ struct ResultView: View {
     @State private var selectedFlight: FlightResult? = nil
     @State private var navigateToDetails = false
     
-    // Pass search ID directly
+    // Pass search ID and search parameters
     let searchId: String?
+    let searchParameters: SearchParameters
     
     var body: some View {
         VStack(spacing: 0) {
-            // Fixed Top Filter Bar
-            ResultHeader()
-                .padding()
-                .background(Color.white)
-                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-                .zIndex(1)
+            // Fixed Top Filter Bar with dynamic data
+            ResultHeader(
+                originCode: searchParameters.originCode,
+                destinationCode: searchParameters.destinationCode,
+                isRoundTrip: searchParameters.isRoundTrip,
+                travelDate: searchParameters.formattedTravelDate,
+                travelerInfo: searchParameters.formattedTravelerInfo,
+                onFiltersChanged: { pollRequest in
+                    viewModel.applyFilters(request: pollRequest)
+                }
+            )
+            .padding()
+            .background(Color.white)
+            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            .zIndex(1)
             
             // Content
             if viewModel.isLoading {
@@ -87,9 +97,8 @@ struct ResultView: View {
                                 selectedFlight = flight
                                 navigateToDetails = true
                             } label: {
-                                // Determine if it's round trip based on number of legs
-                                let isRoundTrip = flight.legs.count > 1
-                                ResultCard(flight: flight, isRoundTrip: isRoundTrip)
+                                // Determine if it's round trip based on search parameters
+                                ResultCard(flight: flight, isRoundTrip: searchParameters.isRoundTrip)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -111,154 +120,51 @@ struct ResultView: View {
             // Poll flights when view appears if we have a search ID
             if let searchId = searchId {
                 print("🔍 ResultView appeared with search_id: \(searchId)")
+                print("📋 Search parameters:")
+                print("   Route: \(searchParameters.routeDisplayText)")
+                print("   Date: \(searchParameters.formattedTravelDate)")
+                print("   Travelers: \(searchParameters.formattedTravelerInfo)")
+                print("   Round Trip: \(searchParameters.isRoundTrip)")
+                
                 viewModel.pollFlights(searchId: searchId)
+                
+                // Update result header with available airlines when poll response is received
+                if let pollResponse = viewModel.pollResponse {
+                    // You can access airlines data here if needed for filters
+                    print("📊 Airlines available: \(pollResponse.airlines.count)")
+                }
             } else {
                 print("⚠️ No search_id available in ResultView")
             }
         }
-    }
-}
-
-// MARK: - Updated Flight Result Card
-struct FlightResultCard: View {
-    let flight: FlightResult
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            HStack {
-                VStack(spacing: 20) {
-                    // Show legs
-                    ForEach(flight.legs.indices, id: \.self) { index in
-                        FlightLegRow(leg: flight.legs[index])
-                    }
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing) {
-                    Text(flight.formattedPrice)
-                        .font(.system(size: 16))
-                        .fontWeight(.bold)
-                        .foregroundColor(Color("PriceGreen"))
-                    Text("per Adult")
-                        .font(.system(size: 12))
-                        .fontWeight(.light)
-                }
-            }
-            .padding(.horizontal)
-            
-            Divider()
-            
-            // Airlines info
-            if let firstSegment = flight.legs.first?.segments.first {
-                HStack {
-                    AsyncImage(url: URL(string: firstSegment.airlineLogo)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } placeholder: {
-                        Image("AirlinesImg")
-                            .resizable()
-                    }
-                    .frame(width: 21, height: 21)
-                    
-                    Text(firstSegment.airlineName)
-                        .font(.system(size: 12))
-                        .foregroundColor(.black.opacity(0.8))
-                        .fontWeight(.light)
-                    
-                    Spacer()
-                    
-                    // Show badges
-                    HStack(spacing: 8) {
-                        if flight.is_best {
-                            FlightBadge(text: "Best", color: Color("Violet"))
-                        }
-                        if flight.is_cheapest {
-                            FlightBadge(text: "Cheapest", color: .green)
-                        }
-                        if flight.is_fastest {
-                            FlightBadge(text: "Fastest", color: .orange)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(16)
-    }
-}
-
-// MARK: - Flight Leg Row
-struct FlightLegRow: View {
-    let leg: FlightLeg
-    
-    var body: some View {
-        HStack(spacing: 20) {
-            VStack(alignment: .leading) {
-                Text(leg.formattedDepartureTime)
-                    .font(.system(size: 14))
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                Text(leg.originCode)
-                    .font(.system(size: 12))
-                    .fontWeight(.medium)
-                    .foregroundColor(.gray)
-            }
-            
-            VStack {
-                Text(formatDuration(leg.duration))
-                    .font(.system(size: 11))
-                    .fontWeight(.semibold)
-                    .foregroundColor(.gray)
-                
-                Divider()
-                    .frame(width: 100)
-                
-                Text(leg.stopsText)
-                    .font(.system(size: 11))
-                    .fontWeight(.medium)
-                    .foregroundColor(.gray)
-            }
-            
-            VStack(alignment: .leading) {
-                Text(leg.formattedArrivalTime)
-                    .font(.system(size: 14))
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                Text(leg.destinationCode)
-                    .font(.system(size: 12))
-                    .fontWeight(.medium)
-                    .foregroundColor(.gray)
+        .onReceive(viewModel.$pollResponse) { pollResponse in
+            // Update available airlines for filters when poll response changes
+            if let response = pollResponse {
+                print("📊 Poll response received with \(response.airlines.count) airlines")
+                // The ResultHeader will get airlines through the filter viewmodel
             }
         }
     }
-    
-    private func formatDuration(_ minutes: Int) -> String {
-        let hours = minutes / 60
-        let mins = minutes % 60
-        return "\(hours)h \(mins)m"
-    }
 }
 
-// MARK: - Flight Badge Component (Renamed to avoid conflicts)
-struct FlightBadge: View {
-    let text: String
-    let color: Color
-    
-    var body: some View {
-        Text(text)
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundColor(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(color)
-            .cornerRadius(4)
-    }
-}
-
+// MARK: - Preview with Sample Data
 #Preview {
-    ResultView(searchId: "sample-search-id")
+    let sampleSearchParams = SearchParameters(
+        originCode: "KCH",
+        destinationCode: "LON",
+        originName: "Kochi",
+        destinationName: "London",
+        isRoundTrip: true,
+        departureDate: Date(),
+        returnDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()),
+        adults: 2,
+        children: 1,
+        infants: 0,
+        selectedClass: .business
+    )
+    
+    return ResultView(
+        searchId: "sample-search-id",
+        searchParameters: sampleSearchParams
+    )
 }
