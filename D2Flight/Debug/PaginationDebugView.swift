@@ -24,6 +24,18 @@ struct PaginationDebugView: View {
                     Text("Loading: \(viewModel.isLoading ? "Initial" : viewModel.isLoadingMore ? "More" : "None")")
                         .font(.system(size: 10))
                         .foregroundColor(.white)
+                    
+                    // Show cache status
+                    if let pollResponse = viewModel.pollResponse {
+                        Text("Cache: \(pollResponse.cache ? "Complete" : "Building")")
+                            .font(.system(size: 10))
+                            .foregroundColor(pollResponse.cache ? .green : .yellow)
+                    }
+                    
+                    // Show poll count
+                    Text("API Calls: \(viewModel.totalPollCount)")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white)
                 }
                 .padding(8)
                 .background(Color.black.opacity(0.7))

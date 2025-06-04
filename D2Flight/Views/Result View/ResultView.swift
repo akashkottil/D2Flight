@@ -97,9 +97,9 @@ struct ResultView: View {
                     .frame(maxHeight: .infinity)
 
                 } else {
-                    // D) Success: list of flight results
+                    // D) Success: list of flight results with pagination
                     ScrollView {
-                        VStack(spacing: 16) {
+                        LazyVStack(spacing: 16) {
                             ForEach(viewModel.flightResults) { flight in
                                 Button {
                                     viewModel.selectFlight(flight)
@@ -112,6 +112,46 @@ struct ResultView: View {
                                     )
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .onAppear {
+                                    // Trigger pagination when user scrolls near the bottom
+                                    if viewModel.shouldLoadMore(currentItem: flight) {
+                                        print("🔄 Triggering load more for item: \(flight.id)")
+                                        viewModel.loadMoreResults()
+                                    }
+                                }
+                            }
+                            
+                            // Loading indicator for pagination
+                            if viewModel.isLoadingMore {
+                                HStack {
+                                    Spacer()
+                                    VStack(spacing: 8) {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                        Text("Loading more flights...")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.gray)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 20)
+                            }
+                            
+                            // Cache complete indicator
+                            if !viewModel.hasMoreResults && !viewModel.flightResults.isEmpty {
+                                HStack {
+                                    Spacer()
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.green)
+                                            .font(.system(size: 16))
+                                        Text("All \(viewModel.totalResultsCount) flights loaded")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.gray)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 20)
                             }
                         }
                         .padding()
@@ -134,6 +174,7 @@ struct ResultView: View {
                 isInitialLoad = true  // Mark this as initial load
 
                 if let searchId = searchId {
+                    print("🚀 Starting initial poll for searchId: \(searchId)")
                     viewModel.pollFlights(searchId: searchId)
                 }
             }
@@ -175,5 +216,7 @@ struct ResultView: View {
         .fullScreenCover(isPresented: $showAnimatedLoader) {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
+        // Add debug info for development
+        .debugPagination(viewModel: viewModel)
     }
 }

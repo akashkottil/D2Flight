@@ -10,11 +10,11 @@ class PollApi {
     func pollFlights(
         searchId: String,
         request: PollRequest = PollRequest(), // Default empty request for initial poll
-        offset: Int = 0,
-        limit: Int = 15,
+        page: Int = 1,
+        limit: Int = 8,
         completion: @escaping (Result<PollResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/poll/?search_id=\(searchId)&offset=\(offset)&limit=\(limit)"
+        let url = "\(baseURL)/poll/?search_id=\(searchId)&page=\(page)&limit=\(limit)"
         
         let headers: HTTPHeaders = [
             "accept": "application/json",
@@ -46,7 +46,7 @@ class PollApi {
             return params
         }()
         
-        print("🔍 Polling flights with search_id: \(searchId), offset: \(offset), limit: \(limit)")
+        print("🔍 Polling flights with search_id: \(searchId), page: \(page), limit: \(limit)")
         print("📋 Request parameters: \(parameters)")
         
         print("📡 Poll API Request:")
