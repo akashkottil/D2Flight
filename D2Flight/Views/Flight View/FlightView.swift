@@ -38,8 +38,6 @@ struct FlightView: View {
     // Navigation to ResultView
     @State private var navigateToResults = false
     
-    // AnimatedResultLoader State
-    @State private var showAnimatedLoader = false
     
     @StateObject private var flightSearchVM = FlightSearchViewModel()
     @StateObject private var networkMonitor = NetworkMonitor()
@@ -264,16 +262,9 @@ struct FlightView: View {
                 createSearchParameters()
                 
                 // Delay to show the loader for minimum time, then navigate
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        showAnimatedLoader = false
-                    }
-                    
-                    // Small delay for smooth transition
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        navigateToResults = true
-                    }
-                }
+                
+                navigateToResults = true
+                
                 
                 print("🔍 FlightView updated currentSearchId and will show loader: \(searchId)")
             }
@@ -281,20 +272,11 @@ struct FlightView: View {
         .onReceive(flightSearchVM.$isLoading) { isLoading in
             print("📡 FlightView - Search loading state: \(isLoading)")
             
-            // Show animated loader when search starts
-            if isLoading {
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    showAnimatedLoader = true
-                }
-            }
         }
         .onReceive(flightSearchVM.$errorMessage) { errorMessage in
             if let error = errorMessage {
                 print("⚠️ FlightView received error: \(error)")
-                // Hide loader if there's an error
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    showAnimatedLoader = false
-                }
+                
             }
         }
         .sheet(isPresented: $showPassengerSheet) {
@@ -333,10 +315,7 @@ struct FlightView: View {
                 }
             }
         }
-        // AnimatedResultLoader as full screen cover - hides tab navigation
-        .fullScreenCover(isPresented: $showAnimatedLoader) {
-            AnimatedResultLoader(isVisible: $showAnimatedLoader)
-        }
+        
         // NEW: Auto-prefill recent locations on view appear
         .onAppear {
             prefillRecentLocationsIfNeeded()
