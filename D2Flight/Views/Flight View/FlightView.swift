@@ -7,8 +7,18 @@ struct FlightView: View {
     @State private var originLocation = ""
     @State private var destinationLocation = ""
     @State private var iataCode = ""
-    @State private var departureDate = "Sat 23 Oct"
-    @State private var returnDate = "Tue 26 Oct"
+    @State private var departureDate: String = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM"
+        return formatter.string(from: Date())
+    }()
+
+    @State private var returnDate: String = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM"
+        let twoDaysLater = Calendar.current.date(byAdding: .day, value: 2, to: Date())!
+        return formatter.string(from: twoDaysLater)
+    }()
     @State private var travelersCount = "2 Travellers, Economy"
     
     // Passenger Sheet States
@@ -395,7 +405,8 @@ struct FlightView: View {
                     }
                     .padding(.vertical, 18)
                     .padding(.horizontal)
-                    
+                    .contentShape(Rectangle())
+                    .frame(maxWidth: .infinity)
                     Divider()
                         .background(Color.gray.opacity(0.5))
                         .padding(.leading)
@@ -413,6 +424,8 @@ struct FlightView: View {
                     }
                     .padding(.vertical, 18)
                     .padding(.horizontal)
+                    .contentShape(Rectangle())
+                    .frame(maxWidth: .infinity)
                 }
             }
             .buttonStyle(PlainButtonStyle())

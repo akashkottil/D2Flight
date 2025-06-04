@@ -100,6 +100,7 @@ struct ResultView: View {
             }
         }
         .navigationBarHidden(true)
+        .toolbar(.hidden, for: .tabBar)
         .background(.gray.opacity(0.2))
         .navigationDestination(isPresented: $navigateToDetails) {
             if let flight = selectedFlight {
