@@ -7,8 +7,14 @@ struct FlightView: View {
     @State private var originLocation = ""
     @State private var destinationLocation = ""
     @State private var iataCode = ""
-    @State private var departureDate = "Sat 23 Oct"
-    @State private var returnDate = "Tue 26 Oct"
+    @State private var departureDate: String = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM"
+        return formatter.string(from: Date())
+    }()
+
+    // Updated: Remove the static return date calculation
+    @State private var returnDate: String = ""
     @State private var travelersCount = "2 Travellers, Economy"
     
     // Passenger Sheet States
@@ -28,17 +34,25 @@ struct FlightView: View {
     // Navigation to ResultView
     @State private var navigateToResults = false
     
+    
     @StateObject private var flightSearchVM = FlightSearchViewModel()
     @StateObject private var networkMonitor = NetworkMonitor()
     
     @State private var originIATACode: String = ""
     @State private var destinationIATACode: String = ""
     @State private var currentSearchId: String? = nil
+    @State private var currentSearchParameters: SearchParameters? = nil
+    
+    // NEW: Recent locations management
+    @StateObject private var recentLocationsManager = RecentLocationsManager.shared
+    @State private var hasPrefilled = false // Prevent multiple prefills
     
     // Notification States
     @State private var showNoInternet = false
     @State private var showEmptySearch = false
     @State private var lastNetworkStatus = true
+    
+    @State private var swapButtonRotationAngle: Double = 0
 
     var body: some View {
         NavigationStack {
@@ -55,10 +69,10 @@ struct FlightView: View {
                         }
                         .padding(.vertical, 10)
                         
-                        // Tabs
+                        // Enhanced Tabs with coordinated animations
                         HStack {
                             Button(action: {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                     isOneWay = true
                                 }
                             }) {
@@ -81,7 +95,7 @@ struct FlightView: View {
                             }
                             
                             Button(action: {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                     isOneWay = false
                                 }
                             }) {
@@ -108,26 +122,45 @@ struct FlightView: View {
                         // Location Input - Updated to navigate to LocationSelectionView
                         locationSection
                         
-                        // Date Section with Date Selection Integration
-                        if isOneWay {
-                            HStack {
-                                dateView(
-                                    label: formatSelectedDate(for: .departure),
-                                    icon: "CalenderIcon"
-                                )
-                            }
-                        } else {
+                        // Enhanced Date Section with Smooth Animations
+                        VStack(spacing: 0) {
                             HStack(spacing: 10) {
+                                // Departure Date - Always visible with stable identity
                                 dateView(
                                     label: formatSelectedDate(for: .departure),
                                     icon: "CalenderIcon"
                                 )
-                                dateView(
-                                    label: formatSelectedDate(for: .return),
-                                    icon: "CalenderIcon"
+                                .id("departure_date") // Stable identity prevents recreation
+                                
+                                // Return Date with smooth conditional visibility
+                                Group {
+                                    if !isOneWay {
+                                        dateView(
+                                            label: formatSelectedDate(for: .return),
+                                            icon: "CalenderIcon"
+                                        )
+                                        .transition(
+                                            .asymmetric(
+                                                insertion: .scale(scale: 0.8)
+                                                    .combined(with: .opacity)
+                                                    .combined(with: .move(edge: .trailing)),
+                                                removal: .scale(scale: 0.8)
+                                                    .combined(with: .opacity)
+                                                    .combined(with: .move(edge: .trailing))
+                                            )
+                                        )
+                                    }
+                                }
+                                .frame(maxWidth: !isOneWay ? .infinity : 0)
+                                .opacity(!isOneWay ? 1 : 0)
+                                .scaleEffect(!isOneWay ? 1 : 0.8)
+                                .animation(
+                                    .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
+                                    value: isOneWay
                                 )
                             }
                         }
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
                         
                         // Passenger Section
                         Button(action: {
@@ -164,7 +197,7 @@ struct FlightView: View {
                     .padding(.bottom, 30)
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
-                    FlightExploreCard()
+                FlightExploreCard()
                 }
                 .scrollIndicators(.hidden)
                 
@@ -186,20 +219,22 @@ struct FlightView: View {
                 .animation(.easeInOut(duration: 0.3), value: showEmptySearch)
             }
             .ignoresSafeArea()
-            // Add navigation destination for ResultView with search ID
+            // Add navigation destination for ResultView with search parameters
             .navigationDestination(isPresented: Binding(
-                get: { currentSearchId != nil && navigateToResults },
+                get: { currentSearchId != nil && navigateToResults && currentSearchParameters != nil },
                 set: { newValue in
                     if !newValue {
                         currentSearchId = nil
                         navigateToResults = false
+                        currentSearchParameters = nil
                     }
                 }
             )) {
-                if let validSearchId = currentSearchId {
-                    ResultView(searchId: validSearchId)
+                if let validSearchId = currentSearchId,
+                   let searchParams = currentSearchParameters {
+                    ResultView(searchId: validSearchId, searchParameters: searchParams)
                 } else {
-                    Text("Invalid Search ID")
+                    Text("Invalid Search Parameters")
                 }
             }
         }
@@ -214,20 +249,30 @@ struct FlightView: View {
             }
             lastNetworkStatus = isConnected
         }
-        // Add search observation
+        // Add search observation with AnimatedResultLoader integration
         .onReceive(flightSearchVM.$searchId) { searchId in
             if let searchId = searchId {
                 currentSearchId = searchId
+                
+                // Create search parameters when search is successful
+                createSearchParameters()
+                
+                // Delay to show the loader for minimum time, then navigate
+                
                 navigateToResults = true
-                print("🔍 FlightView updated currentSearchId and triggered navigation: \(searchId)")
+                
+                
+                print("🔍 FlightView updated currentSearchId and will show loader: \(searchId)")
             }
         }
         .onReceive(flightSearchVM.$isLoading) { isLoading in
             print("📡 FlightView - Search loading state: \(isLoading)")
+            
         }
         .onReceive(flightSearchVM.$errorMessage) { errorMessage in
             if let error = errorMessage {
                 print("⚠️ FlightView received error: \(error)")
+                
             }
         }
         .sheet(isPresented: $showPassengerSheet) {
@@ -266,6 +311,121 @@ struct FlightView: View {
                 }
             }
         }
+        
+        // NEW: Auto-prefill recent locations on view appear
+        .onAppear {
+            prefillRecentLocationsIfNeeded()
+            // Initialize return date on first appear
+            initializeReturnDate()
+        }
+    }
+    
+    // NEW: Initialize return date based on current date + 2 days initially
+    private func initializeReturnDate() {
+        if returnDate.isEmpty {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "E dd MMM"
+            let twoDaysLater = Calendar.current.date(byAdding: .day, value: 2, to: Date())!
+            returnDate = formatter.string(from: twoDaysLater)
+        }
+    }
+    
+    // NEW: Auto-prefill recent locations
+    private func prefillRecentLocationsIfNeeded() {
+        // Only prefill if:
+        // 1. We haven't already prefilled this session
+        // 2. Both origin and destination are currently empty
+        // 3. We have recent locations to prefill
+        guard !hasPrefilled,
+              originLocation.isEmpty,
+              destinationLocation.isEmpty else {
+            print("🚫 Skipping prefill - already prefilled or locations not empty")
+            return
+        }
+        
+        let lastLocations = recentLocationsManager.getLastSearchLocations()
+        
+        // Try to prefill origin
+        if let origin = lastLocations.origin {
+            originLocation = origin.displayName
+            originIATACode = origin.iataCode
+            print("🔄 Auto-prefilled origin: \(origin.displayName) (\(origin.iataCode))")
+        }
+        
+        // Try to prefill destination
+        if let destination = lastLocations.destination {
+            destinationLocation = destination.displayName
+            destinationIATACode = destination.iataCode
+            print("🔄 Auto-prefilled destination: \(destination.displayName) (\(destination.iataCode))")
+        }
+        
+        // Mark as prefilled to prevent multiple prefills
+        if lastLocations.origin != nil || lastLocations.destination != nil {
+            hasPrefilled = true
+            print("✅ Auto-prefill completed")
+        }
+    }
+    
+    // NEW: Save current search pair when search is initiated
+    private func saveCurrentSearchPair() {
+        // Create Location objects from current selection
+        let originLocation = Location(
+            iataCode: originIATACode,
+            airportName: self.originLocation, // Using the display name as airport name
+            type: "airport", // Default to airport
+            displayName: self.originLocation,
+            cityName: self.originLocation,
+            countryName: "",
+            countryCode: "",
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0")
+        )
+        
+        let destinationLocation = Location(
+            iataCode: destinationIATACode,
+            airportName: self.destinationLocation,
+            type: "airport",
+            displayName: self.destinationLocation,
+            cityName: self.destinationLocation,
+            countryName: "",
+            countryCode: "",
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0")
+        )
+        
+        // Save the complete search pair
+        recentLocationsManager.addSearchPair(origin: originLocation, destination: destinationLocation)
+        print("💾 Saved search pair: \(self.originLocation) → \(self.destinationLocation)")
+    }
+    
+    // Create search parameters from current state
+    private func createSearchParameters() {
+        let departureDate = selectedDates.first ?? Date()
+        let returnDate = (!isOneWay && selectedDates.count > 1) ? selectedDates[1] : nil
+        
+        currentSearchParameters = SearchParameters(
+            originCode: originIATACode,
+            destinationCode: destinationIATACode,
+            originName: originLocation,
+            destinationName: destinationLocation,
+            isRoundTrip: !isOneWay,
+            departureDate: departureDate,
+            returnDate: returnDate,
+            adults: adults,
+            children: children,
+            infants: infants,
+            selectedClass: selectedClass
+        )
+        
+        print("🎯 Created search parameters:")
+        print("   Route: \(originIATACode) to \(destinationIATACode)")
+        print("   Trip Type: \(!isOneWay ? "Round Trip" : "One Way")")
+        print("   Departure: \(departureDate)")
+        if let returnDate = returnDate {
+            print("   Return: \(returnDate)")
+        }
+        print("   Travelers: \(adults) adults, \(children) children, \(infants) infants")
+        print("   Class: \(selectedClass.displayName)")
     }
     
     // MARK: - Search Handler
@@ -291,6 +451,9 @@ struct FlightView: View {
             return
         }
         
+        // NEW: Save complete search pair for proper auto-prefill
+        saveCurrentSearchPair()
+        
         // Update ViewModel properties before search
         flightSearchVM.departureIATACode = originIATACode
         flightSearchVM.destinationIATACode = destinationIATACode
@@ -306,8 +469,9 @@ struct FlightView: View {
         if !isOneWay && selectedDates.count > 1 {
             flightSearchVM.returnDate = selectedDates[1]
         } else if !isOneWay {
-            // Default return date if not selected
-            flightSearchVM.returnDate = (selectedDates.first ?? Date()).addingTimeInterval(86400 * 7)
+            // Default return date if not selected - use departure date + 2 days
+            let departureDate = selectedDates.first ?? Date()
+            flightSearchVM.returnDate = Calendar.current.date(byAdding: .day, value: 2, to: departureDate) ?? departureDate.addingTimeInterval(86400 * 2)
         }
         
         flightSearchVM.adults = adults
@@ -321,7 +485,7 @@ struct FlightView: View {
             print("   Return Date: \(selectedDates[1])")
         }
         
-        // Start the search
+        // Start the search - this will trigger the animated loader
         flightSearchVM.searchFlights()
     }
     
@@ -344,7 +508,8 @@ struct FlightView: View {
                     }
                     .padding(.vertical, 18)
                     .padding(.horizontal)
-                    
+                    .contentShape(Rectangle())
+                    .frame(maxWidth: .infinity)
                     Divider()
                         .background(Color.gray.opacity(0.5))
                         .padding(.leading)
@@ -362,6 +527,8 @@ struct FlightView: View {
                     }
                     .padding(.vertical, 18)
                     .padding(.horizontal)
+                    .contentShape(Rectangle())
+                    .frame(maxWidth: .infinity)
                 }
             }
             .buttonStyle(PlainButtonStyle())
@@ -379,8 +546,13 @@ struct FlightView: View {
                 destinationIATACode = tempIATA
                 
                 print("🔄 Swapped locations - Origin: \(originLocation), Destination: \(destinationLocation)")
+                // Toggle rotation state
+                withAnimation(.easeInOut(duration: 0.3)) {
+                        swapButtonRotationAngle -= 180
+                    }
             }) {
                 Image("SwapIcon")
+                    .rotationEffect(.degrees(swapButtonRotationAngle))
             }
             .offset(x: 148)
             .shadow(color: .purple.opacity(0.3), radius: 5)
@@ -423,8 +595,27 @@ struct FlightView: View {
             if selectedDates.count > 1, let secondDate = selectedDates.last {
                 return formatter.string(from: secondDate)
             }
-            return returnDate // Fallback to default
+            // NEW: Calculate return date based on departure date + 2 days
+            return calculateDefaultReturnDate()
         }
+    }
+    
+    // NEW: Calculate default return date based on departure date + 2 days
+    private func calculateDefaultReturnDate() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM"
+        
+        // Use selected departure date if available, otherwise use current date
+        let baseDepartureDate: Date
+        if let selectedDepartureDate = selectedDates.first {
+            baseDepartureDate = selectedDepartureDate
+        } else {
+            baseDepartureDate = Date()
+        }
+        
+        // Add 2 days to the departure date
+        let returnDate = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
+        return formatter.string(from: returnDate)
     }
     
     private func updateDateLabels() {
@@ -437,6 +628,9 @@ struct FlightView: View {
         
         if selectedDates.count > 1, let secondDate = selectedDates.last {
             returnDate = formatter.string(from: secondDate)
+        } else {
+            // NEW: Update return date based on new departure date + 2 days
+            returnDate = calculateDefaultReturnDate()
         }
     }
 }

@@ -22,6 +22,15 @@ struct GradientColor {
         endPoint: .bottom
     )
     
+    static let SplashGradient = LinearGradient(
+        gradient: Gradient(colors: [
+                    Color(hex: "#FF5F30"),
+                    Color(hex: "#DA1010")
+                ]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    
     static let BlueWhite = LinearGradient(
         gradient: Gradient(colors: [
                     Color(hex: "#DACFFF"),

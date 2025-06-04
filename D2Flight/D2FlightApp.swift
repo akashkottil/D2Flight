@@ -11,7 +11,7 @@ import SwiftUI
 struct D2FlightApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppEntryView()
         }
     }
 }
