@@ -8,6 +8,7 @@ struct ResultView: View {
     // ★ Only show loader on first entry ★
     @State private var showAnimatedLoader = false
     @State private var hasInitialized = false
+    @State private var isInitialLoad = false  // Track if this is the initial load
 
     // To cancel any pending hide task
     @State private var loaderHideWorkItem: DispatchWorkItem? = nil
@@ -130,6 +131,7 @@ struct ResultView: View {
                 // Only start polling (and loader) once, on first appear
                 guard !hasInitialized else { return }
                 hasInitialized = true
+                isInitialLoad = true  // Mark this as initial load
 
                 if let searchId = searchId {
                     viewModel.pollFlights(searchId: searchId)
@@ -142,8 +144,8 @@ struct ResultView: View {
                 }
             }
             .onReceive(viewModel.$isLoading) { isLoading in
-                // Only trigger loader‐logic the very first time loading begins
-                guard hasInitialized else { return }
+                // Only trigger loader‐logic for the initial load, not for filter changes
+                guard hasInitialized && isInitialLoad else { return }
 
                 if isLoading {
                     // Cancel any pending hide task
@@ -154,17 +156,18 @@ struct ResultView: View {
                         showAnimatedLoader = true
                     }
 
-                    // Schedule hiding after 6 seconds
+                    // Schedule hiding after 7 seconds
                     let task = DispatchWorkItem {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             showAnimatedLoader = false
                         }
                     }
                     loaderHideWorkItem = task
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 6.0, execute: task)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 7.0, execute: task)
 
                 } else {
-                    // Do nothing here; the scheduled hide will run at the 6-second mark.
+                    // When initial loading completes, mark it as no longer initial load
+                    isInitialLoad = false
                 }
             }
         }

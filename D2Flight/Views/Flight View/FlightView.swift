@@ -13,12 +13,8 @@ struct FlightView: View {
         return formatter.string(from: Date())
     }()
 
-    @State private var returnDate: String = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        let twoDaysLater = Calendar.current.date(byAdding: .day, value: 2, to: Date())!
-        return formatter.string(from: twoDaysLater)
-    }()
+    // Updated: Remove the static return date calculation
+    @State private var returnDate: String = ""
     @State private var travelersCount = "2 Travellers, Economy"
     
     // Passenger Sheet States
@@ -319,6 +315,18 @@ struct FlightView: View {
         // NEW: Auto-prefill recent locations on view appear
         .onAppear {
             prefillRecentLocationsIfNeeded()
+            // Initialize return date on first appear
+            initializeReturnDate()
+        }
+    }
+    
+    // NEW: Initialize return date based on current date + 2 days initially
+    private func initializeReturnDate() {
+        if returnDate.isEmpty {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "E dd MMM"
+            let twoDaysLater = Calendar.current.date(byAdding: .day, value: 2, to: Date())!
+            returnDate = formatter.string(from: twoDaysLater)
         }
     }
     
@@ -461,8 +469,9 @@ struct FlightView: View {
         if !isOneWay && selectedDates.count > 1 {
             flightSearchVM.returnDate = selectedDates[1]
         } else if !isOneWay {
-            // Default return date if not selected
-            flightSearchVM.returnDate = (selectedDates.first ?? Date()).addingTimeInterval(86400 * 7)
+            // Default return date if not selected - use departure date + 2 days
+            let departureDate = selectedDates.first ?? Date()
+            flightSearchVM.returnDate = Calendar.current.date(byAdding: .day, value: 2, to: departureDate) ?? departureDate.addingTimeInterval(86400 * 2)
         }
         
         flightSearchVM.adults = adults
@@ -586,8 +595,27 @@ struct FlightView: View {
             if selectedDates.count > 1, let secondDate = selectedDates.last {
                 return formatter.string(from: secondDate)
             }
-            return returnDate // Fallback to default
+            // NEW: Calculate return date based on departure date + 2 days
+            return calculateDefaultReturnDate()
         }
+    }
+    
+    // NEW: Calculate default return date based on departure date + 2 days
+    private func calculateDefaultReturnDate() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM"
+        
+        // Use selected departure date if available, otherwise use current date
+        let baseDepartureDate: Date
+        if let selectedDepartureDate = selectedDates.first {
+            baseDepartureDate = selectedDepartureDate
+        } else {
+            baseDepartureDate = Date()
+        }
+        
+        // Add 2 days to the departure date
+        let returnDate = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
+        return formatter.string(from: returnDate)
     }
     
     private func updateDateLabels() {
@@ -600,6 +628,9 @@ struct FlightView: View {
         
         if selectedDates.count > 1, let secondDate = selectedDates.last {
             returnDate = formatter.string(from: secondDate)
+        } else {
+            // NEW: Update return date based on new departure date + 2 days
+            returnDate = calculateDefaultReturnDate()
         }
     }
 }
