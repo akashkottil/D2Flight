@@ -36,10 +36,10 @@ struct LocationSelectionView: View {
             
             // Current Selection Display
             LocationInput(
-            originLocation: $originLocation,
-            destinationLocation: $destinationLocation,
-            isSelectingOrigin: $viewModel.isSelectingOrigin,
-            searchText: $viewModel.searchText
+                originLocation: $originLocation,
+                destinationLocation: $destinationLocation,
+                isSelectingOrigin: $viewModel.isSelectingOrigin,
+                searchText: $viewModel.searchText
             )
 
             Divider()
@@ -53,35 +53,84 @@ struct LocationSelectionView: View {
                     .padding(.top, 8)
             }
             
-            // Search Results
+            // Content Area
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    if viewModel.locations.isEmpty && !viewModel.searchText.isEmpty && !viewModel.isLoading {
-                        // No results found
-                        VStack {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 40))
+                    // Section Header (only show if there are results)
+                    if !viewModel.getSectionTitle().isEmpty {
+                        HStack {
+                            Text(viewModel.getSectionTitle())
+                                .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.gray)
-                                .padding()
+                            Spacer()
                             
-                            Text("No locations found")
-                                .font(.system(size: 16))
-                                .foregroundColor(.gray)
-                            
-                            Text("Try searching with a different keyword")
-                                .font(.system(size: 14))
-                                .foregroundColor(.gray.opacity(0.8))
+                            // Show clear recent locations button for recent searches
+                            if viewModel.shouldShowRecentLocations {
+                                Button("Clear") {
+                                    RecentLocationsManager.shared.clearRecentLocations()
+                                }
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Color("Violet"))
+                            }
                         }
-                        .padding(.top, 40)
-                    } else {
+                        .padding(.horizontal, 24)
+                        .padding(.top, 20)
+                        .padding(.bottom, 12)
+                    }
+                    
+                    // Recent Locations Section
+                    if viewModel.shouldShowRecentLocations {
+                        ForEach(viewModel.recentLocations, id: \.id) { recentLocation in
+                            RecentLocationRowView(recentLocation: recentLocation) {
+                                selectRecentLocation(recentLocation)
+                            }
+                        }
+                    }
+                    
+                    // Autocomplete Results Section
+                    if viewModel.shouldShowAutocomplete {
                         ForEach(viewModel.locations, id: \.id) { location in
                             LocationRowView(location: location) {
                                 selectLocation(location)
                             }
                         }
                     }
+                    
+                    // Empty State
+                    if viewModel.shouldShowEmptyState {
+                        let emptyState = viewModel.getEmptyStateMessage()
+                        VStack(spacing: 12) {
+                            Image(systemName: viewModel.showingRecentLocations ? "clock" : "magnifyingglass")
+                                .font(.system(size: 40))
+                                .foregroundColor(.gray)
+                                .padding()
+                            
+                            Text(emptyState.title)
+                                .font(.system(size: 16))
+                                .foregroundColor(.gray)
+                            
+                            Text(emptyState.subtitle)
+                                .font(.system(size: 14))
+                                .foregroundColor(.gray.opacity(0.8))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                        }
+                        .padding(.top, 40)
+                    }
+                    
+                    // Loading State
+                    if viewModel.isLoading {
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                            Text("Searching locations...")
+                                .font(.system(size: 14))
+                                .foregroundColor(.gray)
+                        }
+                        .padding(.top, 40)
+                    }
                 }
-                .padding(.top, 24)
+                .padding(.bottom, 24)
             }
             
             Spacer()
@@ -92,6 +141,7 @@ struct LocationSelectionView: View {
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
             viewModel.resetToOriginSelection()
+            print("📱 LocationSelectionView appeared - showing recent locations initially")
         }
     }
     
@@ -101,19 +151,96 @@ struct LocationSelectionView: View {
             originIATACode = location.iataCode
             print("✈️ Origin selected: \(location.displayName) (\(location.iataCode))")
             onLocationSelected(location.displayName, true, location.iataCode)
-            viewModel.isSelectingOrigin = false
-            viewModel.searchText = destinationLocation // Prepare destination search text (can be empty or last typed)
+            _ = viewModel.selectLocation(location)
         } else {
             destinationLocation = location.displayName
             destinationIATACode = location.iataCode
             print("🎯 Destination selected: \(location.displayName) (\(location.iataCode))")
             onLocationSelected(location.displayName, false, location.iataCode)
-            presentationMode.wrappedValue.dismiss()
+            let shouldClose = viewModel.selectLocation(location)
+            if shouldClose {
+                presentationMode.wrappedValue.dismiss()
+            }
         }
+    }
+    
+    private func selectRecentLocation(_ recentLocation: RecentLocation) {
+        let location = recentLocation.toLocation()
+        selectLocation(location)
     }
 }
 
-// MARK: - Location Row View (Updated)
+// MARK: - Recent Location Row View (NEW)
+struct RecentLocationRowView: View {
+    let recentLocation: RecentLocation
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 16) {
+                // Recent location icon (different from regular locations)
+                ZStack {
+                    Circle()
+                        .fill(Color("Violet").opacity(0.1))
+                        .frame(width: 32, height: 32)
+                    
+                    Image(systemName: "clock.arrow.circlepath")
+                        .foregroundColor(Color("Violet"))
+                        .font(.system(size: 14, weight: .medium))
+                }
+                
+                // Location Info
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        if recentLocation.type == "airport" {
+                            Text(recentLocation.airportName)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.black)
+                            
+                            Text("(\(recentLocation.iataCode))")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.black)
+                        } else {
+                            Text(recentLocation.cityName)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.black)
+                        }
+                        
+                        Spacer()
+                    }
+                    
+                    HStack {
+                        Text(recentLocation.displayName)
+                            .font(.system(size: 14))
+                            .foregroundColor(.gray)
+                            .fontWeight(.medium)
+                            .lineLimit(2)
+                        
+                        Spacer()
+                        
+                        // Show search count as a small badge
+                        if recentLocation.searchCount > 1 {
+                            Text("\(recentLocation.searchCount)×")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Color("Violet"))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color("Violet").opacity(0.1))
+                                .cornerRadius(8)
+                        }
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Location Row View (EXISTING - keeping same design)
 struct LocationRowView: View {
     let location: Location
     let onTap: () -> Void

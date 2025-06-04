@@ -11,7 +11,7 @@ struct ResultHeader: View {
     @State private var showDurationSheet = false
     @State private var showAirlinesSheet = false
     
-    // Trip and result data
+    // Dynamic trip and result data - NO MORE DEFAULTS
     let originCode: String
     let destinationCode: String
     let isRoundTrip: Bool
@@ -21,13 +21,14 @@ struct ResultHeader: View {
     // Callback for applying filters
     var onFiltersChanged: (PollRequest) -> Void
     
+    // Updated initializer without defaults - parameters are required
     init(
-        originCode: String = "KCH",
-        destinationCode: String = "LON",
-        isRoundTrip: Bool = false,
-        travelDate: String = "Wed 17 Oct",
-        travelerInfo: String = "1 Traveler, 1 Economy",
-        onFiltersChanged: @escaping (PollRequest) -> Void = { _ in }
+        originCode: String,
+        destinationCode: String,
+        isRoundTrip: Bool,
+        travelDate: String,
+        travelerInfo: String,
+        onFiltersChanged: @escaping (PollRequest) -> Void
     ) {
         self.originCode = originCode
         self.destinationCode = destinationCode
@@ -39,7 +40,7 @@ struct ResultHeader: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header Section
+            // Header Section with dynamic content
             HStack {
                 Button(action: {
                     dismiss() // Navigate back to previous screen
@@ -138,6 +139,11 @@ struct ResultHeader: View {
         }
         .onAppear {
             filterViewModel.isRoundTrip = isRoundTrip
+            print("🎛️ ResultHeader configured with:")
+            print("   Route: \(originCode) to \(destinationCode)")
+            print("   Trip Type: \(isRoundTrip ? "Round Trip" : "One Way")")
+            print("   Date: \(travelDate)")
+            print("   Travelers: \(travelerInfo)")
         }
         // Bottom Sheets
         .sheet(isPresented: $showSortSheet) {
@@ -196,41 +202,30 @@ struct ResultHeader: View {
     private func applyFilters() {
         let pollRequest = filterViewModel.buildPollRequest()
         onFiltersChanged(pollRequest)
+        
+        print("🔧 Filters applied:")
+        print("   Sort: \(filterViewModel.selectedSortOption.displayName)")
+        print("   Max Stops: \(filterViewModel.maxStops)")
+        print("   Selected Airlines: \(filterViewModel.selectedAirlines.count)")
+        print("   Duration Filter: \(filterViewModel.maxDuration < 1440 ? "Active" : "Inactive")")
     }
     
     // Method to update available airlines from poll response
     func updateAvailableAirlines(_ airlines: [Airline]) {
         filterViewModel.updateAvailableAirlines(airlines)
+        print("✈️ Updated available airlines: \(airlines.count) airlines")
     }
 }
 
-// Updated FilterButton with action support
-//struct FilterButton: View {
-//    let title: String
-//    var isSelected: Bool = false
-//    var action: (() -> Void)? = nil
-//
-//    var body: some View {
-//        Button(action: {
-//            action?()
-//        }) {
-//            Text(title)
-//                .font(.system(size: 12, weight: .semibold))
-//                .padding(.vertical, 8)
-//                .padding(.horizontal, 16)
-//                .background(isSelected ? Color("Violet") : Color.gray.opacity(0.1))
-//                .foregroundColor(isSelected ? .white : .gray)
-//                .cornerRadius(20)
-//        }
-//    }
-//}
-
+// MARK: - Preview with Sample Data
 #Preview {
     ResultHeader(
         originCode: "KCH",
         destinationCode: "LON",
-        isRoundTrip: false,
-        travelDate: "Wed 17 Oct",
-        travelerInfo: "1 Traveler, 1 Economy"
-    ) { _ in }
+        isRoundTrip: true,
+        travelDate: "Wed 17 Oct - Mon 24 Oct",
+        travelerInfo: "2 Travelers, Business"
+    ) { _ in
+        print("Filter applied")
+    }
 }

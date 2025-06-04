@@ -14,18 +14,18 @@ struct SplashScreen: View {
     @State private var audioPlayer: AVAudioPlayer?
 
     
-    func playSound() {
-        if let soundURL = Bundle.main.url(forResource: "woosh", withExtension: "mp3") {
-            do {
-                audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
-                audioPlayer?.play()
-            } catch {
-                print("Error playing sound: \(error.localizedDescription)")
-            }
-        } else {
-            print("Sound file not found.")
-        }
-    }
+//    func playSound() {
+//        if let soundURL = Bundle.main.url(forResource: "woosh", withExtension: "mp3") {
+//            do {
+//                audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
+//                audioPlayer?.play()
+//            } catch {
+//                print("Error playing sound: \(error.localizedDescription)")
+//            }
+//        } else {
+//            print("Sound file not found.")
+//        }
+//    }
 
 
     
@@ -70,7 +70,7 @@ struct SplashScreen: View {
 
                 }
                 .onAppear {
-                    playSound()
+//                    playSound()
                     
                     withAnimation(.easeInOut(duration: 0.8)) {
                         flightPosition = .zero
