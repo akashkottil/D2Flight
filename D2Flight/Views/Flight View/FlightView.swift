@@ -78,7 +78,7 @@ struct FlightView: View {
                             }) {
                                 Text("One Way")
                                     .foregroundColor(isOneWay ? .white : .gray)
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 14))
                                     .fontWeight(.semibold)
                                     .frame(width: 87, height: 31)
                                     .background(
@@ -502,7 +502,7 @@ struct FlightView: View {
                         Text(originLocation.isEmpty ? "Enter Departure" : originLocation)
                             .foregroundColor(originLocation.isEmpty ? .gray : .black)
                             .fontWeight(originLocation.isEmpty ? .medium : .bold)
-                            .font(.system(size: 14))
+                            .font(.system(size: 16))
                             .lineLimit(1)
                         Spacer()
                     }

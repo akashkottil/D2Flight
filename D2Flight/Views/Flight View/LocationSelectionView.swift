@@ -147,16 +147,16 @@ struct LocationSelectionView: View {
     
     private func selectLocation(_ location: Location) {
         if viewModel.isSelectingOrigin {
-            originLocation = location.displayName
+            originLocation = location.airportName
             originIATACode = location.iataCode
             print("✈️ Origin selected: \(location.displayName) (\(location.iataCode))")
-            onLocationSelected(location.displayName, true, location.iataCode)
+            onLocationSelected(location.airportName, true, location.iataCode)
             _ = viewModel.selectLocation(location)
         } else {
-            destinationLocation = location.displayName
+            destinationLocation = location.airportName
             destinationIATACode = location.iataCode
             print("🎯 Destination selected: \(location.displayName) (\(location.iataCode))")
-            onLocationSelected(location.displayName, false, location.iataCode)
+            onLocationSelected(location.airportName, false, location.iataCode)
             let shouldClose = viewModel.selectLocation(location)
             if shouldClose {
                 presentationMode.wrappedValue.dismiss()
@@ -210,24 +210,24 @@ struct RecentLocationRowView: View {
                     }
                     
                     HStack {
-                        Text(recentLocation.displayName)
-                            .font(.system(size: 14))
-                            .foregroundColor(.gray)
-                            .fontWeight(.medium)
-                            .lineLimit(2)
+//                        Text(recentLocation.displayName)
+//                            .font(.system(size: 14))
+//                            .foregroundColor(.gray)
+//                            .fontWeight(.medium)
+//                            .lineLimit(2)
                         
-                        Spacer()
+//                        Spacer()
                         
                         // Show search count as a small badge
-                        if recentLocation.searchCount > 1 {
-                            Text("\(recentLocation.searchCount)×")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(Color("Violet"))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color("Violet").opacity(0.1))
-                                .cornerRadius(8)
-                        }
+//                        if recentLocation.searchCount > 1 {
+//                            Text("\(recentLocation.searchCount)×")
+//                                .font(.system(size: 11, weight: .medium))
+//                                .foregroundColor(Color("Violet"))
+//                                .padding(.horizontal, 6)
+//                                .padding(.vertical, 2)
+//                                .background(Color("Violet").opacity(0.1))
+//                                .cornerRadius(8)
+//                        }
                     }
                 }
                 

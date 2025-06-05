@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - Recent Location Model
 struct RecentLocation: Codable, Identifiable, Hashable {
-    let id = UUID()
+    var id = UUID()
     let iataCode: String
     let airportName: String
     let displayName: String
@@ -52,7 +52,7 @@ struct RecentLocation: Codable, Identifiable, Hashable {
 
 // MARK: - NEW: Recent Search Pair Model
 struct RecentSearchPair: Codable, Identifiable {
-    let id = UUID()
+    var id = UUID()
     let origin: RecentLocation
     let destination: RecentLocation
     let searchDate: Date
