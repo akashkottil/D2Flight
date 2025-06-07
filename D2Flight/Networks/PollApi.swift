@@ -21,32 +21,11 @@ class PollApi {
             "Content-Type": "application/json"
         ]
         
-        // For initial poll, send empty body
-        let parameters: [String: Any] = request.duration_max == nil ? [:] : {
-            // Convert PollRequest to dictionary when filters are applied
-            var params: [String: Any] = [:]
-            if let duration_max = request.duration_max { params["duration_max"] = duration_max }
-            if let stop_count_max = request.stop_count_max { params["stop_count_max"] = stop_count_max }
-            if let arrival_departure_ranges = request.arrival_departure_ranges {
-                params["arrival_departure_ranges"] = arrival_departure_ranges.map { range in
-                    [
-                        "arrival": ["min": range.arrival.min, "max": range.arrival.max],
-                        "departure": ["min": range.departure.min, "max": range.departure.max]
-                    ]
-                }
-            }
-            if let iata_codes_exclude = request.iata_codes_exclude { params["iata_codes_exclude"] = iata_codes_exclude }
-            if let iata_codes_include = request.iata_codes_include { params["iata_codes_include"] = iata_codes_include }
-            if let sort_by = request.sort_by { params["sort_by"] = sort_by }
-            if let sort_order = request.sort_order { params["sort_order"] = sort_order }
-            if let agency_exclude = request.agency_exclude { params["agency_exclude"] = agency_exclude }
-            if let agency_include = request.agency_include { params["agency_include"] = agency_include }
-            if let price_min = request.price_min { params["price_min"] = price_min }
-            if let price_max = request.price_max { params["price_max"] = price_max }
-            return params
-        }()
+        // ✅ FIXED: Use hasFilters() method instead of just checking duration_max
+        let parameters: [String: Any] = request.hasFilters() ? buildFilterParameters(from: request) : [:]
         
         print("🔍 Polling flights with search_id: \(searchId), page: \(page), limit: \(limit)")
+        print("📋 Request has filters: \(request.hasFilters())")
         print("📋 Request parameters: \(parameters)")
         
         print("📡 Poll API Request:")
@@ -78,6 +57,65 @@ class PollApi {
                 completion(.failure(error))
             }
         }
+    }
+    
+    // ✅ NEW: Properly build filter parameters from PollRequest
+    private func buildFilterParameters(from request: PollRequest) -> [String: Any] {
+        var params: [String: Any] = [:]
+        
+        // Duration filter
+        if let duration_max = request.duration_max {
+            params["duration_max"] = duration_max
+        }
+        
+        // Stop count filter
+        if let stop_count_max = request.stop_count_max {
+            params["stop_count_max"] = stop_count_max
+        }
+        
+        // Time range filters
+        if let arrival_departure_ranges = request.arrival_departure_ranges {
+            params["arrival_departure_ranges"] = arrival_departure_ranges.map { range in
+                [
+                    "arrival": ["min": range.arrival.min, "max": range.arrival.max],
+                    "departure": ["min": range.departure.min, "max": range.departure.max]
+                ]
+            }
+        }
+        
+        // Airline filters
+        if let iata_codes_exclude = request.iata_codes_exclude, !iata_codes_exclude.isEmpty {
+            params["iata_codes_exclude"] = iata_codes_exclude
+        }
+        if let iata_codes_include = request.iata_codes_include, !iata_codes_include.isEmpty {
+            params["iata_codes_include"] = iata_codes_include
+        }
+        
+        // Sort options
+        if let sort_by = request.sort_by {
+            params["sort_by"] = sort_by
+        }
+        if let sort_order = request.sort_order {
+            params["sort_order"] = sort_order
+        }
+        
+        // Agency filters
+        if let agency_exclude = request.agency_exclude, !agency_exclude.isEmpty {
+            params["agency_exclude"] = agency_exclude
+        }
+        if let agency_include = request.agency_include, !agency_include.isEmpty {
+            params["agency_include"] = agency_include
+        }
+        
+        // Price filters
+        if let price_min = request.price_min {
+            params["price_min"] = price_min
+        }
+        if let price_max = request.price_max {
+            params["price_max"] = price_max
+        }
+        
+        return params
     }
     
     // Alternative method using next URL if the API provides full URLs

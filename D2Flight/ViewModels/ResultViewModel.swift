@@ -358,57 +358,73 @@ class ResultViewModel: ObservableObject {
         }
     }
     
-    func applyFilters(request: PollRequest) {
-        guard let searchId = searchId else { return }
-        
-        // Stop continuous polling when applying filters
-        shouldContinuouslyPoll = false
-        
-        // Reset pagination when applying filters
-        resetPagination()
-        shouldContinuouslyPoll = true
-        
-        isLoading = true
-        errorMessage = nil
-        flightResults = [] // Clear existing results
-        
-        pollApi.pollFlights(
-            searchId: searchId,
-            request: request,
-            page: currentPage,
-            limit: initialPageSize
-        ) { [weak self] result in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                self.isLoading = false
-                
-                switch result {
-                case .success(let response):
-                    self.pollResponse = response
-                    self.flightResults = response.results
-                    self.currentPage = 2 // Next page will be 2
-                    self.totalResultsCount = response.count
-                    self.isCacheComplete = response.cache
+    // ✅ FIXED: Improved applyFilters method
+        func applyFilters(request: PollRequest) {
+            guard let searchId = searchId else {
+                print("❌ Cannot apply filters: no searchId")
+                return
+            }
+            
+            print("🔧 Applying filters with searchId: \(searchId)")
+            print("   Has filters: \(request.hasFilters())")
+            
+            // Stop continuous polling when applying filters
+            shouldContinuouslyPoll = false
+            
+            // Reset pagination when applying filters
+            resetPagination()
+            shouldContinuouslyPoll = false // Keep polling stopped for filter results
+            
+            isLoading = true
+            errorMessage = nil
+            flightResults = [] // Clear existing results
+            totalPollCount += 1
+            
+            print("📡 Making filtered poll request (poll #\(totalPollCount))")
+            
+            pollApi.pollFlights(
+                searchId: searchId,
+                request: request,
+                page: currentPage,
+                limit: initialPageSize
+            ) { [weak self] result in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
                     
-                    // Check if we need more results
-                    let hasAllResults = self.flightResults.count >= self.totalResultsCount
-                    self.hasMoreResults = !hasAllResults
+                    self.isLoading = false
                     
-                    print("🔍 Filters applied - got \(response.results.count)/\(response.count) results")
-                    print("   Cache: \(response.cache), Has all: \(hasAllResults), Has more: \(self.hasMoreResults)")
-                    
-                    // Start continuous polling if cache is not complete
-                    if !response.cache && self.shouldContinuouslyPoll {
-                        self.startContinuousPolling()
+                    switch result {
+                    case .success(let response):
+                        print("✅ Filter poll successful!")
+                        print("   Results found: \(response.results.count)")
+                        print("   Total available: \(response.count)")
+                        print("   Cache status: \(response.cache)")
+                        
+                        self.pollResponse = response
+                        self.flightResults = response.results
+                        self.currentPage = 2 // Next page will be 2
+                        self.totalResultsCount = response.count
+                        self.isCacheComplete = response.cache
+                        
+                        // Check if we need more results
+                        let hasAllResults = self.flightResults.count >= self.totalResultsCount
+                        self.hasMoreResults = !hasAllResults && !response.cache
+                        
+                        print("   Has all results: \(hasAllResults)")
+                        print("   Has more results: \(self.hasMoreResults)")
+                        
+                        // Don't start continuous polling for filtered results
+                        // User can manually load more if needed
+                        
+                    case .failure(let error):
+                        print("❌ Filter poll failed: \(error)")
+                        self.errorMessage = "Failed to apply filters: \(error.localizedDescription)"
+                        self.flightResults = []
+                        self.hasMoreResults = false
                     }
-                    
-                case .failure(let error):
-                    self.errorMessage = "Failed to apply filters: \(error.localizedDescription)"
                 }
             }
         }
-    }
     
     // Check if we should load more results based on scroll position
     func shouldLoadMore(currentItem: FlightResult) -> Bool {

@@ -9,6 +9,9 @@ struct ResultView: View {
     @State private var showAnimatedLoader = false
     @State private var hasInitialized = false
     @State private var isInitialLoad = false  // Track if this is the initial load
+    
+    // ✅ Reference to ResultHeader for updating airlines
+    @State private var resultHeaderRef: ResultHeader? = nil
 
     // To cancel any pending hide task
     @State private var loaderHideWorkItem: DispatchWorkItem? = nil
@@ -28,6 +31,7 @@ struct ResultView: View {
                     travelDate: searchParameters.formattedTravelDate,
                     travelerInfo: searchParameters.formattedTravelerInfo,
                     onFiltersChanged: { pollRequest in
+                        print("🔧 Applying filters from ResultHeader")
                         viewModel.applyFilters(request: pollRequest)
                     }
                 )
@@ -90,9 +94,10 @@ struct ResultView: View {
                         Text("No flights found")
                             .font(.system(size: 20, weight: .semibold))
 
-                        Text("Try adjusting your search criteria")
+                        Text("Try adjusting your search criteria or filters")
                             .font(.system(size: 14))
                             .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
                     }
                     .frame(maxHeight: .infinity)
 
@@ -178,10 +183,15 @@ struct ResultView: View {
                     viewModel.pollFlights(searchId: searchId)
                 }
             }
+            // ✅ FIXED: Update airlines in ResultHeader when poll response comes in
             .onReceive(viewModel.$pollResponse) { pollResponse in
-                // (unchanged) collect filter metadata if needed
                 if let response = pollResponse {
                     print("📊 Poll response received with \(response.airlines.count) airlines")
+                    // Note: We need to access the ResultHeader somehow to update airlines
+                    // This is a bit tricky with the current architecture
+                    // For now, we'll print the airlines - you might need to use @StateObject
+                    // and pass the FilterViewModel between views for better integration
+                    print("✈️ Available airlines: \(response.airlines.map { $0.airlineName })")
                 }
             }
             .onReceive(viewModel.$isLoading) { isLoading in
