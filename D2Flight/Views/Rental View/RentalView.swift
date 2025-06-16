@@ -213,10 +213,14 @@ struct RentalView: View {
                 updateDateTimeLabels()
             }
         }
+        // In RentalView.swift, update the fullScreenCover call:
+
         .fullScreenCover(isPresented: $navigateToLocationSelection) {
             LocationSelectionView(
                 originLocation: $pickUpLocation,
-                destinationLocation: $dropOffLocation
+                destinationLocation: $dropOffLocation,
+                isFromRental: true,
+                isSameDropOff: isSameDropOff
             ) { selectedLocation, isOrigin, iataCode in
                 if isOrigin {
                     pickUpLocation = selectedLocation
@@ -263,13 +267,16 @@ struct RentalView: View {
                     .contentShape(Rectangle())
                     .frame(maxWidth: .infinity)
                     
-                    // Divider and Drop-off location (conditionally visible)
+                    // Drop-off location section (only for different drop-off)
                     if !isSameDropOff {
                         Divider()
                             .background(Color.gray.opacity(0.5))
                             .padding(.leading)
                             .padding(.trailing, 70)
-                            .transition(.opacity.combined(with: .scale))
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .top)),
+                                removal: .opacity.combined(with: .move(edge: .top))
+                            ))
                         
                         HStack {
                             Image("DestinationIcon")
@@ -285,7 +292,10 @@ struct RentalView: View {
                         .padding(.horizontal)
                         .contentShape(Rectangle())
                         .frame(maxWidth: .infinity)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .bottom)),
+                            removal: .opacity.combined(with: .move(edge: .bottom))
+                        ))
                     }
                 }
             }
@@ -315,12 +325,15 @@ struct RentalView: View {
                 }
                 .offset(x: 148)
                 .shadow(color: .purple.opacity(0.3), radius: 5)
-                .transition(.opacity.combined(with: .scale))
+                .transition(.asymmetric(
+                    insertion: .opacity.combined(with: .scale(scale: 0.8)),
+                    removal: .opacity.combined(with: .scale(scale: 0.8))
+                ))
+                .animation(.spring(response: 0.5, dampingFraction: 0.8), value: !isSameDropOff)
             }
         }
     }
     
-    // MARK: - Date Time View
     // MARK: - Date Time View
     private func dateTimeView(icon: String, title: String, pickUp: Date, dropOff: Date) -> some View {
         let isSameDay = Calendar.current.isDate(pickUp, inSameDayAs: dropOff)
@@ -435,25 +448,29 @@ struct RentalView: View {
     
     private func prefillRecentLocationsIfNeeded() {
         guard !hasPrefilled,
-              pickUpLocation.isEmpty,
-              dropOffLocation.isEmpty else {
+              pickUpLocation.isEmpty else {
             return
         }
         
         let lastLocations = recentLocationsManager.getLastSearchLocations()
         
+        // Always prefill pick-up location if available
         if let origin = lastLocations.origin {
             pickUpLocation = origin.displayName
             pickUpIATACode = origin.iataCode
+            print("🔄 Auto-prefilled pick-up: \(origin.displayName) (\(origin.iataCode))")
         }
         
-        if let destination = lastLocations.destination {
+        // Only prefill drop-off if we're in "different drop-off" mode
+        if !isSameDropOff, let destination = lastLocations.destination {
             dropOffLocation = destination.displayName
             dropOffIATACode = destination.iataCode
+            print("🔄 Auto-prefilled drop-off: \(destination.displayName) (\(destination.iataCode))")
         }
         
-        if lastLocations.origin != nil || lastLocations.destination != nil {
+        if lastLocations.origin != nil {
             hasPrefilled = true
+            print("✅ Rental auto-prefill completed")
         }
     }
     
@@ -470,25 +487,38 @@ struct RentalView: View {
             coordinates: Coordinates(latitude: "0", longitude: "0")
         )
         
-        let dropOffLocationObj = Location(
-            iataCode: dropOffIATACode,
-            airportName: dropOffLocation,
-            type: "airport",
-            displayName: dropOffLocation,
-            cityName: dropOffLocation,
-            countryName: "",
-            countryCode: "",
-            imageUrl: "",
-            coordinates: Coordinates(latitude: "0", longitude: "0")
-        )
+        // For same drop-off, use the same location for both pick-up and drop-off
+        let dropOffLocationObj: Location
+        if isSameDropOff {
+            dropOffLocationObj = pickUpLocationObj // Use same location
+        } else {
+            dropOffLocationObj = Location(
+                iataCode: dropOffIATACode,
+                airportName: dropOffLocation,
+                type: "airport",
+                displayName: dropOffLocation,
+                cityName: dropOffLocation,
+                countryName: "",
+                countryCode: "",
+                imageUrl: "",
+                coordinates: Coordinates(latitude: "0", longitude: "0")
+            )
+        }
         
         recentLocationsManager.addSearchPair(origin: pickUpLocationObj, destination: dropOffLocationObj)
+        
+        if isSameDropOff {
+            print("💾 Saved search pair (same location): \(pickUpLocation)")
+        } else {
+            print("💾 Saved search pair: \(pickUpLocation) → \(dropOffLocation)")
+        }
     }
     
     // MARK: - Search Handler
     private func handleSearchRentals() {
         print("🚗 Search Rentals button tapped!")
         
+        // Check internet connection first
         if !networkMonitor.isConnected {
             withAnimation(.easeInOut(duration: 0.3)) {
                 showNoInternet = true
@@ -497,7 +527,9 @@ struct RentalView: View {
             return
         }
         
+        // Validate pick-up location (always required)
         guard !pickUpIATACode.isEmpty else {
+            print("⚠️ Missing pick-up location")
             withAnimation(.easeInOut(duration: 0.3)) {
                 showEmptySearch = true
                 showNoInternet = false
@@ -505,7 +537,9 @@ struct RentalView: View {
             return
         }
         
+        // Validate drop-off location (only required for different drop-off)
         if !isSameDropOff && dropOffIATACode.isEmpty {
+            print("⚠️ Missing drop-off location for different drop-off option")
             withAnimation(.easeInOut(duration: 0.3)) {
                 showEmptySearch = true
                 showNoInternet = false
@@ -513,11 +547,12 @@ struct RentalView: View {
             return
         }
         
+        // Save search pair
         saveCurrentSearchPair()
         
         // Update ViewModel properties
         rentalSearchVM.pickUpIATACode = pickUpIATACode
-        rentalSearchVM.dropOffIATACode = dropOffIATACode
+        rentalSearchVM.dropOffIATACode = isSameDropOff ? "" : dropOffIATACode // Clear drop-off code for same location
         rentalSearchVM.isSameDropOff = isSameDropOff
         
         if selectedDates.count > 0 {
@@ -531,6 +566,13 @@ struct RentalView: View {
         }
         if selectedTimes.count > 1 {
             rentalSearchVM.dropOffTime = selectedTimes[1]
+        }
+        
+        print("🎯 Rental search parameters:")
+        print("   Same Drop-off: \(isSameDropOff)")
+        print("   Pick-up: \(pickUpLocation) (\(pickUpIATACode))")
+        if !isSameDropOff {
+            print("   Drop-off: \(dropOffLocation) (\(dropOffIATACode))")
         }
         
         rentalSearchVM.searchRentals()
@@ -554,4 +596,5 @@ struct RentalWebView: UIViewControllerRepresentable {
 
 #Preview {
     RentalView()
+    
 }

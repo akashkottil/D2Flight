@@ -123,12 +123,26 @@ class LocationViewModel: ObservableObject {
         errorMessage = nil
     }
     
-    func getCurrentPlaceholder() -> String {
-        return isSelectingOrigin ? "Enter Departure" : "Enter Destination"
+    // Add these methods to LocationViewModel.swift:
+
+    func getCurrentTitle(isFromRental: Bool = false, isSameDropOff: Bool = true) -> String {
+        if isFromRental {
+            if isSameDropOff {
+                return "Select pick-up location"
+            } else {
+                return isSelectingOrigin ? "Select pick-up location" : "Select drop-off location"
+            }
+        } else {
+            return isSelectingOrigin ? "Select departure location" : "Select destination location"
+        }
     }
-    
-    func getCurrentTitle() -> String {
-        return isSelectingOrigin ? "Select departure location" : "Select destination location"
+
+    func getCurrentPlaceholder(isFromRental: Bool = false) -> String {
+        if isFromRental {
+            return isSelectingOrigin ? "Enter Pick-up Location" : "Enter Drop-off Location"
+        } else {
+            return isSelectingOrigin ? "Enter Departure" : "Enter Destination"
+        }
     }
     
     // NEW: Get section title for UI
