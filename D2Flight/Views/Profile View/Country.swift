@@ -1,17 +1,17 @@
 import SwiftUI
 
-struct Currency: View {
+struct Country: View {
     @Environment(\.presentationMode) var presentationMode
-    @StateObject private var currencyManager = CurrencyManager.shared
-    @State private var selectedCurrency: CurrencyInfo?
+    @StateObject private var countryManager = CountryManager.shared
+    @State private var selectedCountry: CountryInfo?
     @State private var searchText: String = ""
     
-    // Filtered currencies based on search
-    private var filteredCurrencies: [CurrencyInfo] {
+    // Filtered countries based on search
+    private var filteredCountries: [CountryInfo] {
         if searchText.isEmpty {
-            return currencyManager.currencies
+            return countryManager.countries
         } else {
-            return currencyManager.searchCurrencies(query: searchText)
+            return countryManager.searchCountries(query: searchText)
         }
     }
     
@@ -30,13 +30,13 @@ struct Currency: View {
                     
                     Spacer()
                     
-                    Text("Select currency")
+                    Text("Select country")
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.trailing, 44) // To balance the left button spacing
                     Spacer()
                     
-                   
+                    
                 }
                 .padding(.vertical)
                 
@@ -47,7 +47,7 @@ struct Currency: View {
                     Image("search")
                         .frame(width: 14,height: 14)
                     
-                    TextField("Search currency", text: $searchText)
+                    TextField("Search country", text: $searchText)
                         .font(.system(size: 16))
                         .foregroundColor(.primary)
                     
@@ -70,25 +70,25 @@ struct Currency: View {
                 .padding(.top)
                 
                 // Content Area
-                if currencyManager.isLoading {
+                if countryManager.isLoading {
                     // Loading State
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.2)
-                        Text("Loading currencies...")
+                        Text("Loading countries...")
                             .font(.system(size: 14))
                             .foregroundColor(.gray)
                     }
                     .frame(maxHeight: .infinity)
                     
-                } else if let errorMessage = currencyManager.errorMessage {
+                } else if let errorMessage = countryManager.errorMessage {
                     // Error State
                     VStack(spacing: 16) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 40))
                             .foregroundColor(.gray)
                         
-                        Text("Error loading currencies")
+                        Text("Error loading countries")
                             .font(.system(size: 16, weight: .semibold))
                         
                         Text(errorMessage)
@@ -97,21 +97,21 @@ struct Currency: View {
                             .multilineTextAlignment(.center)
                         
                         Button("Retry") {
-                            currencyManager.loadCurrencies()
+                            countryManager.loadCountries()
                         }
                         .foregroundColor(.blue)
                     }
                     .frame(maxHeight: .infinity)
                     .padding()
                     
-                } else if filteredCurrencies.isEmpty {
+                } else if filteredCountries.isEmpty {
                     // Empty State
                     VStack(spacing: 16) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 40))
                             .foregroundColor(.gray)
                         
-                        Text("No currencies found")
+                        Text("No countries found")
                             .font(.system(size: 16, weight: .semibold))
                         
                         Text("Try searching with a different keyword")
@@ -123,14 +123,14 @@ struct Currency: View {
                     .padding()
                     
                 } else {
-                    // Currency List
+                    // Country List (same design as Currency.swift)
                     ScrollView {
                         VStack(spacing: 16) {
-                            ForEach(filteredCurrencies) { currency in
+                            ForEach(filteredCountries) { country in
                                 HStack(spacing: 20) {
-                                    // Selection Radio Button (using same design as original)
+                                    // Selection Radio Button (same as Currency)
                                     ZStack {
-                                        if selectedCurrency?.code == currency.code {
+                                        if selectedCountry?.countryCode == country.countryCode {
                                             Circle()
                                                 .stroke(Color("Violet"), lineWidth: 6)
                                                 .frame(width: 20, height: 20)
@@ -145,13 +145,13 @@ struct Currency: View {
                                         }
                                     }
                                     
-                                    Text(currency.displayName)
+                                    Text(country.countryName)
                                         .foregroundColor(.primary)
                                         .font(.system(size: 16))
                                     
                                     Spacer()
                                     
-                                    Text(currency.code)
+                                    Text(country.countryCode.uppercased())
                                         .font(.system(size: 16))
                                         .foregroundColor(.red)
                                         .fontWeight(.semibold)
@@ -159,8 +159,8 @@ struct Currency: View {
                                 .padding()
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    selectedCurrency = currency
-                                    print("💰 Selected currency: \(currency.displayName) (\(currency.code))")
+                                    selectedCountry = country
+                                    print("🌍 Selected country: \(country.countryName) (\(country.countryCode))")
                                 }
                             }
                         }
@@ -172,10 +172,10 @@ struct Currency: View {
             .navigationBarHidden(true)
         }
         .onAppear {
-            // Set default selection to USD if available
-            if selectedCurrency == nil {
+            // Set default selection to United States if available
+            if selectedCountry == nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    selectedCurrency = currencyManager.currencies.first { $0.code == "USD" }
+                    selectedCountry = countryManager.countries.first { $0.countryCode.lowercased() == "us" }
                 }
             }
         }
@@ -183,5 +183,5 @@ struct Currency: View {
 }
 
 #Preview {
-    Currency()
+    Country()
 }

@@ -17,7 +17,7 @@ struct ProfileLists: View {
     
     // Top Section Items
     let topItems: [ProfileItem] = [
-        ProfileItem(icon: "RegionIcon", title: "Region", trailing: "India", destination: AnyView(DemoScreen()), showsArrow: true),
+        ProfileItem(icon: "RegionIcon", title: "Region", trailing: "India", destination: AnyView(Country()), showsArrow: true),
         ProfileItem(icon: "CurrencyIcon", title: "Currency", trailing: "India", destination: AnyView(Currency()), showsArrow: true)
     ]
     
