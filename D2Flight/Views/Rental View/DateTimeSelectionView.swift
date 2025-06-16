@@ -7,6 +7,13 @@ struct DateTimeSelectionView: View {
     let isSameDropOff: Bool
     var onDatesSelected: ([Date], [Date]) -> Void
     
+    @State private var showTimePicker = false
+    @State private var activeTimeSelection: TimeSelectionType?
+    
+    enum TimeSelectionType {
+        case pickup, dropoff
+    }
+    
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd, MMM"
@@ -18,6 +25,48 @@ struct DateTimeSelectionView: View {
         formatter.dateFormat = "HH:mm"
         return formatter
     }()
+    
+    // Generate all 24 hours
+    private var allTimeOptions: [String] {
+        var times: [String] = []
+        for hour in 0..<24 {
+            times.append(String(format: "%02d:00", hour))
+        }
+        return times
+    }
+    
+    // Filter times based on current time if date is today
+    private var availableTimeOptions: [String] {
+        guard let activeSelection = activeTimeSelection else { return allTimeOptions }
+        
+        let selectedDate: Date?
+        switch activeSelection {
+        case .pickup:
+            selectedDate = selectedDates.first
+        case .dropoff:
+            if selectedDates.count > 1 {
+                selectedDate = selectedDates.last
+            } else if isSameDropOff, let firstDate = selectedDates.first {
+                selectedDate = Calendar.current.date(byAdding: .day, value: 2, to: firstDate)
+            } else {
+                selectedDate = nil
+            }
+        }
+        
+        guard let date = selectedDate else { return allTimeOptions }
+        
+        // Check if selected date is today
+        let calendar = Calendar.current
+        if calendar.isDate(date, inSameDayAs: Date()) {
+            let currentHour = calendar.component(.hour, from: Date())
+            return allTimeOptions.filter { timeString in
+                let hour = Int(timeString.prefix(2)) ?? 0
+                return hour > currentHour
+            }
+        }
+        
+        return allTimeOptions
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -71,17 +120,23 @@ struct DateTimeSelectionView: View {
                     
                     VStack(spacing: 16) {
                         // Date and Time selection cards
-                        VStack(spacing: 12) {
+                        HStack(spacing: 12) {
                             // Pick-up Date and Time
                             DateTimeCard(
                                 title: "Pick-up",
                                 dateText: formatPickUpDate(),
                                 timeText: formatPickUpTime(),
                                 isSelected: !selectedDates.isEmpty,
-                                onTimeChange: { newTime in
-                                    updatePickUpTime(newTime)
+                                onTimeTap: {
+                                    activeTimeSelection = .pickup
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        showTimePicker = true
+                                    }
                                 }
                             )
+                            
+                            Image("RoundedArrow")
+                                .frame(width: 16, height: 16)
                             
                             // Drop-off Date and Time (always shown, but location may be same)
                             DateTimeCard(
@@ -89,12 +144,36 @@ struct DateTimeSelectionView: View {
                                 dateText: formatDropOffDate(),
                                 timeText: formatDropOffTime(),
                                 isSelected: selectedDates.count > 1 || isSameDropOff,
-                                onTimeChange: { newTime in
-                                    updateDropOffTime(newTime)
+                                onTimeTap: {
+                                    activeTimeSelection = .dropoff
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        showTimePicker = true
+                                    }
                                 }
                             )
                         }
                         .padding()
+                        
+                        // Time Picker Section
+                        if showTimePicker {
+                            TimePickerSection(
+                                title: activeTimeSelection == .pickup ? "Select Pick-up Time" : "Select Drop-off Time",
+                                timeOptions: availableTimeOptions,
+                                selectedTime: getCurrentSelectedTime(),
+                                onTimeSelected: { timeString in
+                                    selectTime(timeString)
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        showTimePicker = false
+                                        activeTimeSelection = nil
+                                    }
+                                }
+                            )
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .top)),
+                                removal: .opacity.combined(with: .move(edge: .top))
+                            ))
+                            .animation(.easeInOut(duration: 0.3), value: showTimePicker)
+                        }
                         
                         // Apply button
                         PrimaryButton(
@@ -139,6 +218,32 @@ struct DateTimeSelectionView: View {
             // Ensure we have both times
             let dropOffTime = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: Date()) ?? Date()
             selectedTimes.append(dropOffTime)
+        }
+    }
+    
+    private func getCurrentSelectedTime() -> String {
+        guard let activeSelection = activeTimeSelection else { return "09:00" }
+        
+        switch activeSelection {
+        case .pickup:
+            return formatPickUpTime()
+        case .dropoff:
+            return formatDropOffTime()
+        }
+    }
+    
+    private func selectTime(_ timeString: String) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        guard let time = formatter.date(from: timeString) else { return }
+        
+        guard let activeSelection = activeTimeSelection else { return }
+        
+        switch activeSelection {
+        case .pickup:
+            updatePickUpTime(time)
+        case .dropoff:
+            updateDropOffTime(time)
         }
     }
     
@@ -196,49 +301,46 @@ struct DateTimeCard: View {
     let dateText: String
     let timeText: String
     let isSelected: Bool
-    let onTimeChange: (Date) -> Void
+    let onTimeTap: () -> Void
     
-    @State private var showTimePicker = false
-    @State private var selectedTime = Date()
+    private var ampmText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        
+        if let time = formatter.date(from: timeText) {
+            let hour = Calendar.current.component(.hour, from: time)
+            return hour < 12 ? "am" : "pm"
+        }
+        return "pm"
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.gray)
-            
-            HStack {
+            VStack(alignment: .center) {
                 // Date Section
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Date")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.gray)
                     Text(dateText)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(isSelected ? Color("Violet") : Color("Violet"))
                 }
                 
-                Spacer()
-                
                 // Time Section
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Time")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.gray)
-                    
-                    Button(action: {
-                        showTimePicker = true
-                    }) {
-                        Text(timeText)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(isSelected ? Color("Violet") : Color("Violet"))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color("Violet"), lineWidth: 1)
-                                    .background(Color("Violet").opacity(0.1))
-                            )
+                    Button(action: onTimeTap) {
+                        HStack {
+                            Text(timeText)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(isSelected ? Color("Violet") : Color("Violet"))
+                                .padding(.vertical, 8)
+                            
+                            Text(ampmText)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Color("Violet"))
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Color("Violet"))
+                        }
                     }
                 }
             }
@@ -252,22 +354,104 @@ struct DateTimeCard: View {
                 .stroke(isSelected ? Color("Violet") : Color.gray.opacity(0.3), lineWidth: 2)
         )
         .cornerRadius(16)
-        .sheet(isPresented: $showTimePicker) {
-            TimePickerSheet(
-                selectedTime: $selectedTime,
-                onTimeSelected: { time in
-                    onTimeChange(time)
+    }
+}
+
+struct TimePickerSection: View {
+    let title: String
+    let timeOptions: [String]
+    let selectedTime: String
+    let onTimeSelected: (String) -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Title
+            HStack {
+                Text(title)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.primary)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+            
+            // Time Options
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(timeOptions, id: \.self) { time in
+                        TimeOptionRow(
+                            timeText: time,
+                            isSelected: selectedTime == time,
+                            onTap: {
+                                onTimeSelected(time)
+                            }
+                        )
+                    }
                 }
+            }
+            .frame(maxHeight: 250)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .cornerRadius(12)
+            .padding(.horizontal, 20)
+        }
+        .padding(.bottom, 16)
+    }
+}
+
+struct TimeOptionRow: View {
+    let timeText: String
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    private var displayTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        
+        if let time = formatter.date(from: timeText) {
+            let displayFormatter = DateFormatter()
+            displayFormatter.dateFormat = "h:mm"
+            return displayFormatter.string(from: time)
+        }
+        return timeText
+    }
+    
+    private var ampmText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        
+        if let time = formatter.date(from: timeText) {
+            let hour = Calendar.current.component(.hour, from: time)
+            return hour < 12 ? "AM" : "PM"
+        }
+        return "PM"
+    }
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack {
+                Text("\(displayTime) \(ampmText)")
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? Color("Violet") : .primary)
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(Color("Violet"))
+                }
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(
+                isSelected ? Color("Violet").opacity(0.1) : Color.clear
             )
         }
-        .onAppear {
-            // Initialize selectedTime from timeText
-            let formatter = DateFormatter()
-            formatter.dateFormat = "HH:mm"
-            if let time = formatter.date(from: timeText) {
-                selectedTime = time
-            }
-        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -276,41 +460,126 @@ struct TimePickerSheet: View {
     @Binding var selectedTime: Date
     let onTimeSelected: (Date) -> Void
     
+    @State private var showTimePicker = true
+    
+    private let hourFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter
+    }()
+    
     var body: some View {
-        NavigationView {
-            VStack {
-                DatePicker(
-                    "Select Time",
-                    selection: $selectedTime,
-                    displayedComponents: .hourAndMinute
-                )
-                .datePickerStyle(WheelDatePickerStyle())
-                .labelsHidden()
-                .padding()
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(Color("Violet"))
                 
                 Spacer()
                 
-                PrimaryButton(
-                    title: "Done",
-                    font: .system(size: 16),
-                    fontWeight: .semibold,
-                    textColor: .white,
-                    verticalPadding: 16,
-                    horizontalPadding: 24,
-                    cornerRadius: 12
-                ) {
+                Text("Select Time")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                Button("Done") {
                     onTimeSelected(selectedTime)
                     presentationMode.wrappedValue.dismiss()
                 }
-                .padding()
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(Color("Violet"))
             }
-            .navigationTitle("Select Time")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                trailing: Button("Cancel") {
-                    presentationMode.wrappedValue.dismiss()
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(Color.white)
+            
+            Divider()
+                .background(Color.gray.opacity(0.3))
+            
+            VStack(spacing: 20) {
+                // Time Display Card
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Selected Time")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.gray)
+                    
+                    // Time Selector Button
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showTimePicker.toggle()
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Text(hourFormatter.string(from: selectedTime))
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(Color("Violet"))
+                            
+                            Image(systemName: "chevron.down")
+                                .rotationEffect(.degrees(showTimePicker ? 180 : 0))
+                                .foregroundColor(Color("Violet"))
+                                .font(.system(size: 14, weight: .medium))
+                                .animation(.easeInOut(duration: 0.3), value: showTimePicker)
+                        }
+                        .padding(.vertical, 8)
+                    }
                 }
-            )
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 20)
+                .background(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color("Violet"), lineWidth: 2)
+                )
+                .cornerRadius(16)
+                .padding(.horizontal, 20)
+                
+                // Time Picker
+                if showTimePicker {
+                    VStack(spacing: 0) {
+                        DatePicker(
+                            "",
+                            selection: $selectedTime,
+                            in: availableTimeRange(),
+                            displayedComponents: .hourAndMinute
+                        )
+                        .datePickerStyle(WheelDatePickerStyle())
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 20)
+                    }
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
+                    .animation(.easeInOut(duration: 0.3), value: showTimePicker)
+                }
+                
+                Spacer()
+            }
+            .padding(.top, 20)
+        }
+        .background(Color(.systemGroupedBackground))
+        .ignoresSafeArea(.container, edges: .bottom)
+    }
+    
+    // 🔒 Disables past times if today is selected
+    private func availableTimeRange() -> ClosedRange<Date> {
+        let now = Date()
+        let calendar = Calendar.current
+        let selectedDay = calendar.startOfDay(for: selectedTime)
+        let today = calendar.startOfDay(for: now)
+        
+        if selectedDay == today {
+            return now...calendar.date(bySettingHour: 23, minute: 59, second: 59, of: now)!
+        } else {
+            let start = calendar.date(bySettingHour: 0, minute: 0, second: 0, of: selectedTime)!
+            let end = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: selectedTime)!
+            return start...end
         }
     }
 }
