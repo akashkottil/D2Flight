@@ -39,7 +39,7 @@ struct DateSelectionView: View {
             
             // Weekday Headers
             HStack(spacing: 8) { // Add spacing between each day
-                ForEach(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"], id: \.self) { day in
+                ForEach(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"], id: \.self) { day in
                     Text(day)
                         .font(CustomFont.font(.regular, weight: .medium))
                         .foregroundColor(.gray)
@@ -119,6 +119,7 @@ struct DateSelectionView: View {
                 }
             }
         }
+        .padding(.vertical,10)
         .navigationBarTitle("")
         .navigationBarHidden(true)
         .background(Color.white)
