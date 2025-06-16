@@ -16,7 +16,7 @@ struct NotificationSheet: View {
                 .padding(.horizontal)
 
             Text("Allow push notifications so that we can ensure you don’t miss out on the best deals.")
-                .font(.system(size: 14))
+                .font(CustomFont.font(.regular))
                 .fontWeight(.light)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.gray)
@@ -25,7 +25,7 @@ struct NotificationSheet: View {
             HStack(spacing: 12) {
                 SecondaryButton(
                     title: "Clear",
-                    font: .system(size: 12),
+                    font: CustomFont.font(.small),
                     fontWeight: .semibold,
                     textColor: .gray,
                     width: .infinity,
@@ -39,7 +39,7 @@ struct NotificationSheet: View {
 
                 PrimaryButton(
                     title: "Allow",
-                    font: .system(size: 12),
+                    font: CustomFont.font(.small),
                     fontWeight: .semibold,
                     textColor: .white,
                     width: .infinity,

@@ -17,7 +17,7 @@ struct PassengerSheet: View {
             // Header
             HStack {
                 Text("Traveler and Class")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
                 
@@ -25,7 +25,7 @@ struct PassengerSheet: View {
                     isPresented = false
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(CustomFont.font(.large, weight: .medium))
                         .foregroundColor(.black)
                 }
             }
@@ -42,7 +42,7 @@ struct PassengerSheet: View {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Text("Select Class")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(CustomFont.font(.regular, weight: .semibold))
                                 .foregroundColor(.gray)
                             Spacer()
                         }
@@ -59,7 +59,7 @@ struct PassengerSheet: View {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Text("Select Travellers")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(CustomFont.font(.regular, weight: .semibold))
                                 .foregroundColor(.gray)
                             Spacer()
                         }
@@ -93,7 +93,7 @@ struct PassengerSheet: View {
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
                                 Text("Select Children Age")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(CustomFont.font(.regular, weight: .semibold))
                                     .foregroundColor(.gray)
                                 Spacer()
                             }
@@ -115,7 +115,7 @@ struct PassengerSheet: View {
             
             // Apply Button
             VStack{
-                PrimaryButton(title: "Apply", font: .system(size: 18), fontWeight: .semibold, textColor: .white, width: 543, height: 56, horizontalPadding: 24, cornerRadius: 16, action: {
+                PrimaryButton(title: "Apply", font: CustomFont.font(.large), fontWeight: .semibold, textColor: .white, width: 543, height: 56, horizontalPadding: 24, cornerRadius: 16, action: {
                     let totalTravelers = adults + children + infants
                     let travelersText = "\(totalTravelers) Traveller\(totalTravelers > 1 ? "s" : ""), \(selectedClass.displayName)"
                     onDone(travelersText)
@@ -136,7 +136,7 @@ struct PassengerSheet: View {
         }) {
             HStack {
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(CustomFont.font(.medium, weight: .semibold))
                     .foregroundColor(.black)
                 
                 Spacer()
@@ -170,11 +170,11 @@ struct PassengerSheet: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(CustomFont.font(.regular, weight: .semibold))
                     .foregroundColor(.black)
                 
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(CustomFont.font(.small))
                     .foregroundColor(.gray)
                     .fontWeight(.medium)
             }
@@ -188,7 +188,7 @@ struct PassengerSheet: View {
                     }
                 }) {
                     Image(systemName: "minus")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(CustomFont.font(.medium, weight: .medium))
                         .foregroundColor(.white)
                         .frame(width: 32, height: 32)
                         .background(
@@ -199,7 +199,7 @@ struct PassengerSheet: View {
                 .disabled(count.wrappedValue <= minCount)
                 
                 Text("\(count.wrappedValue)")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(CustomFont.font(.large, weight: .semibold))
                     .foregroundColor(.black)
                     .frame(minWidth: 20)
                 
@@ -209,7 +209,7 @@ struct PassengerSheet: View {
                     }
                 }) {
                     Image(systemName: "plus")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(CustomFont.font(.medium, weight: .medium))
                         .foregroundColor(.white)
                         .frame(width: 32, height: 32)
                         .background(
@@ -225,7 +225,7 @@ struct PassengerSheet: View {
     private func childAgeRow(childNumber: Int, age: Binding<Int>) -> some View {
         HStack {
             Text("Children \(childNumber)")
-                .font(.system(size: 14, weight: .semibold))
+                .font(CustomFont.font(.regular, weight: .semibold))
                 .foregroundColor(.black)
             
             Spacer()
@@ -239,11 +239,11 @@ struct PassengerSheet: View {
             } label: {
                 HStack {
                     Text("\(age.wrappedValue) years")
-                        .font(.system(size: 16))
+                        .font(CustomFont.font(.medium))
                         .foregroundColor(.black)
                     
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .foregroundColor(.gray)
                 }
                 

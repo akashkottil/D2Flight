@@ -23,11 +23,11 @@ struct ResultCard: View {
                 
                 VStack(alignment: .trailing) {
                     Text(flight.formattedPrice)
-                        .font(.system(size: 16))
+                        .font(CustomFont.font(.medium))
                         .fontWeight(.bold)
                         .foregroundColor(Color("PriceGreen"))
                     Text("per Adult")
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .fontWeight(.light)
                 }
             }
@@ -45,7 +45,7 @@ struct ResultCard: View {
                     .frame(width: 21, height: 21)
                     
                     Text(firstSegment.airlineName)
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .foregroundColor(.black.opacity(0.8))
                         .fontWeight(.light)
                 } else {
@@ -53,7 +53,7 @@ struct ResultCard: View {
                         .resizable()
                         .frame(width: 21, height: 21)
                     Text("Unknown Airline")
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .foregroundColor(.black.opacity(0.8))
                         .fontWeight(.light)
                 }
@@ -113,11 +113,11 @@ struct LocationTimeColumn: View {
     var body: some View {
         VStack(alignment: .leading) {
             Text(time)
-                .font(.system(size: 14))
+                .font(CustomFont.font(.regular))
                 .fontWeight(.bold)
                 .foregroundColor(.black)
             Text(code)
-                .font(.system(size: 12))
+                .font(CustomFont.font(.small))
                 .fontWeight(.medium)
                 .foregroundColor(.gray)
         }

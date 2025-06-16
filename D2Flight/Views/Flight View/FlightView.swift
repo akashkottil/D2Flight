@@ -64,7 +64,7 @@ struct FlightView: View {
                             Image("HomeLogo")
                                 .frame(width: 32, height: 32)
                             Text("Last Minute Flights")
-                                .font(.system(size: 18, weight: .bold))
+                                .font(CustomFont.font(.large, weight: .bold))
                                 .foregroundColor(Color.white)
                         }
                         .padding(.vertical, 10)
@@ -78,7 +78,7 @@ struct FlightView: View {
                             }) {
                                 Text("One Way")
                                     .foregroundColor(isOneWay ? .white : .gray)
-                                    .font(.system(size: 14))
+                                    .font(CustomFont.font(.small))
                                     .fontWeight(.semibold)
                                     .frame(width: 87, height: 31)
                                     .background(
@@ -101,7 +101,7 @@ struct FlightView: View {
                             }) {
                                 Text("Round Trip")
                                     .foregroundColor(!isOneWay ? .white : .gray)
-                                    .font(.system(size: 12))
+                                    .font(CustomFont.font(.small))
                                     .fontWeight(.semibold)
                                     .frame(width: 87, height: 31)
                                     .background(
@@ -173,7 +173,7 @@ struct FlightView: View {
                                 Text(travelersCount)
                                     .foregroundColor(.gray)
                                     .fontWeight(.medium)
-                                    .font(.system(size: 14))
+                                    .font(CustomFont.font(.regular))
                                 Spacer()
                             }
                             .padding()
@@ -183,7 +183,7 @@ struct FlightView: View {
                         
                         // Updated Search Flights Button with validation
                         PrimaryButton(title: "Search Flights",
-                                      font: .system(size: 16),
+                                      font: CustomFont.font(.medium),
                                       fontWeight: .bold,
                                       textColor: .white,
                                       verticalPadding: 20,
@@ -502,7 +502,7 @@ struct FlightView: View {
                         Text(originLocation.isEmpty ? "Enter Departure" : originLocation)
                             .foregroundColor(originLocation.isEmpty ? .gray : .black)
                             .fontWeight(originLocation.isEmpty ? .medium : .bold)
-                            .font(.system(size: 16))
+                            .font(CustomFont.font(.regular))
                             .lineLimit(1)
                         Spacer()
                     }
@@ -521,7 +521,7 @@ struct FlightView: View {
                         Text(destinationLocation.isEmpty ? "Enter Destination" : destinationLocation)
                             .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
                             .fontWeight(destinationLocation.isEmpty ? .medium : .bold)
-                            .font(.system(size: 14))
+                            .font(CustomFont.font(.regular))
                             .lineLimit(1)
                         Spacer()
                     }
@@ -570,7 +570,7 @@ struct FlightView: View {
                 Text(label)
                     .foregroundColor(.gray)
                     .fontWeight(.medium)
-                    .font(.system(size: 14))
+                    .font(CustomFont.font(.regular))
                 Spacer()
             }
             .padding()

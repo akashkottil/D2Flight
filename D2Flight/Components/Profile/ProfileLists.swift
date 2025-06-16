@@ -107,11 +107,11 @@ struct ProfileListItem: View {
                 .resizable()
                 .frame(width: 29, height: 29)
             Text(title)
-                .font(.system(size: 16))
+                .font(CustomFont.font(.medium))
             Spacer()
             if let trailingText = trailing {
                 Text(trailingText)
-                    .font(.system(size: 16))
+                    .font(CustomFont.font(.medium))
                     .fontWeight(.bold)
                     .foregroundColor(.black.opacity(0.5))
             }

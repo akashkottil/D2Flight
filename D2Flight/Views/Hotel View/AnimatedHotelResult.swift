@@ -1,21 +1,20 @@
 import SwiftUI
 
-struct AnimatedResultLoader: View {
-    @State private var animateClouds = false
-    @State private var animatePlane = false
-    @State private var flyAway = false
+struct AnimatedHotelResult: View {
+    @State private var animateCar = false
+    @State private var carMoveAway = false
     @State private var currentTextIndex = 0
     @Binding var isVisible: Bool
     
     let messages = [
-        "Searching for best price for your journey",
-        "Scanning hundreds of airlines",
+        "Finding the best route for your journey",
+        "Checking road conditions",
         "Finalizing your best deals"
     ]
     
     var body: some View {
         ZStack {
-            // Full-screen background
+            // Full-screen background (Gradient Color)
             GradientColor.Primary
                 .ignoresSafeArea(.all) // Ignore all safe areas for true full-screen
             
@@ -23,44 +22,44 @@ struct AnimatedResultLoader: View {
                 Spacer()
                 
                 ZStack {
-                    // Background clouds with better positioning
+                    // Background scene with trees and buildings
                     VStack(spacing: 60) {
                         HStack(spacing: 120) {
-                            CloudView(offsetX: animateClouds ? -280 : 280, delay: 0, size: 60)
-                            CloudView(offsetX: animateClouds ? 300 : -300, delay: 1.5, size: 45)
+                            TreeView(offsetX: animateCar ? -280 : 280, delay: 0, size: 60)
+                            BuildingView(offsetX: animateCar ? 300 : -300, delay: 1.5, size: 100)
                         }
                         
                         HStack(spacing: 100) {
-                            CloudView(offsetX: animateClouds ? 250 : -250, delay: 2.5, size: 55)
-                            CloudView(offsetX: animateClouds ? -320 : 320, delay: 0.8, size: 40)
+                            TreeView(offsetX: animateCar ? 250 : -250, delay: 2.5, size: 70)
+                            BuildingView(offsetX: animateCar ? -320 : 320, delay: 0.8, size: 120)
                         }
                         
                         HStack(spacing: 140) {
-                            CloudView(offsetX: animateClouds ? -270 : 270, delay: 1.2, size: 50)
-                            CloudView(offsetX: animateClouds ? 290 : -290, delay: 3, size: 35)
+                            TreeView(offsetX: animateCar ? -270 : 270, delay: 1.2, size: 65)
+                            BuildingView(offsetX: animateCar ? 290 : -290, delay: 3, size: 110)
                         }
                     }
                     .opacity(0.6)
                     
-                    // Main plane animation
-                    Image("AnimatedFlyFlight")
+                    // Main car animation
+                    Image("CarImage") // Replace with your car image
                         .resizable()
                         .scaledToFit()
                         .frame(width: 160, height: 160)
                         .foregroundColor(.white)
                         .offset(
-                            x: flyAway ? 600 : 0,
-                            y: animatePlane ? -10 : 10
+                            x: carMoveAway ? 600 : 0,
+                            y: animateCar ? -10 : 10
                         )
                         .animation(
-                            flyAway ?
+                            carMoveAway ?
                                 .easeIn(duration: 1) :
                                 .easeInOut(duration: 1.5).repeatForever(autoreverses: true),
-                            value: flyAway
+                            value: carMoveAway
                         )
                         .animation(
                             .easeInOut(duration: 1.5).repeatForever(autoreverses: true),
-                            value: animatePlane
+                            value: animateCar
                         )
                 }
                 .frame(height: 300)
@@ -93,15 +92,15 @@ struct AnimatedResultLoader: View {
     }
     
     private func startAnimations() {
-        // Start plane floating animation
+        // Start car moving animation
         withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-            animatePlane = true
+            animateCar = true
         }
         
-        // Start cloud animations with slight delay
+        // Start background objects (trees/buildings) animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
-                animateClouds = true
+                animateCar = true
             }
         }
         
@@ -111,10 +110,10 @@ struct AnimatedResultLoader: View {
         // Simulate loading complete after 5 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.5) {
             withAnimation(.easeIn(duration: 1)) {
-                flyAway = true
+                carMoveAway = true
             }
             
-            // Hide the loader after plane flies away
+            // Hide the loader after car moves away
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                 withAnimation(.easeOut(duration: 0.5)) {
                     isVisible = false
@@ -124,9 +123,8 @@ struct AnimatedResultLoader: View {
     }
     
     private func resetAnimations() {
-        animateClouds = false
-        animatePlane = false
-        flyAway = false
+        animateCar = false
+        carMoveAway = false
         currentTextIndex = 0
     }
     
@@ -144,7 +142,7 @@ struct AnimatedResultLoader: View {
     }
 }
 
-struct CloudView: View {
+struct TreeView: View {
     let offsetX: CGFloat
     var delay: Double = 0
     var size: CGFloat = 50
@@ -152,10 +150,39 @@ struct CloudView: View {
     @State private var animate = false
     
     var body: some View {
-        Image(systemName: "cloud.fill")
+        Image(systemName: "leaf.fill") // You can replace with a tree image
             .resizable()
-            .frame(width: size, height: size * 0.6)
-            .foregroundColor(.white.opacity(0.4))
+            .frame(width: size, height: size)
+            .foregroundColor(.green.opacity(0.4))
+            .offset(x: animate ? offsetX : -offsetX)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    withAnimation(
+                        Animation.linear(duration: 8)
+                            .repeatForever(autoreverses: false)
+                    ) {
+                        animate = true
+                    }
+                }
+            }
+            .onDisappear {
+                animate = false
+            }
+    }
+}
+
+struct BuildingView: View {
+    let offsetX: CGFloat
+    var delay: Double = 0
+    var size: CGFloat = 50
+    
+    @State private var animate = false
+    
+    var body: some View {
+        Image(systemName: "building.2.fill") // Replace with a building image
+            .resizable()
+            .frame(width: size, height: size * 1.2)
+            .foregroundColor(.gray.opacity(0.4))
             .offset(x: animate ? offsetX : -offsetX)
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
@@ -174,5 +201,5 @@ struct CloudView: View {
 }
 
 #Preview {
-    AnimatedResultLoader(isVisible: .constant(true))
+    AnimatedHotelResult(isVisible: .constant(true))
 }

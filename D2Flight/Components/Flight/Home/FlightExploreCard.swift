@@ -7,11 +7,11 @@ struct FlightExploreCard: View {
             HStack{
                 VStack(alignment: .leading){
                     Text("Explore")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(CustomFont.font(.regular, weight: .bold))
                     Text("Explore low fare flights to any destinations from your location")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(CustomFont.font(.small, weight: .medium))
                     
-                    PrimaryButton(title: "Explore", font: .system(size: 12), fontWeight: .semibold, textColor: .white,
+                    PrimaryButton(title: "Explore", font: CustomFont.font(.small), fontWeight: .semibold, textColor: .white,
                                   width: 68,
                                   height: 31,
                                   cornerRadius: 4, action: {

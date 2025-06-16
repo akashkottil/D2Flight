@@ -15,18 +15,18 @@ struct SignInCard: View {
                         .clipShape(Circle())
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Akash kottil")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(CustomFont.font(.medium, weight: .bold))
                         Text("kottilakash@gmail.com")
-                            .font(.system(size: 12))
+                            .font(CustomFont.font(.small))
                             .fontWeight(.medium)
                             .foregroundColor(Color.gray)
                     }
                 } else {
                     VStack(alignment: .leading) {
                         Text("More offers awaits you")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(CustomFont.font(.medium, weight: .bold))
                         Text("Sign up and access to our exclusive deals")
-                            .font(.system(size: 12))
+                            .font(CustomFont.font(.small))
                             .fontWeight(.medium)
                             .foregroundColor(Color.gray)
                     }
@@ -45,7 +45,7 @@ struct SignInCard: View {
                     }) {
                         HStack {
                             Text("Account Settings")
-                                .font(.system(size: 16, weight: .medium))
+                                .font(CustomFont.font(.medium, weight: .medium))
                             Spacer()
                             Image("RedArrow")
                         }
@@ -66,7 +66,7 @@ struct SignInCard: View {
                     }) {
                         HStack {
                             Text("Sign in Now")
-                                .font(.system(size: 16, weight: .medium))
+                                .font(CustomFont.font(.medium, weight: .medium))
                             Spacer()
                             Image("WhiteArrow")
                         }

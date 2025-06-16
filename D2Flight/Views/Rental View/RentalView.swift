@@ -59,7 +59,7 @@ struct RentalView: View {
                             Image("HomeLogo")
                                 .frame(width: 32, height: 32)
                             Text("Last Minute Flights")
-                                .font(.system(size: 18, weight: .bold))
+                                .font(CustomFont.font(.large, weight: .bold))
                                 .foregroundColor(Color.white)
                         }
                         .padding(.vertical, 10)
@@ -73,7 +73,7 @@ struct RentalView: View {
                             }) {
                                 Text("Same drop-off")
                                     .foregroundColor(isSameDropOff ? .white : .gray)
-                                    .font(.system(size: 14))
+                                    .font(CustomFont.font(.regular))
                                     .fontWeight(.semibold)
                                     .frame(width: 120, height: 31)
                                     .background(
@@ -96,7 +96,7 @@ struct RentalView: View {
                             }) {
                                 Text("Different drop-off")
                                     .foregroundColor(!isSameDropOff ? .white : .gray)
-                                    .font(.system(size: 12))
+                                    .font(CustomFont.font(.small))
                                     .fontWeight(.semibold)
                                     .frame(width: 120, height: 31)
                                     .background(
@@ -140,7 +140,7 @@ struct RentalView: View {
                         // Search Rentals Button with validation
                         PrimaryButton(
                             title: "Search Rentals",
-                            font: .system(size: 16),
+                            font: CustomFont.font(.medium),
                             fontWeight: .bold,
                             textColor: .white,
                             verticalPadding: 20,
@@ -254,7 +254,7 @@ struct RentalView: View {
                         Text(pickUpLocation.isEmpty ? "Enter Pick-up Location" : pickUpLocation)
                             .foregroundColor(pickUpLocation.isEmpty ? .gray : .black)
                             .fontWeight(pickUpLocation.isEmpty ? .medium : .bold)
-                            .font(.system(size: 16))
+                            .font(CustomFont.font(.regular))
                             .lineLimit(1)
                         Spacer()
                     }
@@ -277,7 +277,7 @@ struct RentalView: View {
                             Text(dropOffLocation.isEmpty ? "Enter Drop-off Location" : dropOffLocation)
                                 .foregroundColor(dropOffLocation.isEmpty ? .gray : .black)
                                 .fontWeight(dropOffLocation.isEmpty ? .medium : .bold)
-                                .font(.system(size: 14))
+                                .font(CustomFont.font(.regular))
                                 .lineLimit(1)
                             Spacer()
                         }
@@ -331,31 +331,47 @@ struct RentalView: View {
             navigateToDateTimeSelection = true
         }) {
             VStack(alignment: .leading, spacing: 4) {
+                
                 HStack {
                     Image(icon)
                         .resizable()
-                        .frame(width: 16, height: 16)
+                        .frame(width: 22, height: 22)
 
                     Text(pickUpText)
                         .foregroundColor(.gray)
                         .fontWeight(.medium)
                         .font(.system(size: 13))
                     
-                    Spacer()
+                    
+                   if isSameDropOff {
+                       Spacer()
+                    }
+                    
+//                    Spacer()
 
                     // Only show drop-off text if it's different drop-off tab AND not same day
                     if !isSameDropOff && !isSameDay {
-                        Spacer()
+                        HStack{
+                            
+                        }
+                        .frame(width: 6, height: 6)
+                        .background(.gray)
+                        .cornerRadius(.infinity)
+                        
+                        
                         Text(dropOffText)
                             .foregroundColor(.gray)
                             .fontWeight(.medium)
                             .font(.system(size: 13))
+                        
+                        Spacer()
                     }
                 }
             }
             .padding()
             .background(Color.white)
             .cornerRadius(12)
+            .frame(maxWidth: .infinity)
         }
     }
 

@@ -48,7 +48,7 @@ struct Currency: View {
                         .frame(width: 14,height: 14)
                     
                     TextField("Search currency", text: $searchText)
-                        .font(.system(size: 16))
+                        .font(CustomFont.font(.medium))
                         .foregroundColor(.primary)
                     
                     // Clear button
@@ -76,7 +76,7 @@ struct Currency: View {
                         ProgressView()
                             .scaleEffect(1.2)
                         Text("Loading currencies...")
-                            .font(.system(size: 14))
+                            .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                     }
                     .frame(maxHeight: .infinity)
@@ -89,10 +89,10 @@ struct Currency: View {
                             .foregroundColor(.gray)
                         
                         Text("Error loading currencies")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(CustomFont.font(.medium, weight: .semibold))
                         
                         Text(errorMessage)
-                            .font(.system(size: 14))
+                            .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                         
@@ -112,10 +112,10 @@ struct Currency: View {
                             .foregroundColor(.gray)
                         
                         Text("No currencies found")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(CustomFont.font(.medium, weight: .semibold))
                         
                         Text("Try searching with a different keyword")
-                            .font(.system(size: 14))
+                            .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                     }
@@ -147,12 +147,12 @@ struct Currency: View {
                                     
                                     Text(currency.displayName)
                                         .foregroundColor(.primary)
-                                        .font(.system(size: 16))
+                                        .font(CustomFont.font(.medium))
                                     
                                     Spacer()
                                     
                                     Text(currency.code)
-                                        .font(.system(size: 16))
+                                        .font(CustomFont.font(.medium))
                                         .foregroundColor(.red)
                                         .fontWeight(.semibold)
                                 }

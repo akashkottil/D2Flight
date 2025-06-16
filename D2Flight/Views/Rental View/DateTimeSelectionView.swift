@@ -94,7 +94,7 @@ struct DateTimeSelectionView: View {
             HStack(spacing: 8) {
                 ForEach(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"], id: \.self) { day in
                     Text(day)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(CustomFont.font(.regular, weight: .medium))
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -178,7 +178,7 @@ struct DateTimeSelectionView: View {
                         // Apply button
                         PrimaryButton(
                             title: "Apply",
-                            font: .system(size: 18),
+                            font: CustomFont.font(.large),
                             fontWeight: .bold,
                             textColor: .white,
                             verticalPadding: 18,
@@ -320,7 +320,7 @@ struct DateTimeCard: View {
                 // Date Section
                 VStack(alignment: .leading, spacing: 4) {
                     Text(dateText)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(CustomFont.font(.medium, weight: .semibold))
                         .foregroundColor(isSelected ? Color("Violet") : Color("Violet"))
                 }
                 
@@ -329,16 +329,16 @@ struct DateTimeCard: View {
                     Button(action: onTimeTap) {
                         HStack {
                             Text(timeText)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(isSelected ? Color("Violet") : Color("Violet"))
                                 .padding(.vertical, 8)
                             
                             Text(ampmText)
-                                .font(.system(size: 14, weight: .medium))
+                                .font(CustomFont.font(.regular, weight: .medium))
                                 .foregroundColor(Color("Violet"))
                             
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(CustomFont.font(.regular, weight: .medium))
                                 .foregroundColor(Color("Violet"))
                         }
                     }
@@ -368,7 +368,7 @@ struct TimePickerSection: View {
             // Title
             HStack {
                 Text(title)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(CustomFont.font(.large, weight: .semibold))
                     .foregroundColor(.primary)
                 Spacer()
             }
@@ -434,14 +434,14 @@ struct TimeOptionRow: View {
         Button(action: onTap) {
             HStack {
                 Text("\(displayTime) \(ampmText)")
-                    .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                    .font(CustomFont.font(.medium, weight: isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? Color("Violet") : .primary)
                 
                 Spacer()
                 
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(CustomFont.font(.regular, weight: .semibold))
                         .foregroundColor(Color("Violet"))
                 }
             }
@@ -475,13 +475,13 @@ struct TimePickerSheet: View {
                 Button("Cancel") {
                     presentationMode.wrappedValue.dismiss()
                 }
-                .font(.system(size: 16, weight: .medium))
+                .font(CustomFont.font(.medium, weight: .medium))
                 .foregroundColor(Color("Violet"))
                 
                 Spacer()
                 
                 Text("Select Time")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(CustomFont.font(.large, weight: .semibold))
                     .foregroundColor(.primary)
                 
                 Spacer()
@@ -490,7 +490,7 @@ struct TimePickerSheet: View {
                     onTimeSelected(selectedTime)
                     presentationMode.wrappedValue.dismiss()
                 }
-                .font(.system(size: 16, weight: .semibold))
+                .font(CustomFont.font(.medium, weight: .semibold))
                 .foregroundColor(Color("Violet"))
             }
             .padding(.horizontal, 20)
@@ -504,7 +504,7 @@ struct TimePickerSheet: View {
                 // Time Display Card
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Selected Time")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(CustomFont.font(.regular, weight: .medium))
                         .foregroundColor(.gray)
                     
                     // Time Selector Button
@@ -515,13 +515,13 @@ struct TimePickerSheet: View {
                     }) {
                         HStack(spacing: 6) {
                             Text(hourFormatter.string(from: selectedTime))
-                                .font(.system(size: 18, weight: .semibold))
+                                .font(CustomFont.font(.large, weight: .semibold))
                                 .foregroundColor(Color("Violet"))
                             
                             Image(systemName: "chevron.down")
                                 .rotationEffect(.degrees(showTimePicker ? 180 : 0))
                                 .foregroundColor(Color("Violet"))
-                                .font(.system(size: 14, weight: .medium))
+                                .font(CustomFont.font(.regular, weight: .medium))
                                 .animation(.easeInOut(duration: 0.3), value: showTimePicker)
                         }
                         .padding(.vertical, 8)

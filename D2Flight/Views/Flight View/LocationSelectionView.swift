@@ -48,7 +48,7 @@ struct LocationSelectionView: View {
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
-                    .font(.system(size: 14))
+                    .font(CustomFont.font(.regular))
                     .padding(.horizontal)
                     .padding(.top, 8)
             }
@@ -60,7 +60,7 @@ struct LocationSelectionView: View {
                     if !viewModel.getSectionTitle().isEmpty {
                         HStack {
                             Text(viewModel.getSectionTitle())
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.gray)
                             Spacer()
                             
@@ -69,7 +69,7 @@ struct LocationSelectionView: View {
                                 Button("Clear") {
                                     RecentLocationsManager.shared.clearRecentLocations()
                                 }
-                                .font(.system(size: 14, weight: .medium))
+                                .font(CustomFont.font(.regular, weight: .medium))
                                 .foregroundColor(Color("Violet"))
                             }
                         }
@@ -106,11 +106,11 @@ struct LocationSelectionView: View {
                                 .padding()
                             
                             Text(emptyState.title)
-                                .font(.system(size: 16))
+                                .font(CustomFont.font(.medium))
                                 .foregroundColor(.gray)
                             
                             Text(emptyState.subtitle)
-                                .font(.system(size: 14))
+                                .font(CustomFont.font(.regular))
                                 .foregroundColor(.gray.opacity(0.8))
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 40)
@@ -124,7 +124,7 @@ struct LocationSelectionView: View {
                             ProgressView()
                                 .scaleEffect(1.2)
                             Text("Searching locations...")
-                                .font(.system(size: 14))
+                                .font(CustomFont.font(.regular))
                                 .foregroundColor(.gray)
                         }
                         .padding(.top, 40)
@@ -186,7 +186,7 @@ struct RecentLocationRowView: View {
                     
                     Image(systemName: "clock.arrow.circlepath")
                         .foregroundColor(Color("Violet"))
-                        .font(.system(size: 14, weight: .medium))
+                        .font(CustomFont.font(.regular, weight: .medium))
                 }
                 
                 // Location Info
@@ -194,15 +194,15 @@ struct RecentLocationRowView: View {
                     HStack {
                         if recentLocation.type == "airport" {
                             Text(recentLocation.airportName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                             
                             Text("(\(recentLocation.iataCode))")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         } else {
                             Text(recentLocation.cityName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         }
                         
@@ -211,7 +211,7 @@ struct RecentLocationRowView: View {
                     
                     HStack {
 //                        Text(recentLocation.displayName)
-//                            .font(.system(size: 14))
+//                            .font(CustomFont.font(.regular))
 //                            .foregroundColor(.gray)
 //                            .fontWeight(.medium)
 //                            .lineLimit(2)
@@ -251,7 +251,7 @@ struct LocationRowView: View {
                 // Location Icon based on type
                 Image(location.type == "airport" ? "FlightIcon" : "HotelIcon")
                     .foregroundColor(Color("Violet"))
-                    .font(.system(size: 18))
+                    .font(CustomFont.font(.large))
                     .frame(width: 24, height: 24)
                 
                 // Location Info
@@ -259,15 +259,15 @@ struct LocationRowView: View {
                     HStack {
                         if location.type == "airport" {
                             Text(location.airportName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                             
                             Text("(\(location.iataCode))")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         } else {
                             Text(location.cityName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         }
                         
@@ -275,7 +275,7 @@ struct LocationRowView: View {
                     }
                     
                     Text(location.displayName)
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                         .foregroundColor(.gray)
                         .fontWeight(.medium)
                         .lineLimit(2)

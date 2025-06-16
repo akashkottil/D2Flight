@@ -64,14 +64,14 @@ struct ResultView: View {
                             .font(.system(size: 20, weight: .semibold))
 
                         Text(error)
-                            .font(.system(size: 14))
+                            .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
 
                         PrimaryButton(
                             title: "Try Again",
-                            font: .system(size: 16),
+                            font: CustomFont.font(.medium),
                             fontWeight: .semibold,
                             width: 150,
                             height: 44,
@@ -95,7 +95,7 @@ struct ResultView: View {
                             .font(.system(size: 20, weight: .semibold))
 
                         Text("Try adjusting your search criteria or filters")
-                            .font(.system(size: 14))
+                            .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                     }
@@ -134,7 +134,7 @@ struct ResultView: View {
                                         ProgressView()
                                             .scaleEffect(0.8)
                                         Text("Loading more flights...")
-                                            .font(.system(size: 12))
+                                            .font(CustomFont.font(.small))
                                             .foregroundColor(.gray)
                                     }
                                     Spacer()
@@ -149,9 +149,9 @@ struct ResultView: View {
                                     VStack(spacing: 8) {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(.green)
-                                            .font(.system(size: 16))
+                                            .font(CustomFont.font(.medium))
                                         Text("All \(viewModel.totalResultsCount) flights loaded")
-                                            .font(.system(size: 12))
+                                            .font(CustomFont.font(.small))
                                             .foregroundColor(.gray)
                                     }
                                     Spacer()

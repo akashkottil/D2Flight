@@ -17,14 +17,14 @@ struct SortSheet: View {
             // Header
             HStack {
                 Text("Sort")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
                 Button(action: {
                     isPresented = false
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(CustomFont.font(.large, weight: .medium))
                         .foregroundColor(.black)
                 }
             }
@@ -54,7 +54,7 @@ struct SortSheet: View {
             VStack {
                 PrimaryButton(
                     title: "Apply",
-                    font: .system(size: 18),
+                    font: CustomFont.font(.large),
                     fontWeight: .semibold,
                     textColor: .white,
                     width: nil,
@@ -79,7 +79,7 @@ struct SortSheet: View {
         }) {
             HStack {
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(CustomFont.font(.medium, weight: .semibold))
                     .foregroundColor(.black)
                 
                 Spacer()

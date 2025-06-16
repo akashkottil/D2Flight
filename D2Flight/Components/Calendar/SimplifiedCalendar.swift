@@ -126,7 +126,7 @@ struct DayButton: View {
             handleDateSelection()
         }) {
             Text(dayNumber)
-                .font(.system(size: 16, weight: .medium))
+                .font(CustomFont.font(.medium, weight: .medium))
                 .foregroundColor(isSelected ? .white : (isPastDate ? .gray : .black))
                 .frame(width: 40, height: 40)
                 .background(

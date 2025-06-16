@@ -31,7 +31,7 @@ struct LocationInput: View {
                         }
                         .foregroundColor(originLocation.isEmpty ? .gray : .black)
                         .fontWeight(originLocation.isEmpty ? .medium : .semibold)
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                     // Clear button, visible only if the text is not empty
                     if !(isSelectingOrigin ? searchText.isEmpty : originLocation.isEmpty) {
                         Button(action: {
@@ -70,7 +70,7 @@ struct LocationInput: View {
                         }
                         .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
                         .fontWeight(destinationLocation.isEmpty ? .medium : .semibold)
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                     if !(!isSelectingOrigin ? searchText.isEmpty : destinationLocation.isEmpty) {
                         Button(action: {
                             if !isSelectingOrigin {

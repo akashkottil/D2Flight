@@ -52,11 +52,11 @@ struct ResultHeader: View {
                 
                 VStack(alignment: .leading) {
                     Text("\(originCode) to \(destinationCode)")
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                         .fontWeight(.semibold)
                         .foregroundColor(.black)
                     Text("\(travelDate), \(travelerInfo)")
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .fontWeight(.light)
                         .foregroundColor(.gray)
                 }
@@ -65,7 +65,7 @@ struct ResultHeader: View {
                     Image("EditIcon")
                         .frame(width: 14, height: 14)
                     Text("Edit")
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .fontWeight(.semibold)
                         .foregroundColor(.black)
                 }
@@ -83,7 +83,7 @@ struct ResultHeader: View {
                             Image("SortIcon")
                             Text("Sort: \(filterViewModel.selectedSortOption.displayName)")
                         }
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(CustomFont.font(.small, weight: .semibold))
                         .padding(.vertical, 8)
                         .padding(.horizontal, 16)
                         .background(filterViewModel.selectedSortOption != .best ? Color("Violet") : Color.gray.opacity(0.1))

@@ -31,10 +31,10 @@ struct AccountSettings: View {
                             // First Name
                             HStack {
                                 Text("First Name")
-                                    .font(.system(size: 16))
+                                    .font(CustomFont.font(.medium))
                                 Spacer()
                                 Text("Akash")
-                                    .font(.system(size: 16))
+                                    .font(CustomFont.font(.medium))
                                     .foregroundColor(.black.opacity(0.5))
                             }
                             .padding()
@@ -44,10 +44,10 @@ struct AccountSettings: View {
                             // Last Name
                             HStack {
                                 Text("Last Name")
-                                    .font(.system(size: 16))
+                                    .font(CustomFont.font(.medium))
                                 Spacer()
                                 Text("Kottil")
-                                    .font(.system(size: 16))
+                                    .font(CustomFont.font(.medium))
                                     .foregroundColor(.black.opacity(0.5))
                             }
                             .padding()
@@ -57,10 +57,10 @@ struct AccountSettings: View {
                             // Email
                             HStack {
                                 Text("Email")
-                                    .font(.system(size: 16))
+                                    .font(CustomFont.font(.medium))
                                 Spacer()
                                 Text("kottilakash@gmail.com")
-                                    .font(.system(size: 16))
+                                    .font(CustomFont.font(.medium))
                                     .foregroundColor(.black.opacity(0.5))
                             }
                             .padding()

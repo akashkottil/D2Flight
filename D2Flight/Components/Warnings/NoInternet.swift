@@ -8,10 +8,10 @@ struct NoInternet: View {
             Spacer()
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.black)
-                .font(.system(size: 16))
+                .font(CustomFont.font(.medium))
             
             Text("No Internet connection. Try reconnecting")
-                .font(.system(size: 14, weight: .medium))
+                .font(CustomFont.font(.regular, weight: .medium))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.leading)
             

@@ -14,7 +14,7 @@ struct LocationSelectionViews: View {
                     TextField("Enter Departure", text: $originLocation)
                         .foregroundColor(originLocation.isEmpty ? .gray : .black)
                         .fontWeight(originLocation.isEmpty ? .medium : .semibold)
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                     Spacer()
                 }
                 .padding(.vertical, 18)
@@ -32,7 +32,7 @@ struct LocationSelectionViews: View {
                     TextField("Enter Destination", text: $destinationLocation)
                         .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
                         .fontWeight(destinationLocation.isEmpty ? .medium : .semibold)
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                     Spacer()
                 }
                 .padding(.vertical, 18)

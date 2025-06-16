@@ -23,7 +23,7 @@ struct ResultDetails: View {
                 }) {
                     Image("ShareIcon")
                         .frame(width: 24,height: 24)
-                        .font(.system(size: 18))
+                        .font(CustomFont.font(.large))
                         .foregroundColor(.black)
                 }
             }
@@ -42,10 +42,10 @@ struct ResultDetails: View {
                             Spacer()
                             VStack(alignment:.trailing){
                                 Text("1 stop")
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(CustomFont.font(.small, weight: .semibold))
                                     .foregroundColor(Color.red)
                                 Text("1h 54m")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(CustomFont.font(.small, weight: .medium))
                                     .foregroundColor(.black.opacity(0.5))
                             }
                         }
@@ -56,11 +56,11 @@ struct ResultDetails: View {
                             Text("Kannur")
                             Spacer()
                         }
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(CustomFont.font(.regular, weight: .semibold))
                         // Trip Details
                         HStack {
                             Text(getTripDetailsText())
-                                .font(.system(size: 18))
+                                .font(CustomFont.font(.large))
                                 .fontWeight(.light)
                                 .foregroundColor(.gray)
                             Spacer()
@@ -80,7 +80,7 @@ struct ResultDetails: View {
                                 // Show more deals
                             }) {
                                 Text("\(flight.providers.count - 3) more deal from \(flight.formattedPrice)")
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(CustomFont.font(.regular, weight: .medium))
                                     .foregroundColor(.red)
                             }
                             .padding(.top, 8)
@@ -93,7 +93,7 @@ struct ResultDetails: View {
                     HStack {
                         Spacer()
                         Text("3 more deal from $280")
-                            .font(.system(size: 16))
+                            .font(CustomFont.font(.medium))
                             .fontWeight(.semibold)
                             .foregroundColor(.red)
                         Spacer()
@@ -107,7 +107,7 @@ struct ResultDetails: View {
                     HStack {
                         Spacer()
                         Text("$ (USD) per ticket, including taxes & Fees")
-                            .font(.system(size: 12))
+                            .font(CustomFont.font(.small))
                             .foregroundColor(.gray)
                         Spacer()
                     }
@@ -191,13 +191,13 @@ struct BookingPlatformRow: View {
         Divider()
         HStack {
             Text(platform.name)
-                .font(.system(size: 14, weight: .semibold))
+                .font(CustomFont.font(.regular, weight: .semibold))
                 .foregroundColor(.black.opacity(0.5))
             
             Spacer()
             
             Text(String(format: "$%.0f", platform.price))
-                .font(.system(size: 16, weight: .semibold))
+                .font(CustomFont.font(.medium, weight: .semibold))
                 .foregroundColor(.black)
             
             Image(systemName: "info.circle")
@@ -207,7 +207,7 @@ struct BookingPlatformRow: View {
             
             // Updated Search Flights Button with validation
             PrimaryButton(title: "View Deal",
-                          font: .system(size: 12),
+                          font: CustomFont.font(.small),
                           fontWeight: .bold,
                           textColor: .white,
                           width: 90,
@@ -240,7 +240,7 @@ struct FlightDetailCard: View {
                             .fill(Color.blue)
                             .overlay(
                                 Text(String(firstSegment.airlineName.prefix(2)))
-                                    .font(.system(size: 12, weight: .bold))
+                                    .font(CustomFont.font(.small, weight: .bold))
                                     .foregroundColor(.white)
                             )
                     }
@@ -248,10 +248,10 @@ struct FlightDetailCard: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text(firstSegment.airlineName)
-                            .font(.system(size: 14, weight: .medium))
+                            .font(CustomFont.font(.regular, weight: .medium))
                             .foregroundColor(.black)
                         Text(getTripDate())
-                            .font(.system(size: 12, weight: .medium))
+                            .font(CustomFont.font(.small, weight: .medium))
                             .foregroundColor(.gray)
                     }
                     
@@ -264,13 +264,13 @@ struct FlightDetailCard: View {
                 // Departure
                 VStack(alignment: .leading, spacing: 4) {
                     Text(leg.originCode)
-                        .font(.system(size: 12, weight: .light))
+                        .font(CustomFont.font(.small, weight: .light))
                         .foregroundColor(.black)
                     Text(leg.formattedDepartureTime)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(CustomFont.font(.medium, weight: .semibold))
                         .foregroundColor(.black)
                     Text(leg.origin)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(CustomFont.font(.small, weight: .semibold))
                         .foregroundColor(.black)
                 }
                 
@@ -279,7 +279,7 @@ struct FlightDetailCard: View {
                 // Duration and Stops
                 VStack(spacing: 8) {
                     Text(formatDuration(leg.duration))
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(CustomFont.font(.small, weight: .semibold))
                         .foregroundColor(.gray)
                     
                     // Flight path line
@@ -309,7 +309,7 @@ struct FlightDetailCard: View {
                     .frame(width: 100)
                     
                     Text(leg.stopsText)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(CustomFont.font(.small, weight: .medium))
                         .foregroundColor(.gray)
                 }
                 
@@ -318,13 +318,13 @@ struct FlightDetailCard: View {
                 // Arrival
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(leg.destinationCode)
-                        .font(.system(size: 12, weight: .light))
+                        .font(CustomFont.font(.small, weight: .light))
                         .foregroundColor(.black)
                     Text(leg.formattedArrivalTime)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(CustomFont.font(.medium, weight: .semibold))
                         .foregroundColor(.black)
                     Text(leg.destination)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(CustomFont.font(.small, weight: .semibold))
                         .foregroundColor(.black)
                 }
             }
@@ -333,11 +333,11 @@ struct FlightDetailCard: View {
             if let firstSegment = leg.segments.first {
                 HStack {
                     Image(systemName: "airplane")
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                         .foregroundColor(.gray)
                     
                     Text(firstSegment.aircraft ?? "Airbus A32neo")
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                         .foregroundColor(.gray)
                     
                     Spacer()
@@ -345,11 +345,11 @@ struct FlightDetailCard: View {
                     Button("View more") {
                         print("View more details tapped")
                     }
-                    .font(.system(size: 14))
+                    .font(CustomFont.font(.regular))
                     .foregroundColor(.purple)
                     
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .foregroundColor(.purple)
                 }
             }
