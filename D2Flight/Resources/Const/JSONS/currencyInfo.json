@@ -1,0 +1,1425 @@
+[
+    {
+      "code": "AED",
+      "symbol": "AED",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "AFN",
+      "symbol": "AFN",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ALL",
+      "symbol": "Lek",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "AMD",
+      "symbol": "դր.",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ANG",
+      "symbol": "NAf.",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "AOA",
+      "symbol": "Kz",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ARS",
+      "symbol": "$",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "AUD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "AWG",
+      "symbol": "Afl.",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "AZN",
+      "symbol": "₼",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BAM",
+      "symbol": "КМ",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BBD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BDT",
+      "symbol": "BDT",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BGN",
+      "symbol": "лв.",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BHD",
+      "symbol": "د.ب.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 3
+    },
+    {
+      "code": "BIF",
+      "symbol": "FBu",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "BMD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BND",
+      "symbol": "$",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BOB",
+      "symbol": "Bs",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BRL",
+      "symbol": "R$",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BSD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BTN",
+      "symbol": "Nu.",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BWP",
+      "symbol": "P",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BYN",
+      "symbol": "Br",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "BZD",
+      "symbol": "BZ$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CAD",
+      "symbol": "C$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CDF",
+      "symbol": "FC",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CHF",
+      "symbol": "CHF",
+      "thousands_separator": "'",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CLP",
+      "symbol": "$",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CNY",
+      "symbol": "¥",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "COP",
+      "symbol": "$",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CRC",
+      "symbol": "₡",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CUC",
+      "symbol": "CUC",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CUP",
+      "symbol": "$MN",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CVE",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "CZK",
+      "symbol": "Kč",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "DJF",
+      "symbol": "Fdj",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "DKK",
+      "symbol": "kr.",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "DOP",
+      "symbol": "RD$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "DZD",
+      "symbol": "د.ج.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "EGP",
+      "symbol": "ج.م.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ERN",
+      "symbol": "Nfk",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ETB",
+      "symbol": "Br",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "EUR",
+      "symbol": "€",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "FJD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "GBP",
+      "symbol": "£",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "GEL",
+      "symbol": "₾",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "GHS",
+      "symbol": "GH¢",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "GIP",
+      "symbol": "£",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "GMD",
+      "symbol": "D",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "GNF",
+      "symbol": "FG",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "GTQ",
+      "symbol": "Q",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "GYD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "HKD",
+      "symbol": "HK$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "HNL",
+      "symbol": "L.",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "HTG",
+      "symbol": "G",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "HUF",
+      "symbol": "Ft",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "IDR",
+      "symbol": "Rp",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ILS",
+      "symbol": "₪",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "INR",
+      "symbol": "₹",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "IQD",
+      "symbol": "د.ع.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "IRR",
+      "symbol": "ريال",
+      "thousands_separator": ",",
+      "decimal_separator": "/",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ISK",
+      "symbol": "kr.",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 0
+    },
+    {
+      "code": "JMD",
+      "symbol": "J$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "JOD",
+      "symbol": "د.ا.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 3
+    },
+    {
+      "code": "JPY",
+      "symbol": "¥",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "KES",
+      "symbol": "S",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "KGS",
+      "symbol": "сом",
+      "thousands_separator": " ",
+      "decimal_separator": "-",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "KHR",
+      "symbol": "KHR",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "KMF",
+      "symbol": "CF",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "KPW",
+      "symbol": "₩",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "KRW",
+      "symbol": "₩",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "KWD",
+      "symbol": "د.ك.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 3
+    },
+    {
+      "code": "KYD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "KZT",
+      "symbol": "Т",
+      "thousands_separator": " ",
+      "decimal_separator": "-",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "LAK",
+      "symbol": "₭",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "LBP",
+      "symbol": "ل.ل.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "LKR",
+      "symbol": "Rp",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "LRD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "LSL",
+      "symbol": "M",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "LYD",
+      "symbol": "د.ل.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 3
+    },
+    {
+      "code": "MAD",
+      "symbol": "د.م.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MDL",
+      "symbol": "lei",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MGA",
+      "symbol": "Ar",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "MKD",
+      "symbol": "ден.",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MMK",
+      "symbol": "K",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MNT",
+      "symbol": "₮",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MOP",
+      "symbol": "MOP$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MRU",
+      "symbol": "UM",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MUR",
+      "symbol": "Rs",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MVR",
+      "symbol": "MVR",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MWK",
+      "symbol": "MK",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MXN",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MYR",
+      "symbol": "RM",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "MZN",
+      "symbol": "MT",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "NAD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "NGN",
+      "symbol": "₦",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "NIO",
+      "symbol": "C$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "NOK",
+      "symbol": "kr",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "NPR",
+      "symbol": "रु",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "NZD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "OMR",
+      "symbol": "ر.ع.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 3
+    },
+    {
+      "code": "PAB",
+      "symbol": "B/.",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "PEN",
+      "symbol": "S/.",
+      "thousands_separator": ".",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "PGK",
+      "symbol": "K",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "PHP",
+      "symbol": "P",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "PKR",
+      "symbol": "Rs",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "PLN",
+      "symbol": "zł",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "PYG",
+      "symbol": "Gs",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "QAR",
+      "symbol": "ر.ق.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "RON",
+      "symbol": "lei",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "RSD",
+      "symbol": "Дин.",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "RUB",
+      "symbol": "₽",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "RWF",
+      "symbol": "RWF",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SAR",
+      "symbol": "SAR",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SBD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SCR",
+      "symbol": "Rs",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SDG",
+      "symbol": "ج.س.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SEK",
+      "symbol": "SEK",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SGD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SHP",
+      "symbol": "£",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SLE",
+      "symbol": "Le",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SLL",
+      "symbol": "Le",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SOS",
+      "symbol": "S",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SRD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "STN",
+      "symbol": "Db",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SZL",
+      "symbol": "E",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "THB",
+      "symbol": "฿",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "TJS",
+      "symbol": "TJS",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "TMT",
+      "symbol": "m",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "TND",
+      "symbol": "د.ت.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 3
+    },
+    {
+      "code": "TOP",
+      "symbol": "T$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "TRY",
+      "symbol": "TL",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "TTD",
+      "symbol": "TT$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "TWD",
+      "symbol": "NT$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "TZS",
+      "symbol": "TSh",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "UAH",
+      "symbol": "грн.",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "UGX",
+      "symbol": "USh",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "USD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SYP",
+      "symbol": "ل.س.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "UYU",
+      "symbol": "$U",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "UZS",
+      "symbol": "сўм",
+      "thousands_separator": " ",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "VND",
+      "symbol": "₫",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 1
+    },
+    {
+      "code": "VUV",
+      "symbol": "VT",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 0
+    },
+    {
+      "code": "WST",
+      "symbol": "WS$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "XAF",
+      "symbol": "F",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "XCD",
+      "symbol": "$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "XOF",
+      "symbol": "F",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "XPF",
+      "symbol": "F",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "YER",
+      "symbol": "ر.ي.‏",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ZAR",
+      "symbol": "R",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ZMW",
+      "symbol": "ZK",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "HRK",
+      "symbol": "kn",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": false,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SVC",
+      "symbol": "₡",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "FKP",
+      "symbol": "£",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "SSP",
+      "symbol": "£",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    },
+    {
+      "code": "VES",
+      "symbol": "Bs.",
+      "thousands_separator": ".",
+      "decimal_separator": ",",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": true,
+      "decimal_digits": 2
+    },
+    {
+      "code": "ZWL",
+      "symbol": "Z$",
+      "thousands_separator": ",",
+      "decimal_separator": ".",
+      "symbol_on_left": true,
+      "space_between_amount_and_symbol": false,
+      "decimal_digits": 2
+    }
+  ]
+  

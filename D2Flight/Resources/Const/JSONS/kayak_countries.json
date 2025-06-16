@@ -1,0 +1,779 @@
+[
+    {
+        "countryName": "Argentina",
+        "countryCode": "ar",
+        "fullDomainName": "http://www.kayak.com.ar/",
+        "currencyCode": "ARS",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Argentina Peso",
+        "abbreviation": "ARS",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "Australia",
+        "countryCode": "au",
+        "fullDomainName": "http://www.kayak.com.au/",
+        "currencyCode": "AUD",
+        "supportedLanguages": [
+            "en"
+        ],
+        "defaultDomain": null,
+        "currency": "Australia Dollar",
+        "abbreviation": "AUD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "België",
+        "countryCode": "be",
+        "fullDomainName": "http://www.be.kayak.com/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "fr",
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "Bolivia",
+        "countryCode": "bo",
+        "fullDomainName": "http://www.kayak.bo/",
+        "currencyCode": "BOB",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Bolivia Boliviano",
+        "abbreviation": "BOB",
+        "symbol": "&#36;&#98;"
+    },
+    {
+        "countryName": "Brasil",
+        "countryCode": "br",
+        "fullDomainName": "http://www.kayak.com.br/",
+        "currencyCode": "BRL",
+        "supportedLanguages": [
+            "pt"
+        ],
+        "currency": "Brazil Real",
+        "abbreviation": "BRL",
+        "symbol": "&#82;&#36;"
+    },
+    {
+        "countryName": "Canada",
+        "countryCode": "ca",
+        "fullDomainName": "http://www.ca.kayak.com/",
+        "currencyCode": "CAD",
+        "supportedLanguages": [
+            "en",
+        ],
+        "currency": "Canada Dollar",
+        "abbreviation": "CAD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "Chile",
+        "countryCode": "cl",
+        "fullDomainName": "http://www.kayak.cl/",
+        "currencyCode": "CLP",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Chile Peso",
+        "abbreviation": "CLP",
+        "symbol": "&#36;"    },
+    {
+        "countryName": "中国",
+        "countryCode": "cn",
+        "fullDomainName": "http://www.cn.kayak.com/",
+        "currencyCode": "CNY",
+        "supportedLanguages": [
+            "zh"
+        ],
+        "defaultDomain": null,
+        "currency": "China Yuan Renminbi",
+        "abbreviation": "CNY",
+        "symbol": "&#165;"
+    },
+    {
+        "countryName": "Colombia",
+        "countryCode": "co",
+        "fullDomainName": "http://www.kayak.com.co/",
+        "currencyCode": "COP",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Colombia Peso",
+        "abbreviation": "COP",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "Costa Rica",
+        "countryCode": "cr",
+        "fullDomainName": "http://www.kayak.co.cr/",
+        "currencyCode": "CRC",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Costa Rica Colon",
+        "abbreviation": "CRC",
+        "symbol": "&#8353;"
+    },
+    {
+        "countryName": "Danmark",
+        "countryCode": "dk",
+        "fullDomainName": "http://www.kayak.dk/",
+        "currencyCode": "DKK",
+        "supportedLanguages": [
+            "da"
+        ],
+        "defaultDomain": null,
+        "currency": "Denmark Krone",
+        "abbreviation": "DKK",
+        "symbol": "&#107;&#114;"
+    },
+    {
+        "countryName": "Deutschland",
+        "countryCode": "de",
+        "fullDomainName": "http://www.kayak.de/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "de",
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "Ecuador",
+        "countryCode": "ec",
+        "fullDomainName": "http://www.kayak.com.ec/",
+        "currencyCode": "USD",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "United States Dollar",
+        "abbreviation": "USD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "El Salvador",
+        "countryCode": "sv",
+        "fullDomainName": "http://www.kayak.com.sv/",
+        "currencyCode": "USD",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "United States Dollar",
+        "abbreviation": "USD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "España",
+        "countryCode": "es",
+        "fullDomainName": "http://www.kayak.es/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "es",
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "France",
+        "countryCode": "fr",
+        "fullDomainName": "http://www.kayak.fr/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "fr"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+
+    },
+    {
+        "countryName": "Ελλάδα",
+        "countryCode": "gr",
+        "fullDomainName": "http://www.gr.kayak.com/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "el"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "Guatemala",
+        "countryCode": "gt",
+        "fullDomainName": "http://www.kayak.com.gt/",
+        "currencyCode": "GTQ",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Guatemala Quetzal",
+        "abbreviation": "GTQ",
+        "symbol": "&#81;"
+    },
+    {
+        "countryName": "Honduras",
+        "countryCode": "hn",
+        "fullDomainName": "http://www.kayak.com.hn/",
+        "currencyCode": "HNL",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Honduras Lempira",
+        "abbreviation": "HNL",
+        "symbol": "&#76;"
+    },
+    {
+        "countryName": "香港",
+        "countryCode": "hk",
+        "fullDomainName": "http://www.kayak.com.hk/",
+        "currencyCode": "HKD",
+        "supportedLanguages": [
+            "zh",
+        ],
+        "defaultDomain": null,
+        "currency": "Hong Kong Dollar",
+        "abbreviation": "HKD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "India",
+        "countryCode": "in",
+        "fullDomainName": "http://www.kayak.co.in/",
+        "currencyCode": "INR",
+        "supportedLanguages": [
+            "en"
+        ],
+        "defaultDomain": null,
+        "currency": "India Rupee",
+        "abbreviation": "INR",
+        "symbol": "&#8377;"
+    },
+    {
+        "countryName": "Indonesia",
+        "countryCode": "id",
+        "fullDomainName": "http://www.kayak.co.id/",
+        "currencyCode": "IDR",
+        "supportedLanguages": [
+            "in",
+        ],
+        "defaultDomain": null,
+        "currency": "Indonesia Rupiah",
+        "abbreviation": "IDR",
+        "symbol": "&#82;&#112;"    },
+    {
+        "countryName": "Ireland",
+        "countryCode": "ie",
+        "fullDomainName": "http://www.kayak.ie/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "en"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "Israel",
+        "countryCode": "il",
+        "fullDomainName": "http://www.il.kayak.com/",
+        "currencyCode": "ILS",
+        "supportedLanguages": [
+            "en",
+        ],
+        "defaultDomain": null,
+        "currency": "Israel Shekel",
+        "abbreviation": "ILS",
+        "symbol": "&#8362;"
+    },
+    {
+        "countryName": "Italia",
+        "countryCode": "it",
+        "fullDomainName": "http://www.kayak.it/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "it"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "日本",
+        "countryCode": "jp",
+        "fullDomainName": "http://www.kayak.co.jp/",
+        "currencyCode": "JPY",
+        "supportedLanguages": [
+            "ja"
+        ],
+        "defaultDomain": null,
+        "currency": "Japan Yen",
+        "abbreviation": "JPY",
+        "symbol": "&#165;"
+    },
+    {
+        "countryName": "Malaysia",
+        "countryCode": "my",
+        "fullDomainName": "http://www.kayak.com.my/",
+        "currencyCode": "MYR",
+        "supportedLanguages": [
+            "en",
+        ],
+        "defaultDomain": null,
+        "currency": "Malaysia Ringgit",
+        "abbreviation": "MYR",
+        "symbol": "&#82;&#77;"
+    },
+    {
+        "countryName": "México",
+        "countryCode": "mx",
+        "fullDomainName": "http://www.kayak.com.mx/",
+        "currencyCode": "MXN",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Mexico Peso",
+        "abbreviation": "MXN",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "Nederland",
+        "countryCode": "nl",
+        "fullDomainName": "http://www.kayak.nl/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "nl"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "New Zealand",
+        "countryCode": "nz",
+        "fullDomainName": "http://www.nz.kayak.com/",
+        "currencyCode": "NZD",
+        "supportedLanguages": [
+            "en"
+        ],
+        "defaultDomain": null,
+        "currency": "New Zealand Dollar",
+        "abbreviation": "NZD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "Nicaragua",
+        "countryCode": "ni",
+        "fullDomainName": "http://www.kayak.com.ni/",
+        "currencyCode": "NIO",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Nicaragua Cordoba",
+        "abbreviation": "NIO",
+        "symbol": "&#67;&#36;"
+    },
+    {
+        "countryName": "Norge",
+        "countryCode": "no",
+        "fullDomainName": "http://www.kayak.no/",
+        "currencyCode": "NOK",
+        "supportedLanguages": [
+            "no"
+        ],
+        "defaultDomain": null,
+        "currency": "Norway Krone",
+        "abbreviation": "NOK",
+        "symbol": "&#107;&#114;"
+    },
+    {
+        "countryName": "Panamá",
+        "countryCode": "pa",
+        "fullDomainName": "http://www.kayak.com.pa/",
+        "currencyCode": "USD",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "United States Dollar",
+        "abbreviation": "USD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "Paraguay",
+        "countryCode": "py",
+        "fullDomainName": "http://www.kayak.com.py/",
+        "currencyCode": "PYG",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Paraguay Guarani",
+        "abbreviation": "PYG",
+        "symbol": "&#71;&#115;"
+    },
+    {
+        "countryName": "Perú",
+        "countryCode": "pe",
+        "fullDomainName": "http://www.kayak.com.pe/",
+        "currencyCode": "PEN",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Peru Nuevo Sol",
+        "abbreviation": "PEN",
+        "symbol": "&#83;&#47;&#46;"
+    },
+    {
+        "countryName": "Philippines",
+        "countryCode": "ph",
+        "fullDomainName": "http://www.kayak.com.ph/",
+        "currencyCode": "PHP",
+        "supportedLanguages": [
+            "en"
+        ],
+        "defaultDomain": null,
+        "currency": "Philippines Peso", 
+        "abbreviation": "PHP",
+        "symbol": "&#8369;"
+    },
+    {
+        "countryName": "Polska",
+        "countryCode": "pl",
+        "fullDomainName": "http://www.kayak.pl/",
+        "currencyCode": "PLN",
+        "supportedLanguages": [
+            "pl"
+        ],
+        "defaultDomain": null,
+        "currency": "Poland Zloty",
+        "abbreviation": "PLN",
+        "symbol": "&#122;&#322;"
+    },
+    {
+        "countryName": "Portugal",
+        "countryCode": "pt",
+        "fullDomainName": "http://www.kayak.pt/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "pt"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "Puerto Rico",
+        "countryCode": "pr",
+        "fullDomainName": "http://www.kayak.com.pr/",
+        "currencyCode": "USD",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "United States Dollar",
+        "abbreviation": "USD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "República Dominicana",
+        "countryCode": "do",
+        "fullDomainName": "http://www.kayak.com.do/",
+        "currencyCode": "DOP",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Dominican Republic Peso",
+        "abbreviation": "DOP",
+        "symbol": "&#82;&#68;&#36;"
+    },
+    {
+        "countryName": "România",
+        "countryCode": "ro",
+        "fullDomainName": "http://www.ro.kayak.com/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "ro"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "Россия",
+        "countryCode": "ru",
+        "fullDomainName": "http://www.kayak.ru/",
+        "currencyCode": "RUB",
+        "supportedLanguages": [
+            "ru"
+        ],
+        "defaultDomain": null,
+        "currency": "Russia Ruble",
+        "abbreviation": "RUB",
+        "symbol": "&#1088;&#1091;&#1073;"
+    },
+    {
+        "countryName": "Schweiz",
+        "countryCode": "ch",
+        "fullDomainName": "http://www.kayak.ch/",
+        "currencyCode": "CHF",
+        "supportedLanguages": [
+            "fr",
+        ],
+        "defaultDomain": null,
+        "currency": "Switzerland Franc",
+        "abbreviation": "CHF",
+        "symbol": "&#67;&#72;&#70;"
+    },
+    {
+        "countryName": "Singapore",
+        "countryCode": "sg",
+        "fullDomainName": "http://www.kayak.sg/",
+        "currencyCode": "SGD",
+        "supportedLanguages": [
+            "en",
+        ],
+        "defaultDomain": null,
+        "currency": "Singapore Dollar",
+        "abbreviation": "SGD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "South Africa",
+        "countryCode": "za",
+        "fullDomainName": "http://www.za.kayak.com/",
+        "currencyCode": "ZAR",
+        "supportedLanguages": [
+            "en"
+        ],
+        "defaultDomain": null,
+        "currency": "South Africa Rand",
+        "abbreviation": "ZAR",
+        "symbol": "&#82;"
+    },
+    {
+        "countryName": "대한민국",
+        "countryCode": "kr",
+        "fullDomainName": "http://www.kayak.co.kr/",
+        "currencyCode": "KRW",
+        "supportedLanguages": [
+            "ko"
+        ],
+        "defaultDomain": null,
+        "currency": "Korea (South) Won",
+        "abbreviation": "KRW",
+        "symbol": "&#8361;"
+    },
+    {
+        "countryName": "Suomi",
+        "countryCode": "fi",
+        "fullDomainName": "http://www.fi.kayak.com/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "fi"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "Sverige",
+        "countryCode": "se",
+        "fullDomainName": "http://www.kayak.se/",
+        "currencyCode": "SEK",
+        "supportedLanguages": [
+            "sv"
+        ],
+        "defaultDomain": null,
+        "currency": "Sweden Krona",
+        "abbreviation": "SEK",
+        "symbol": "&#107;&#114;"
+    },
+    {
+        "countryName": "台灣",
+        "countryCode": "tw",
+        "fullDomainName": "http://www.tw.kayak.com/",
+        "currencyCode": "TWD",
+        "supportedLanguages": [
+            "zh"
+        ],
+        "defaultDomain": null,
+        "currency": "Taiwan New Dollar",
+        "abbreviation": "TWD",
+        "symbol": "&#78;&#84;&#36;"
+    },
+    {
+        "countryName": "Türkiye",
+        "countryCode": "tr",
+        "fullDomainName": "http://www.kayak.com.tr/",
+        "currencyCode": "TRY",
+        "supportedLanguages": [
+            "tr"
+        ],
+        "defaultDomain": null,
+        "currency": "Turkey Lira",
+        "abbreviation": "TRY",
+        "symbol": "&#8378;"
+    },
+    {
+        "countryName": "United Arab Emirates",
+        "countryCode": "ae",
+        "fullDomainName": "http://www.kayak.ae/",
+        "currencyCode": "AED",
+        "supportedLanguages": [
+            "ar"
+        ],
+        "defaultDomain": null,
+        "currency": "Dirham",
+        "abbreviation": "AED",
+        "symbol": "&#x62f;&#x2e;&#x625;"
+    },
+    {
+        "countryName": "United Kingdom",
+        "countryCode": "gb",
+        "fullDomainName": "http://www.kayak.co.uk/",
+        "currencyCode": "GBP",
+        "supportedLanguages": [
+            "en"
+        ],
+        "defaultDomain": null,
+        "currency": "United Kingdom Pound",
+        "abbreviation": "GBP",
+        "symbol": "&#163;"
+    },
+    {
+        "countryName": "United States",
+        "countryCode": "us",
+        "fullDomainName": "http://www.kayak.com/",
+        "currencyCode": "USD",
+        "supportedLanguages": [
+            "en"
+        ],
+        "defaultDomain": null,
+        "currency": "United States Dollar",
+        "abbreviation": "USD",
+        "symbol": "&#36;"
+    },
+    {
+        "countryName": "Uruguay",
+        "countryCode": "uy",
+        "fullDomainName": "http://www.kayak.com.uy/",
+        "currencyCode": "UYU",
+        "supportedLanguages": [
+            "es"
+        ],
+        "defaultDomain": null,
+        "currency": "Uruguay Peso",
+        "abbreviation": "UYU",
+        "symbol": "&#36;&#85;"
+    },
+    {
+        "countryName": "Việt Nam",
+        "countryCode": "vn",
+        "fullDomainName": "http://www.vn.kayak.com/",
+        "currencyCode": "VND",
+        "supportedLanguages": [
+            "en",
+        ],
+        "defaultDomain": null,
+        "currency": "Viet Nam Dong",
+        "abbreviation": "VND",
+        "symbol": "&#8363;"
+    },
+    {
+        "countryName": "Österreich",
+        "countryCode": "at",
+        "fullDomainName": "http://www.at.kayak.com/",
+        "currencyCode": "EUR",
+        "supportedLanguages": [
+            "de"
+        ],
+        "defaultDomain": null,
+        "currency": "Euro Member Countries",
+        "abbreviation": "EUR",
+        "symbol": "&#8364;"
+    },
+    {
+        "countryName": "Česká republika",
+        "countryCode": "cz",
+        "fullDomainName": "http://www.cz.kayak.com/",
+        "currencyCode": "CZK",
+        "supportedLanguages": [
+            "cs"
+        ],
+        "defaultDomain": null,
+        "currency": "Czech Republic Koruna",
+        "abbreviation": "CZK",
+        "symbol": "&#75;&#269;"
+    },
+    {
+        "countryName": "Україна",
+        "countryCode": "ua",
+        "fullDomainName": "http://www.ua.kayak.com/",
+        "currencyCode": "UAH",
+        "supportedLanguages": [
+            "uk"
+        ],
+        "defaultDomain": null,
+        "currency": "Ukraine Hryvna",
+        "abbreviation": "UAH",
+        "symbol": "&#8372;"
+    },
+    {
+        "countryName": "المملكة العربية السعودية",
+        "countryCode": "sa",
+        "fullDomainName": "http://www.kayak.sa/",
+        "currencyCode": "SAR",
+        "supportedLanguages": [
+            "ar",
+        ],
+        "defaultDomain": null,
+        "currency": "Saudi Arabia Riyal",
+        "abbreviation": "SAR",
+        "symbol": "&#65020;"
+    },
+    {
+        "countryName": "ประเทศไทย",
+        "countryCode": "th",
+        "fullDomainName": "http://www.kayak.co.th/",
+        "currencyCode": "THB",
+        "supportedLanguages": [
+            "th",
+        ],
+        "defaultDomain": null,
+        "currency": "Serbia Dinar",
+        "abbreviation": "THB",
+        "symbol": "&#1044;&#1080;&#1085;&#46;"
+    }
+]
