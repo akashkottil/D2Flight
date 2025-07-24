@@ -110,6 +110,7 @@ struct FlightDetailCard: View {
                 }
             }
             
+//            segment section
             Divider()
             
             // Aircraft and amenities info with conditional "View details" button
