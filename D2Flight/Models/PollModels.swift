@@ -167,13 +167,31 @@ struct Provider: Codable {
 }
 
 struct SplitProvider: Codable {
-    let name: String
-    let imageURL: String
-    let price: Double
-    let deeplink: String
-    let rating: Double?
-    let ratingCount: Int?
-    let fareFamily: [String: String]?
+  let name: String
+  let imageURL: String
+  let price: Double
+  let deeplink: String
+  let rating: Double?
+  let ratingCount: Int?
+  let fareFamily: FareFamily?
+  enum CodingKeys: String, CodingKey {
+    case name
+    case imageURL = "imageURL"
+    case price
+    case deeplink
+    case rating
+    case ratingCount
+    case fareFamily
+  }
+}
+struct FareFamily: Codable {
+  let code: String
+  let displayName: String
+  let features: [FareFeature]
+}
+struct FareFeature: Codable {
+  let type: String
+  let description: String
 }
 
 // MARK: - Helper Extensions
@@ -185,7 +203,7 @@ extension FlightResult {
     }
     
     var formattedPrice: String {
-        return String(format: "$%.0f", min_price)
+        return String(format: "₹%.0f", min_price)
     }
 }
 

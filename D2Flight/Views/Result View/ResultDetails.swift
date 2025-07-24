@@ -3,6 +3,7 @@ import SwiftUI
 struct ResultDetails: View {
     let flight: FlightResult
     @Environment(\.dismiss) private var dismiss
+    @State private var showAllDeals = false // Track expanded state
     
     var body: some View {
         VStack(spacing: 0) {
@@ -40,23 +41,27 @@ struct ResultDetails: View {
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
-                            VStack(alignment:.trailing){
-                                Text("1 stop")
+                            VStack(alignment: .trailing) {
+                                Text(getStopsText())
                                     .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(Color.red)
-                                Text("1h 54m")
+                                    .foregroundColor(flight.legs.first?.stopCount == 0 ? Color.green : Color.red)
+                                Text(flight.formattedDuration)
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(.black.opacity(0.5))
                             }
                         }
-                        // trip location
-                        HStack{
-                            Text("Kozhikode")
-                            Text("to")
-                            Text("Kannur")
+                        
+                        // Trip location names
+                        HStack {
+                            if let firstLeg = flight.legs.first {
+                                Text(firstLeg.origin)
+                                Text("to")
+                                Text(firstLeg.destination)
+                            }
                             Spacer()
                         }
                         .font(.system(size: 14, weight: .semibold))
+                        
                         // Trip Details
                         HStack {
                             Text(getTripDetailsText())
@@ -69,44 +74,78 @@ struct ResultDetails: View {
                     .padding()
                     .background(Color.white)
                     
-                    // Booking Platforms Section
-                    VStack(spacing: 12) {
-                        ForEach(getBookingPlatforms(), id: \.name) { platform in
-                            BookingPlatformRow(platform: platform)
+                    // UPDATED: Real Booking Platforms Section with expandable functionality
+                    VStack(spacing: 0) {
+                        // Header
+                        HStack {
+                            Text("Booking Options")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.black)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top)
+                        .padding(.bottom, 8)
+                        
+                        // Display providers based on expanded state
+                        let providersToShow = showAllDeals ? flight.providers : Array(flight.providers.prefix(3))
+                        
+                        ForEach(Array(providersToShow.enumerated()), id: \.offset) { index, provider in
+                            if let splitProvider = provider.splitProviders?.first {
+                                BookingPlatformRow(
+                                    platform: BookingPlatform(
+                                        name: splitProvider.name,
+                                        price: provider.price,
+                                        imageURL: splitProvider.imageURL,
+                                        deeplink: splitProvider.deeplink,
+                                        rating: splitProvider.rating,
+                                        ratingCount: splitProvider.ratingCount
+                                    ),
+                                    isFirst: index == 0,
+                                    isLast: index == providersToShow.count - 1
+                                )
+                            }
                         }
                         
+                        // Show "View more deals" or "Show less" button conditionally
                         if flight.providers.count > 3 {
                             Button(action: {
-                                // Show more deals
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    showAllDeals.toggle()
+                                }
                             }) {
-                                Text("\(flight.providers.count - 3) more deal from \(flight.formattedPrice)")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.red)
+                                HStack {
+                                    Spacer()
+                                    if showAllDeals {
+                                        Text("Show less")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(.red)
+                                        Image(systemName: "chevron.up")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.red)
+                                    } else {
+                                        Text("\(flight.providers.count - 3) more deal from ₹\(Int(getLowestRemainingPrice()))")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(.red)
+                                        Image(systemName: "chevron.down")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.red)
+                                    }
+                                    Spacer()
+                                }
                             }
-                            .padding(.top, 8)
+                            .padding(.vertical, 12)
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
-                    .padding()
                     .background(Color.white)
                     
                     Divider()
-                    HStack {
-                        Spacer()
-                        Text("3 more deal from $280")
-                            .font(.system(size: 16))
-                            .fontWeight(.semibold)
-                            .foregroundColor(.red)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 20)
-                    .background(Color.white)
                     
-                    Divider()
                     // Price note
                     HStack {
                         Spacer()
-                        Text("$ (USD) per ticket, including taxes & Fees")
+                        Text("₹ (INR) per ticket, including taxes & fees")
                             .font(.system(size: 12))
                             .foregroundColor(.gray)
                         Spacer()
@@ -114,6 +153,7 @@ struct ResultDetails: View {
                     .padding(.horizontal)
                     .padding(.vertical, 20)
                     .background(Color.white)
+                    
                     Divider()
                     
                     // Flight Details Section
@@ -126,8 +166,8 @@ struct ResultDetails: View {
                             )
                         }
                     }
-                    .padding()
-                    .background(Color.gray.opacity(0.05))
+                    .padding(.top)
+//                    .background(Color.gray.opacity(0.05))
                 }
             }
         }
@@ -135,12 +175,18 @@ struct ResultDetails: View {
         .background(Color.gray.opacity(0.05))
         .onAppear {
             print("📋 Displaying flight details for: \(flight.id)")
+            printFlightProviders()
         }
     }
     
     private func getRouteText() -> String {
         guard let firstLeg = flight.legs.first else { return "Flight Details" }
         return "\(firstLeg.originCode) → \(firstLeg.destinationCode)"
+    }
+    
+    private func getStopsText() -> String {
+        guard let firstLeg = flight.legs.first else { return "Direct" }
+        return firstLeg.stopsText.lowercased()
     }
     
     private func getTripDetailsText() -> String {
@@ -153,342 +199,228 @@ struct ResultDetails: View {
             details = dateFormatter.string(from: date)
         }
         
-        // Add cabin class and traveler info (you might want to pass this from the search)
-        details += " • Economy • 1 Traveller"
+        // Add cabin class and traveler info
+        details += " • Economy • 2 Travelers"
         
         return details
     }
     
-    private func getBookingPlatforms() -> [BookingPlatform] {
-        var platforms: [BookingPlatform] = []
+    // NEW: Get lowest price from remaining providers (4th onward)
+    private func getLowestRemainingPrice() -> Double {
+        if flight.providers.count > 3 {
+            let remainingProviders = Array(flight.providers.dropFirst(3))
+            return remainingProviders.map { $0.price }.min() ?? flight.min_price
+        }
+        return flight.min_price
+    }
+    
+    // NEW: Print provider details for debugging
+    private func printFlightProviders() {
+        print("🏪 ===== FLIGHT PROVIDERS DETAILS =====")
+        print("Flight ID: \(flight.id)")
+        print("Total Providers: \(flight.providers.count)")
+        print("Price Range: ₹\(flight.min_price) - ₹\(flight.max_price)")
         
-        // Create sample platforms based on providers or use default ones
-        let platformNames = ["Trip.com", "Skyscanner", "Kayak"]
-        
-        for (index, name) in platformNames.enumerated() {
-            if index < flight.providers.count {
-                platforms.append(BookingPlatform(
-                    name: name,
-                    price: flight.providers[index].price
-                ))
-            } else {
-                platforms.append(BookingPlatform(
-                    name: name,
-                    price: flight.min_price
-                ))
+        for (index, provider) in flight.providers.enumerated() {
+            print("\nProvider \(index + 1):")
+            print("  Price: ₹\(provider.price)")
+            print("  Is Split: \(provider.isSplit)")
+            print("  Transfer Type: \(provider.transferType ?? "N/A")")
+            
+            if let splitProviders = provider.splitProviders {
+                print("  Split Providers Count: \(splitProviders.count)")
+                for (spIndex, splitProvider) in splitProviders.enumerated() {
+                    print("    Split Provider \(spIndex + 1):")
+                    print("      Name: \(splitProvider.name)")
+                    print("      Price: ₹\(splitProvider.price)")
+                    print("      Image URL: \(splitProvider.imageURL)")
+                    print("      Deep Link: \(splitProvider.deeplink)")
+                    print("      Rating: \(splitProvider.rating?.description ?? "N/A")")
+                    print("      Rating Count: \(splitProvider.ratingCount?.description ?? "N/A")")
+                }
             }
         }
-        
-        return platforms
+        print("🏪 ===== END PROVIDERS DETAILS =====")
     }
 }
 
-// MARK: - Booking Platform Row
+// MARK: - Updated Booking Platform Row
 struct BookingPlatformRow: View {
     let platform: BookingPlatform
+    let isFirst: Bool
+    let isLast: Bool
     
     var body: some View {
-        Divider()
-        HStack {
-            Text(platform.name)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.black.opacity(0.5))
-            
-            Spacer()
-            
-            Text(String(format: "$%.0f", platform.price))
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.black)
-            
-            Image(systemName: "info.circle")
-                .font(.system(size: 11))
-                .foregroundColor(.gray)
-                .padding(.leading, 4)
-            
-            // Updated Search Flights Button with validation
-            PrimaryButton(title: "View Deal",
-                          font: .system(size: 12),
-                          fontWeight: .bold,
-                          textColor: .white,
-                          width: 90,
-                          height: 39,
-                          verticalPadding: 12,
-                          cornerRadius: 6,
-                          action: {print("View Deal tapped for \(platform.name)")})
-        }
-        .padding(.vertical, 12)
-    }
-}
-
-// MARK: - Flight Detail Card
-struct FlightDetailCard: View {
-    let leg: FlightLeg
-    let isRoundTrip: Bool
-    let legIndex: Int
-    
-    var body: some View {
-        VStack(spacing: 16) {
-            // Airline Header
-            if let firstSegment = leg.segments.first {
-                HStack {
-                    AsyncImage(url: URL(string: firstSegment.airlineLogo)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } placeholder: {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.blue)
-                            .overlay(
-                                Text(String(firstSegment.airlineName.prefix(2)))
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.white)
-                            )
-                    }
-                    .frame(width: 40, height: 40)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(firstSegment.airlineName)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.black)
-                        Text(getTripDate())
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer()
-                }
+        VStack(spacing: 0) {
+            if !isFirst {
+                Divider()
+                    .padding(.leading)
             }
             
-            // Flight Route Details
             HStack {
-                // Departure
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(leg.originCode)
-                        .font(.system(size: 12, weight: .light))
-                        .foregroundColor(.black)
-                    Text(leg.formattedDepartureTime)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.black)
-                    Text(leg.origin)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.black)
+                // Provider Logo
+                AsyncImage(url: URL(string: platform.imageURL)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(
+                            Text(String(platform.name.prefix(2)))
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.gray)
+                        )
                 }
+                .frame(width: 40, height: 24)
                 
-                Spacer()
-                
-                // Duration and Stops
-                VStack(spacing: 8) {
-                    Text(formatDuration(leg.duration))
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.gray)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(platform.name)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.black.opacity(0.8))
                     
-                    // Flight path line
-                    HStack {
-                        Circle()
-                            .fill(Color.gray)
-                            .frame(width: 6, height: 6)
-                        
-                        Rectangle()
-                            .fill(Color.gray)
-                            .frame(height: 1)
-                        
-                        if leg.stopCount > 0 {
-                            Circle()
-                                .fill(Color.gray)
-                                .frame(width: 6, height: 6)
-                            
-                            Rectangle()
-                                .fill(Color.gray)
-                                .frame(height: 1)
+                    // Show rating if available
+                    if let rating = platform.rating, let ratingCount = platform.ratingCount {
+                        HStack(spacing: 4) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 10))
+                                .foregroundColor(.yellow)
+                            Text("\(String(format: "%.1f", rating)) (\(ratingCount))")
+                                .font(.system(size: 10))
+                                .foregroundColor(.gray)
                         }
-                        
-                        Circle()
-                            .fill(Color.gray)
-                            .frame(width: 6, height: 6)
                     }
-                    .frame(width: 100)
-                    
-                    Text(leg.stopsText)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.gray)
                 }
                 
                 Spacer()
                 
-                // Arrival
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(leg.destinationCode)
-                        .font(.system(size: 12, weight: .light))
-                        .foregroundColor(.black)
-                    Text(leg.formattedArrivalTime)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.black)
-                    Text(leg.destination)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.black)
-                }
-            }
-            
-            // Aircraft Info
-            if let firstSegment = leg.segments.first {
-                HStack {
-                    Image(systemName: "airplane")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
-                    
-                    Text(firstSegment.aircraft ?? "Airbus A32neo")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
-                    
-                    Spacer()
-                    
-                    Button("View more") {
-                        print("View more details tapped")
+                // Price
+                Text("₹\(Int(platform.price))")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.black)
+                
+                // Info icon
+                Image(systemName: "info.circle")
+                    .font(.system(size: 11))
+                    .foregroundColor(.gray)
+                    .padding(.leading, 4)
+                
+                // Book button
+                PrimaryButton(
+                    title: "View Deal",
+                    font: .system(size: 12),
+                    fontWeight: .bold,
+                    textColor: .white,
+                    width: 90,
+                    height: 39,
+                    verticalPadding: 12,
+                    cornerRadius: 6
+                ) {
+                    // Open deep link for booking
+                    if let url = URL(string: platform.deeplink) {
+                        UIApplication.shared.open(url)
+                        print("🔗 Opening booking link for \(platform.name): \(platform.deeplink)")
+                    } else {
+                        print("❌ Invalid booking URL for \(platform.name)")
                     }
-                    .font(.system(size: 14))
-                    .foregroundColor(.purple)
-                    
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12))
-                        .foregroundColor(.purple)
                 }
             }
+            .padding(.vertical, 12)
+            .padding(.horizontal)
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(16)
-    }
-    
-    private func formatDuration(_ minutes: Int) -> String {
-        let hours = minutes / 60
-        let mins = minutes % 60
-        return "\(hours)h \(mins)m"
-    }
-    
-    private func getTripDate() -> String {
-        let date = Date(timeIntervalSince1970: TimeInterval(leg.departureTimeAirport))
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        return formatter.string(from: date)
     }
 }
 
-// MARK: - Supporting Models
+
+
+// MARK: - Updated Supporting Models
 struct BookingPlatform {
     let name: String
     let price: Double
+    let imageURL: String
+    let deeplink: String
+    let rating: Double?
+    let ratingCount: Int?
 }
 
 #Preview {
-    // Create a sample flight for preview
+    // Create a sample flight for preview based on your actual API response
     let sampleSegment = FlightSegment(
-        id: "sample-segment",
-        arriveTimeAirport: 1735228800,
-        departureTimeAirport: 1735221600,
-        duration: 135,
-        flightNumber: "6E 123",
-        airlineName: "Indigo Airways",
-        airlineIata: "6E",
-        airlineLogo: "https://example.com/logo.png",
-        originCode: "CNN",
-        origin: "Kozhikode",
-        destinationCode: "CCJ",
-        destination: "Kannur",
+        id: "1341465931",
+        arriveTimeAirport: 1753363200,
+        departureTimeAirport: 1753359000,
+        duration: 70,
+        flightNumber: "516",
+        airlineName: "Alliance Air",
+        airlineIata: "9I",
+        airlineLogo: "https://content.r9cdn.net/rimg/provider-logos/airlines/v/9I.png?crop=false&width=108&height=92&fallback=default2.png&_v=90ac937114a16bb3c9405a546ae3266d",
+        originCode: "COK",
+        origin: "Kochi",
+        destinationCode: "SXV",
+        destination: "Salem",
         arrival_day_difference: 0,
-        wifi: true,
-        cabinClass: "Economy",
-        aircraft: "Airbus A32neo"
+        wifi: false,
+        cabinClass: "E",
+        aircraft: "ATR 72-201 / 202"
     )
     
     let sampleLeg = FlightLeg(
-        arriveTimeAirport: 1735228800,
-        departureTimeAirport: 1735221600,
-        duration: 135,
-        origin: "Kozhikode",
-        originCode: "CNN",
-        destination: "Kannur",
-        destinationCode: "CCJ",
-        stopCount: 1,
+        arriveTimeAirport: 1753363200,
+        departureTimeAirport: 1753359000,
+        duration: 70,
+        origin: "Kochi",
+        originCode: "COK",
+        destination: "Salem",
+        destinationCode: "SXV",
+        stopCount: 0,
         segments: [sampleSegment]
     )
     
-    let sampleProvider = Provider(
+    let sampleSplitProvider1 = SplitProvider(
+        name: "Yatra.com",
+        imageURL: "https://content.r9cdn.net/rimg/provider-logos/airlines/h/YATRAAIR.png?crop=false&width=166&height=62&fallback=default1.png&_v=79278c2f78d9747b2ab4dc606231fadb",
+        price: 1359.0,
+        deeplink: "https://www.kayak.co.in//in?cluster=5...",
+        rating: nil,
+        ratingCount: nil,
+        fareFamily: nil
+    )
+    
+    let sampleSplitProvider2 = SplitProvider(
+        name: "EaseMyTrip",
+        imageURL: "https://content.r9cdn.net/rimg/provider-logos/airlines/h/EASEMYTRIP.png?crop=false&width=166&height=62&fallback=default3.png&_v=7f73dd9532d350ccadae48b2df544c73",
+        price: 1469.5,
+        deeplink: "https://www.kayak.co.in//in?cluster=5...",
+        rating: nil,
+        ratingCount: nil,
+        fareFamily: nil
+    )
+    
+    let sampleProvider1 = Provider(
         isSplit: false,
-        transferType: nil,
-        price: 280.0,
-        splitProviders: nil
+        transferType: "managed",
+        price: 1359.0,
+        splitProviders: [sampleSplitProvider1]
+    )
+    
+    let sampleProvider2 = Provider(
+        isSplit: false,
+        transferType: "managed",
+        price: 1469.5,
+        splitProviders: [sampleSplitProvider2]
     )
     
     let sampleFlight = FlightResult(
-        id: "sample-123",
-        total_duration: 135,
-        min_price: 280.0,
-        max_price: 280.0,
+        id: "p1-3fde53e7da45",
+        total_duration: 70,
+        min_price: 1359.0,
+        max_price: 1469.5,
         legs: [sampleLeg],
-        providers: [sampleProvider],
+        providers: [sampleProvider1, sampleProvider2],
         is_best: true,
-        is_cheapest: false,
-        is_fastest: false
+        is_cheapest: true,
+        is_fastest: true
     )
     
     ResultDetails(flight: sampleFlight)
 }
-
-// MARK: - Sample Data for Preview
-
-let sampleSegment = FlightSegment(
-    id: "sample-segment",
-    arriveTimeAirport: 1735228800,
-    departureTimeAirport: 1735221600,
-    duration: 135,
-    flightNumber: "6E 123",
-    airlineName: "Indigo Airways",
-    airlineIata: "6E",
-    airlineLogo: "https://example.com/logo.png",
-    originCode: "CNN",
-    origin: "Kozhikode",
-    destinationCode: "CCJ",
-    destination: "Kannur",
-    arrival_day_difference: 0,
-    wifi: true,
-    cabinClass: "Economy",
-    aircraft: "Airbus A32neo"
-)
-
-let sampleLeg = FlightLeg(
-    arriveTimeAirport: 1735228800,
-    departureTimeAirport: 1735221600,
-    duration: 135,
-    origin: "Kozhikode",
-    originCode: "CNN",
-    destination: "Kannur",
-    destinationCode: "CCJ",
-    stopCount: 1,
-    segments: [sampleSegment]
-)
-
-let sampleProvider = Provider(
-    isSplit: false,
-    transferType: nil,
-    price: 280.0,
-    splitProviders: nil
-)
-
-let sampleFlight = FlightResult(
-    id: "sample-123",
-    total_duration: 135,
-    min_price: 280.0,
-    max_price: 280.0,
-    legs: [sampleLeg],
-    providers: [sampleProvider],
-    is_best: true,
-    is_cheapest: false,
-    is_fastest: false
-)
-
-// MARK: - Preview
-
-#Preview {
-    ResultDetails(flight: sampleFlight)
-}
-

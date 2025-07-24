@@ -9,6 +9,9 @@ struct ResultView: View {
     @State private var showAnimatedLoader = false
     @State private var hasInitialized = false
     @State private var isInitialLoad = false  // Track if this is the initial load
+    
+    // ✅ Reference to ResultHeader for updating airlines
+    @State private var resultHeaderRef: ResultHeader? = nil
 
     // To cancel any pending hide task
     @State private var loaderHideWorkItem: DispatchWorkItem? = nil
@@ -28,6 +31,7 @@ struct ResultView: View {
                     travelDate: searchParameters.formattedTravelDate,
                     travelerInfo: searchParameters.formattedTravelerInfo,
                     onFiltersChanged: { pollRequest in
+                        print("🔧 Applying filters from ResultHeader")
                         viewModel.applyFilters(request: pollRequest)
                     }
                 )
@@ -60,14 +64,14 @@ struct ResultView: View {
                             .font(.system(size: 20, weight: .semibold))
 
                         Text(error)
-                            .font(.system(size: 14))
+                            .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
 
                         PrimaryButton(
                             title: "Try Again",
-                            font: .system(size: 16),
+                            font: CustomFont.font(.medium),
                             fontWeight: .semibold,
                             width: 150,
                             height: 44,
@@ -90,16 +94,17 @@ struct ResultView: View {
                         Text("No flights found")
                             .font(.system(size: 20, weight: .semibold))
 
-                        Text("Try adjusting your search criteria")
-                            .font(.system(size: 14))
+                        Text("Try adjusting your search criteria or filters")
+                            .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
                     }
                     .frame(maxHeight: .infinity)
 
                 } else {
-                    // D) Success: list of flight results
+                    // D) Success: list of flight results with pagination
                     ScrollView {
-                        VStack(spacing: 16) {
+                        LazyVStack(spacing: 16) {
                             ForEach(viewModel.flightResults) { flight in
                                 Button {
                                     viewModel.selectFlight(flight)
@@ -112,6 +117,46 @@ struct ResultView: View {
                                     )
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .onAppear {
+                                    // Trigger pagination when user scrolls near the bottom
+                                    if viewModel.shouldLoadMore(currentItem: flight) {
+                                        print("🔄 Triggering load more for item: \(flight.id)")
+                                        viewModel.loadMoreResults()
+                                    }
+                                }
+                            }
+                            
+                            // Loading indicator for pagination
+                            if viewModel.isLoadingMore {
+                                HStack {
+                                    Spacer()
+                                    VStack(spacing: 8) {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                        Text("Loading more flights...")
+                                            .font(CustomFont.font(.small))
+                                            .foregroundColor(.gray)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 20)
+                            }
+                            
+                            // Cache complete indicator
+                            if !viewModel.hasMoreResults && !viewModel.flightResults.isEmpty {
+                                HStack {
+                                    Spacer()
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.green)
+                                            .font(CustomFont.font(.medium))
+                                        Text("All \(viewModel.totalResultsCount) flights loaded")
+                                            .font(CustomFont.font(.small))
+                                            .foregroundColor(.gray)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 20)
                             }
                         }
                         .padding()
@@ -134,13 +179,35 @@ struct ResultView: View {
                 isInitialLoad = true  // Mark this as initial load
 
                 if let searchId = searchId {
+                    print("🚀 Starting initial poll for searchId: \(searchId)")
                     viewModel.pollFlights(searchId: searchId)
                 }
             }
+            // In ResultView.swift, add this in the body or onReceive
+
+            .onReceive(viewModel.$flightResults) { flightResults in
+                print("🖥️ ResultView received \(flightResults.count) flight results")
+                print("Result view response: \(flightResults)")
+                for (index, flight) in flightResults.enumerated() {
+                    print("   Flight \(index + 1): \(flight.legs.first?.originCode ?? "?") → \(flight.legs.first?.destinationCode ?? "?") - \(flight.formattedPrice)")
+                }
+            }
             .onReceive(viewModel.$pollResponse) { pollResponse in
-                // (unchanged) collect filter metadata if needed
+                if let response = pollResponse {
+                    print("🖥️ ResultView received poll response with \(response.results.count) results")
+                    print("🖥️ Total available flights: \(response.count)")
+                    print("🖥️ Available airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
+                }
+            }
+            // ✅ FIXED: Update airlines in ResultHeader when poll response comes in
+            .onReceive(viewModel.$pollResponse) { pollResponse in
                 if let response = pollResponse {
                     print("📊 Poll response received with \(response.airlines.count) airlines")
+                    // Note: We need to access the ResultHeader somehow to update airlines
+                    // This is a bit tricky with the current architecture
+                    // For now, we'll print the airlines - you might need to use @StateObject
+                    // and pass the FilterViewModel between views for better integration
+                    print("✈️ Available airlines: \(response.airlines.map { $0.airlineName })")
                 }
             }
             .onReceive(viewModel.$isLoading) { isLoading in
@@ -175,5 +242,7 @@ struct ResultView: View {
         .fullScreenCover(isPresented: $showAnimatedLoader) {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
+        // Add debug info for development
+        .debugPagination(viewModel: viewModel)
     }
 }

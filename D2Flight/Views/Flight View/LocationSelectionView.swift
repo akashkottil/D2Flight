@@ -9,8 +9,40 @@ struct LocationSelectionView: View {
     @State private var originIATACode = ""
     @State private var destinationIATACode = ""
     
+    // NEW: Parameters to identify source and mode
+    let isFromRental: Bool
+    let isSameDropOff: Bool
+    
     // Updated closure to include IATA code
     var onLocationSelected: (String, Bool, String) -> Void // location, isOrigin, iataCode
+    
+    // Default initializer for FlightView (maintains backward compatibility)
+    init(
+        originLocation: Binding<String>,
+        destinationLocation: Binding<String>,
+        onLocationSelected: @escaping (String, Bool, String) -> Void
+    ) {
+        self._originLocation = originLocation
+        self._destinationLocation = destinationLocation
+        self.onLocationSelected = onLocationSelected
+        self.isFromRental = false
+        self.isSameDropOff = true
+    }
+    
+    // New initializer for RentalView
+    init(
+        originLocation: Binding<String>,
+        destinationLocation: Binding<String>,
+        isFromRental: Bool,
+        isSameDropOff: Bool,
+        onLocationSelected: @escaping (String, Bool, String) -> Void
+    ) {
+        self._originLocation = originLocation
+        self._destinationLocation = destinationLocation
+        self.onLocationSelected = onLocationSelected
+        self.isFromRental = isFromRental
+        self.isSameDropOff = isSameDropOff
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -23,7 +55,7 @@ struct LocationSelectionView: View {
                         .padding(.horizontal)
                 }
                 
-                Text(viewModel.getCurrentTitle())
+                Text(getHeaderTitle())
                     .font(.system(size: 20, weight: .bold))
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.trailing, 44)
@@ -39,7 +71,9 @@ struct LocationSelectionView: View {
                 originLocation: $originLocation,
                 destinationLocation: $destinationLocation,
                 isSelectingOrigin: $viewModel.isSelectingOrigin,
-                searchText: $viewModel.searchText
+                searchText: $viewModel.searchText,
+                isFromRental: isFromRental,
+                isSameDropOff: isSameDropOff
             )
 
             Divider()
@@ -48,7 +82,7 @@ struct LocationSelectionView: View {
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
-                    .font(.system(size: 14))
+                    .font(CustomFont.font(.regular))
                     .padding(.horizontal)
                     .padding(.top, 8)
             }
@@ -60,7 +94,7 @@ struct LocationSelectionView: View {
                     if !viewModel.getSectionTitle().isEmpty {
                         HStack {
                             Text(viewModel.getSectionTitle())
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.gray)
                             Spacer()
                             
@@ -69,7 +103,7 @@ struct LocationSelectionView: View {
                                 Button("Clear") {
                                     RecentLocationsManager.shared.clearRecentLocations()
                                 }
-                                .font(.system(size: 14, weight: .medium))
+                                .font(CustomFont.font(.regular, weight: .medium))
                                 .foregroundColor(Color("Violet"))
                             }
                         }
@@ -106,11 +140,11 @@ struct LocationSelectionView: View {
                                 .padding()
                             
                             Text(emptyState.title)
-                                .font(.system(size: 16))
+                                .font(CustomFont.font(.medium))
                                 .foregroundColor(.gray)
                             
                             Text(emptyState.subtitle)
-                                .font(.system(size: 14))
+                                .font(CustomFont.font(.regular))
                                 .foregroundColor(.gray.opacity(0.8))
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 40)
@@ -124,7 +158,7 @@ struct LocationSelectionView: View {
                             ProgressView()
                                 .scaleEffect(1.2)
                             Text("Searching locations...")
-                                .font(.system(size: 14))
+                                .font(CustomFont.font(.regular))
                                 .foregroundColor(.gray)
                         }
                         .padding(.top, 40)
@@ -140,23 +174,35 @@ struct LocationSelectionView: View {
         .background(Color.gray.opacity(0.05))
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
-            viewModel.resetToOriginSelection()
-            print("📱 LocationSelectionView appeared - showing recent locations initially")
+            // For rental same drop-off, start with destination selection disabled
+            if isFromRental && isSameDropOff {
+                viewModel.isSelectingOrigin = true
+            } else {
+                viewModel.resetToOriginSelection()
+            }
+            print("📱 LocationSelectionView appeared - isFromRental: \(isFromRental), isSameDropOff: \(isSameDropOff)")
         }
     }
     
     private func selectLocation(_ location: Location) {
         if viewModel.isSelectingOrigin {
-            originLocation = location.displayName
+            originLocation = location.airportName
             originIATACode = location.iataCode
             print("✈️ Origin selected: \(location.displayName) (\(location.iataCode))")
-            onLocationSelected(location.displayName, true, location.iataCode)
-            _ = viewModel.selectLocation(location)
+            onLocationSelected(location.airportName, true, location.iataCode)
+            
+            // For rental same drop-off, close immediately after selecting pickup
+            if isFromRental && isSameDropOff {
+                let shouldClose = viewModel.selectLocation(location)
+                presentationMode.wrappedValue.dismiss()
+            } else {
+                _ = viewModel.selectLocation(location)
+            }
         } else {
-            destinationLocation = location.displayName
+            destinationLocation = location.airportName
             destinationIATACode = location.iataCode
             print("🎯 Destination selected: \(location.displayName) (\(location.iataCode))")
-            onLocationSelected(location.displayName, false, location.iataCode)
+            onLocationSelected(location.airportName, false, location.iataCode)
             let shouldClose = viewModel.selectLocation(location)
             if shouldClose {
                 presentationMode.wrappedValue.dismiss()
@@ -168,9 +214,21 @@ struct LocationSelectionView: View {
         let location = recentLocation.toLocation()
         selectLocation(location)
     }
+    
+    private func getHeaderTitle() -> String {
+        if isFromRental {
+            if isSameDropOff {
+                return "Select pick-up location"
+            } else {
+                return viewModel.isSelectingOrigin ? "Select pick-up location" : "Select drop-off location"
+            }
+        } else {
+            return viewModel.isSelectingOrigin ? "Select departure location" : "Select destination location"
+        }
+    }
 }
 
-// MARK: - Recent Location Row View (NEW)
+// MARK: - Recent Location Row View (unchanged)
 struct RecentLocationRowView: View {
     let recentLocation: RecentLocation
     let onTap: () -> Void
@@ -186,7 +244,7 @@ struct RecentLocationRowView: View {
                     
                     Image(systemName: "clock.arrow.circlepath")
                         .foregroundColor(Color("Violet"))
-                        .font(.system(size: 14, weight: .medium))
+                        .font(CustomFont.font(.regular, weight: .medium))
                 }
                 
                 // Location Info
@@ -194,15 +252,15 @@ struct RecentLocationRowView: View {
                     HStack {
                         if recentLocation.type == "airport" {
                             Text(recentLocation.airportName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                             
                             Text("(\(recentLocation.iataCode))")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         } else {
                             Text(recentLocation.cityName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         }
                         
@@ -210,24 +268,7 @@ struct RecentLocationRowView: View {
                     }
                     
                     HStack {
-                        Text(recentLocation.displayName)
-                            .font(.system(size: 14))
-                            .foregroundColor(.gray)
-                            .fontWeight(.medium)
-                            .lineLimit(2)
-                        
-                        Spacer()
-                        
-                        // Show search count as a small badge
-                        if recentLocation.searchCount > 1 {
-                            Text("\(recentLocation.searchCount)×")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(Color("Violet"))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color("Violet").opacity(0.1))
-                                .cornerRadius(8)
-                        }
+                        // Empty for now - removed commented code
                     }
                 }
                 
@@ -240,7 +281,7 @@ struct RecentLocationRowView: View {
     }
 }
 
-// MARK: - Location Row View (EXISTING - keeping same design)
+// MARK: - Location Row View (unchanged)
 struct LocationRowView: View {
     let location: Location
     let onTap: () -> Void
@@ -251,7 +292,7 @@ struct LocationRowView: View {
                 // Location Icon based on type
                 Image(location.type == "airport" ? "FlightIcon" : "HotelIcon")
                     .foregroundColor(Color("Violet"))
-                    .font(.system(size: 18))
+                    .font(CustomFont.font(.large))
                     .frame(width: 24, height: 24)
                 
                 // Location Info
@@ -259,15 +300,15 @@ struct LocationRowView: View {
                     HStack {
                         if location.type == "airport" {
                             Text(location.airportName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                             
                             Text("(\(location.iataCode))")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         } else {
                             Text(location.cityName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         }
                         
@@ -275,7 +316,7 @@ struct LocationRowView: View {
                     }
                     
                     Text(location.displayName)
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                         .foregroundColor(.gray)
                         .fontWeight(.medium)
                         .lineLimit(2)

@@ -21,14 +21,14 @@ struct TimesFilterSheet: View {
             // Header
             HStack {
                 Text("Times")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
                 Button(action: {
                     isPresented = false
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(CustomFont.font(.large, weight: .medium))
                         .foregroundColor(.black)
                 }
             }
@@ -44,12 +44,12 @@ struct TimesFilterSheet: View {
                     // Departure Time Range
                     VStack(alignment: .leading, spacing: 16) {
                         Text("\(originCode) - \(destinationCode)")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(CustomFont.font(.medium, weight: .semibold))
                             .foregroundColor(.gray)
                         
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Taking off from \(originCode)")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                             
                             TimeRangeSlider(
@@ -64,12 +64,12 @@ struct TimesFilterSheet: View {
                     if isRoundTrip {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("\(destinationCode) - \(originCode)")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.gray)
                             
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Taking off from \(destinationCode)")
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(CustomFont.font(.medium, weight: .semibold))
                                     .foregroundColor(.black)
                                 
                                 TimeRangeSlider(
@@ -92,7 +92,7 @@ struct TimesFilterSheet: View {
                 HStack(spacing: 12) {
                     SecondaryButton(
                         title: "Clear",
-                        font: .system(size: 16),
+                        font: CustomFont.font(.medium),
                         fontWeight: .semibold,
                         textColor: .gray,
                         width: nil,
@@ -106,7 +106,7 @@ struct TimesFilterSheet: View {
                     
                     PrimaryButton(
                         title: "Apply",
-                        font: .system(size: 16),
+                        font: CustomFont.font(.medium),
                         fontWeight: .semibold,
                         textColor: .white,
                         width: nil,
@@ -197,13 +197,13 @@ struct TimeRangeSlider: View {
             // Time labels
             HStack {
                 Text(formatTime(range.lowerBound))
-                    .font(.system(size: 12))
+                    .font(CustomFont.font(.small))
                     .foregroundColor(.gray)
 
                 Spacer()
 
                 Text(formatTime(range.upperBound))
-                    .font(.system(size: 12))
+                    .font(CustomFont.font(.small))
                     .foregroundColor(.gray)
             }
         }

@@ -39,9 +39,9 @@ struct DateSelectionView: View {
             
             // Weekday Headers
             HStack(spacing: 8) { // Add spacing between each day
-                ForEach(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"], id: \.self) { day in
+                ForEach(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"], id: \.self) { day in
                     Text(day)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(CustomFont.font(.regular, weight: .medium))
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -99,7 +99,7 @@ struct DateSelectionView: View {
                         // Apply button
                         PrimaryButton(
                             title: "Apply",
-                            font: .system(size: 18),
+                            font: CustomFont.font(.large),
                             fontWeight: .bold,
                             textColor: .white,
                             verticalPadding: 18,
@@ -119,6 +119,7 @@ struct DateSelectionView: View {
                 }
             }
         }
+        .padding(.vertical,10)
         .navigationBarTitle("")
         .navigationBarHidden(true)
         .background(Color.white)
@@ -148,11 +149,11 @@ struct DateCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 14, weight: .medium))
+                .font(CustomFont.font(.regular, weight: .medium))
                 .foregroundColor(.gray)
             
             Text(dateText)
-                .font(.system(size: 16, weight: .semibold))
+                .font(CustomFont.font(.medium, weight: .semibold))
                 .foregroundColor(isSelected ? Color("Violet") : Color("Violet"))
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -23,14 +23,14 @@ struct DurationFilterSheet: View {
             // Header
             HStack {
                 Text("Duration")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
                 Button(action: {
                     isPresented = false
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(CustomFont.font(.large, weight: .medium))
                         .foregroundColor(.black)
                 }
             }
@@ -46,14 +46,14 @@ struct DurationFilterSheet: View {
                     // Departure Duration Filters
                     VStack(alignment: .leading, spacing: 16) {
                         Text("\(originCode) - \(destinationCode)")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(CustomFont.font(.regular, weight: .semibold))
                             .foregroundColor(.gray)
                         
                         VStack(spacing: 20) {
                             // Stopover Duration
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Stopover")
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(CustomFont.font(.regular, weight: .medium))
                                     .foregroundColor(.black)
                                 
                                 DurationRangeSlider(
@@ -67,7 +67,7 @@ struct DurationFilterSheet: View {
                             // Flight Leg Duration
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Flight leg")
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(CustomFont.font(.regular, weight: .medium))
                                     .foregroundColor(.black)
                                 
                                 DurationRangeSlider(
@@ -84,14 +84,14 @@ struct DurationFilterSheet: View {
                     if isRoundTrip {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("\(destinationCode) - \(originCode)")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(CustomFont.font(.regular, weight: .semibold))
                                 .foregroundColor(.gray)
                             
                             VStack(spacing: 20) {
                                 // Stopover Duration
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Stopover")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(CustomFont.font(.regular, weight: .medium))
                                         .foregroundColor(.black)
                                     
                                     DurationRangeSlider(
@@ -105,7 +105,7 @@ struct DurationFilterSheet: View {
                                 // Flight Leg Duration
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Flight leg")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(CustomFont.font(.regular, weight: .medium))
                                         .foregroundColor(.black)
                                     
                                     DurationRangeSlider(
@@ -130,7 +130,7 @@ struct DurationFilterSheet: View {
                 HStack(spacing: 12) {
                     SecondaryButton(
                         title: "Clear",
-                        font: .system(size: 16),
+                        font: CustomFont.font(.medium),
                         fontWeight: .semibold,
                         textColor: .gray,
                         width: nil,
@@ -146,7 +146,7 @@ struct DurationFilterSheet: View {
                     
                     PrimaryButton(
                         title: "Apply",
-                        font: .system(size: 16),
+                        font: CustomFont.font(.medium),
                         fontWeight: .semibold,
                         textColor: .white,
                         width: nil,
@@ -239,11 +239,11 @@ struct DurationRangeSlider: View {
             // Duration labels
             HStack {
                 Text(isDuration ? formatDuration(range.lowerBound) : formatTime(range.lowerBound))
-                    .font(.system(size: 12))
+                    .font(CustomFont.font(.small))
                     .foregroundColor(.gray)
                 Spacer()
                 Text(isDuration ? formatDuration(range.upperBound) : formatTime(range.upperBound))
-                    .font(.system(size: 12))
+                    .font(CustomFont.font(.small))
                     .foregroundColor(.gray)
             }
         }

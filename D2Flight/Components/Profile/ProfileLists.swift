@@ -17,8 +17,8 @@ struct ProfileLists: View {
     
     // Top Section Items
     let topItems: [ProfileItem] = [
-        ProfileItem(icon: "RegionIcon", title: "Region", trailing: "India", destination: AnyView(DemoScreen()), showsArrow: true),
-        ProfileItem(icon: "CurrencyIcon", title: "Currency", trailing: "India", destination: AnyView(DemoScreen()), showsArrow: true)
+        ProfileItem(icon: "RegionIcon", title: "Region", trailing: "India", destination: AnyView(Country()), showsArrow: true),
+        ProfileItem(icon: "CurrencyIcon", title: "Currency", trailing: "India", destination: AnyView(Currency()), showsArrow: true)
     ]
     
     var bottomItems: [ProfileItem] {
@@ -107,11 +107,11 @@ struct ProfileListItem: View {
                 .resizable()
                 .frame(width: 29, height: 29)
             Text(title)
-                .font(.system(size: 16))
+                .font(CustomFont.font(.medium))
             Spacer()
             if let trailingText = trailing {
                 Text(trailingText)
-                    .font(.system(size: 16))
+                    .font(CustomFont.font(.medium))
                     .fontWeight(.bold)
                     .foregroundColor(.black.opacity(0.5))
             }

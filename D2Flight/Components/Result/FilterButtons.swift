@@ -10,7 +10,7 @@ struct FilterButton: View {
             action?()
         }) {
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(CustomFont.font(.small, weight: .semibold))
                 .padding(.vertical, 8)
                 .padding(.horizontal, 16)
                 .background(isSelected ? Color("Violet") : Color.gray.opacity(0.1))
@@ -27,7 +27,7 @@ struct StaticFilterButton: View {
 
     var body: some View {
         Text(title)
-            .font(.system(size: 12, weight: .semibold))
+            .font(CustomFont.font(.small, weight: .semibold))
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
             .background(isSelected ? Color("Violet") : Color.gray.opacity(0.1))

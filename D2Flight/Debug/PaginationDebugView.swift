@@ -10,19 +10,31 @@ struct PaginationDebugView: View {
             if showDebugInfo {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Debug Info")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(CustomFont.font(.small, weight: .bold))
                         .foregroundColor(.white)
                     
                     Text("Results: \(viewModel.flightResults.count)/\(viewModel.totalResultsCount)")
-                        .font(.system(size: 10))
+                        .font(CustomFont.font(.tiny))
                         .foregroundColor(.white)
                     
                     Text("HasMore: \(viewModel.hasMoreResults ? "Yes" : "No")")
-                        .font(.system(size: 10))
+                        .font(CustomFont.font(.tiny))
                         .foregroundColor(.white)
                     
                     Text("Loading: \(viewModel.isLoading ? "Initial" : viewModel.isLoadingMore ? "More" : "None")")
-                        .font(.system(size: 10))
+                        .font(CustomFont.font(.tiny))
+                        .foregroundColor(.white)
+                    
+                    // Show cache status
+                    if let pollResponse = viewModel.pollResponse {
+                        Text("Cache: \(pollResponse.cache ? "Complete" : "Building")")
+                            .font(CustomFont.font(.tiny))
+                            .foregroundColor(pollResponse.cache ? .green : .yellow)
+                    }
+                    
+                    // Show poll count
+                    Text("API Calls: \(viewModel.totalPollCount)")
+                        .font(CustomFont.font(.tiny))
                         .foregroundColor(.white)
                 }
                 .padding(8)
@@ -38,7 +50,7 @@ struct PaginationDebugView: View {
                 }
             }) {
                 Image(systemName: "info.circle")
-                    .font(.system(size: 16))
+                    .font(CustomFont.font(.medium))
                     .foregroundColor(.gray)
                     .opacity(0.6)
             }

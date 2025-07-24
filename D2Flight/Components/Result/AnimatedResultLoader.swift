@@ -71,7 +71,7 @@ struct AnimatedResultLoader: View {
                         .foregroundColor(.white)
                     
                     Text(messages[currentTextIndex])
-                        .font(.system(size: 16))
+                        .font(CustomFont.font(.medium))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))

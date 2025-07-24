@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 struct SimplifiedCalendar: View {
@@ -16,8 +15,8 @@ struct SimplifiedCalendar: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 40) {
-                // Show current month and next month
-                ForEach(0..<2, id: \.self) { monthOffset in
+                // Show current month and next 10 months (11 months total)
+                ForEach(0..<11, id: \.self) { monthOffset in
                     if let monthDate = calendar.date(byAdding: .month, value: monthOffset, to: currentDate) {
                         MonthCalendarView(
                             month: monthDate,
@@ -126,7 +125,7 @@ struct DayButton: View {
             handleDateSelection()
         }) {
             Text(dayNumber)
-                .font(.system(size: 16, weight: .medium))
+                .font(CustomFont.font(.medium, weight: .medium))
                 .foregroundColor(isSelected ? .white : (isPastDate ? .gray : .black))
                 .frame(width: 40, height: 40)
                 .background(

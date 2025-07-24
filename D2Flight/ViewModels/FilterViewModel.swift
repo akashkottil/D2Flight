@@ -66,6 +66,7 @@ class FilterViewModel: ObservableObject {
                 price: 350 // Default price, could be calculated from results
             )
         }
+        print("✈️ Updated available airlines: \(availableAirlines.count)")
     }
     
     func toggleAirlineSelection(_ airlineCode: String) {
@@ -88,57 +89,84 @@ class FilterViewModel: ObservableObject {
         loadDefaultFilters()
     }
     
+    // ✅ FIXED: Improved buildPollRequest with better logic
     func buildPollRequest() -> PollRequest {
         var request = PollRequest()
         
-        // Sort options
-        switch selectedSortOption {
-        case .best:
-            request.sort_by = "quality"
-            request.sort_order = "desc"
-        case .cheapest:
-            request.sort_by = "price"
-            request.sort_order = "asc"
-        case .quickest:
-            request.sort_by = "duration"
-            request.sort_order = "asc"
-        case .earliest:
-            request.sort_by = "departure"
-            request.sort_order = "asc"
+        // ✅ Sort options - always apply if not default
+        if selectedSortOption != .best {
+            switch selectedSortOption {
+            case .best:
+                request.sort_by = "quality"
+                request.sort_order = "desc"
+            case .cheapest:
+                request.sort_by = "price"
+                request.sort_order = "asc"
+            case .quickest:
+                request.sort_by = "duration"
+                request.sort_order = "asc"
+            case .earliest:
+                request.sort_by = "departure"
+                request.sort_order = "asc"
+            }
         }
         
-        // Duration filter
+        // ✅ Duration filter - only apply if different from default
         if maxDuration < 1440 {
             request.duration_max = Int(maxDuration)
         }
         
-        // Stop count filter
+        // ✅ Stop count filter - only apply if different from default
         if maxStops < 3 {
             request.stop_count_max = maxStops
         }
         
-        // Time range filters
-        if departureTimeRange != 0...1440 || returnTimeRange != 0...1440 {
-            var timeRanges: [ArrivalDepartureRange] = []
-            
-            // Departure leg time range
+        // ✅ Time range filters - only apply if ranges are modified
+        var hasTimeFilters = false
+        var timeRanges: [ArrivalDepartureRange] = []
+        
+        if departureTimeRange != 0...1440 {
+            hasTimeFilters = true
             timeRanges.append(ArrivalDepartureRange(
-                arrival: TimeRange(min: Int(departureTimeRange.lowerBound * 60), max: Int(departureTimeRange.upperBound * 60)),
-                departure: TimeRange(min: Int(departureTimeRange.lowerBound * 60), max: Int(departureTimeRange.upperBound * 60))
+                arrival: TimeRange(
+                    min: Int(departureTimeRange.lowerBound),
+                    max: Int(departureTimeRange.upperBound)
+                ),
+                departure: TimeRange(
+                    min: Int(departureTimeRange.lowerBound),
+                    max: Int(departureTimeRange.upperBound)
+                )
             ))
-            
-            // Return leg time range (if round trip)
-            if isRoundTrip {
+        }
+        
+        // Return leg time range (if round trip and different from default)
+        if isRoundTrip && returnTimeRange != 0...1440 {
+            hasTimeFilters = true
+            // Add return leg if not already added, or update existing one
+            if timeRanges.isEmpty {
+                // Add departure with default values and return with filtered values
                 timeRanges.append(ArrivalDepartureRange(
-                    arrival: TimeRange(min: Int(returnTimeRange.lowerBound * 60), max: Int(returnTimeRange.upperBound * 60)),
-                    departure: TimeRange(min: Int(returnTimeRange.lowerBound * 60), max: Int(returnTimeRange.upperBound * 60))
+                    arrival: TimeRange(min: 0, max: 1440),
+                    departure: TimeRange(min: 0, max: 1440)
                 ))
             }
-            
+            timeRanges.append(ArrivalDepartureRange(
+                arrival: TimeRange(
+                    min: Int(returnTimeRange.lowerBound),
+                    max: Int(returnTimeRange.upperBound)
+                ),
+                departure: TimeRange(
+                    min: Int(returnTimeRange.lowerBound),
+                    max: Int(returnTimeRange.upperBound)
+                )
+            ))
+        }
+        
+        if hasTimeFilters {
             request.arrival_departure_ranges = timeRanges
         }
         
-        // Airline filters
+        // ✅ Airline filters - only apply if airlines are selected
         if !selectedAirlines.isEmpty {
             request.iata_codes_include = Array(selectedAirlines)
         }
@@ -147,7 +175,7 @@ class FilterViewModel: ObservableObject {
             request.iata_codes_exclude = Array(excludedAirlines)
         }
         
-        // Price filters
+        // ✅ Price filters - only apply if different from default
         if priceRange.lowerBound > 0 {
             request.price_min = Int(priceRange.lowerBound)
         }
@@ -155,6 +183,16 @@ class FilterViewModel: ObservableObject {
         if priceRange.upperBound < 10000 {
             request.price_max = Int(priceRange.upperBound)
         }
+        
+        // ✅ Debug logging
+        print("🔧 Built PollRequest:")
+        print("   Sort: \(request.sort_by ?? "none") \(request.sort_order ?? "")")
+        print("   Max Duration: \(request.duration_max ?? -1)")
+        print("   Max Stops: \(request.stop_count_max ?? -1)")
+        print("   Selected Airlines: \(selectedAirlines.count)")
+        print("   Time Filters: \(hasTimeFilters)")
+        print("   Price Range: \(request.price_min ?? 0) - \(request.price_max ?? -1)")
+        print("   Has Filters: \(request.hasFilters())")
         
         return request
     }

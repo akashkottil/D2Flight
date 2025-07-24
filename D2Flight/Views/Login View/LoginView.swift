@@ -23,7 +23,7 @@ struct LoginView : View {
                     .foregroundColor(.white)
                 
                 Text("Sign in to save up to 50% when you book a flight last minute and anytime 😊.")
-                    .font(.system(size: 16))
+                    .font(CustomFont.font(.medium))
                     .fontWeight(.medium)
                     .foregroundColor(.white)
             }

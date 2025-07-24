@@ -10,6 +10,7 @@ struct ResultHeader: View {
     @State private var showClassesSheet = false
     @State private var showDurationSheet = false
     @State private var showAirlinesSheet = false
+    @State private var showPriceSheet = false  // ✅ Added price sheet
     
     // Dynamic trip and result data - NO MORE DEFAULTS
     let originCode: String
@@ -51,11 +52,11 @@ struct ResultHeader: View {
                 
                 VStack(alignment: .leading) {
                     Text("\(originCode) to \(destinationCode)")
-                        .font(.system(size: 14))
+                        .font(CustomFont.font(.regular))
                         .fontWeight(.semibold)
                         .foregroundColor(.black)
                     Text("\(travelDate), \(travelerInfo)")
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .fontWeight(.light)
                         .foregroundColor(.gray)
                 }
@@ -64,7 +65,7 @@ struct ResultHeader: View {
                     Image("EditIcon")
                         .frame(width: 14, height: 14)
                     Text("Edit")
-                        .font(.system(size: 12))
+                        .font(CustomFont.font(.small))
                         .fontWeight(.semibold)
                         .foregroundColor(.black)
                 }
@@ -74,7 +75,7 @@ struct ResultHeader: View {
             // Filter Buttons
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    // Sort Button
+                    // Sort Button - ✅ Show active state when not "Best"
                     Button(action: {
                         showSortSheet = true
                     }) {
@@ -82,34 +83,42 @@ struct ResultHeader: View {
                             Image("SortIcon")
                             Text("Sort: \(filterViewModel.selectedSortOption.displayName)")
                         }
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(CustomFont.font(.small, weight: .semibold))
                         .padding(.vertical, 8)
                         .padding(.horizontal, 16)
-                        .background(Color.gray.opacity(0.1))
-                        .foregroundColor(.gray)
+                        .background(filterViewModel.selectedSortOption != .best ? Color("Violet") : Color.gray.opacity(0.1))
+                        .foregroundColor(filterViewModel.selectedSortOption != .best ? .white : .gray)
                         .cornerRadius(20)
                     }
                     
-                    // Filter Buttons with active state
+                    // ✅ Stops Filter - Show active state
                     FilterButton(
                         title: "Stops",
                         isSelected: filterViewModel.maxStops < 3,
                         action: {
-                            // For now, just toggle max stops between 0 and 3
-                            filterViewModel.maxStops = filterViewModel.maxStops == 3 ? 0 : 3
+                            // Cycle through stop options: All stops (3) -> Non-stop (0) -> 1 stop (1) -> 2 stops (2) -> All stops (3)
+                            switch filterViewModel.maxStops {
+                            case 3: filterViewModel.maxStops = 0 // All -> Non-stop
+                            case 0: filterViewModel.maxStops = 1 // Non-stop -> 1 stop
+                            case 1: filterViewModel.maxStops = 2 // 1 stop -> 2 stops
+                            case 2: filterViewModel.maxStops = 3 // 2 stops -> All
+                            default: filterViewModel.maxStops = 3
+                            }
                             applyFilters()
                         }
                     )
                     
-                    
+                    // ✅ Time Filter - Show active state
                     FilterButton(
                         title: "Time",
-                        isSelected: filterViewModel.departureTimeRange != 0...1440 || filterViewModel.returnTimeRange != 0...1440,
+                        isSelected: filterViewModel.departureTimeRange != 0...1440 ||
+                                   (isRoundTrip && filterViewModel.returnTimeRange != 0...1440),
                         action: {
                             showTimesSheet = true
                         }
                     )
                     
+                    // ✅ Airlines Filter - Show active state
                     FilterButton(
                         title: "Airlines",
                         isSelected: !filterViewModel.selectedAirlines.isEmpty,
@@ -118,6 +127,7 @@ struct ResultHeader: View {
                         }
                     )
                     
+                    // ✅ Duration Filter - Show active state
                     FilterButton(
                         title: "Duration",
                         isSelected: filterViewModel.maxDuration < 1440,
@@ -126,6 +136,17 @@ struct ResultHeader: View {
                         }
                     )
                     
+                    // ✅ Price Filter - Show active state
+                    FilterButton(
+                        title: "Price",
+                        isSelected: filterViewModel.priceRange.lowerBound > 0 ||
+                                   filterViewModel.priceRange.upperBound < 10000,
+                        action: {
+                            showPriceSheet = true
+                        }
+                    )
+                    
+                    // ✅ Classes Filter - Show active state
                     FilterButton(
                         title: "Classes",
                         isSelected: filterViewModel.selectedClass != .economy,
@@ -197,6 +218,18 @@ struct ResultHeader: View {
             )
             .presentationDetents([.large])
         }
+        // ✅ Added Price Filter Sheet
+        .sheet(isPresented: $showPriceSheet) {
+            PriceFilterSheet(
+                isPresented: $showPriceSheet,
+                priceRange: $filterViewModel.priceRange,
+                minPrice: 0,
+                maxPrice: 10000,
+                averagePrice: 500, // You might want to calculate this from actual data
+                onApply: applyFilters
+            )
+            .presentationDetents([.medium])
+        }
     }
     
     private func applyFilters() {
@@ -208,12 +241,15 @@ struct ResultHeader: View {
         print("   Max Stops: \(filterViewModel.maxStops)")
         print("   Selected Airlines: \(filterViewModel.selectedAirlines.count)")
         print("   Duration Filter: \(filterViewModel.maxDuration < 1440 ? "Active" : "Inactive")")
+        print("   Time Filter: \(filterViewModel.departureTimeRange != 0...1440 ? "Active" : "Inactive")")
+        print("   Price Filter: \(filterViewModel.priceRange != 0...10000 ? "Active" : "Inactive")")
+        print("   Has Any Filters: \(pollRequest.hasFilters())")
     }
     
-    // Method to update available airlines from poll response
+    // ✅ Method to update available airlines from poll response
     func updateAvailableAirlines(_ airlines: [Airline]) {
         filterViewModel.updateAvailableAirlines(airlines)
-        print("✈️ Updated available airlines: \(airlines.count) airlines")
+        print("✈️ Updated available airlines in ResultHeader: \(airlines.count) airlines")
     }
 }
 

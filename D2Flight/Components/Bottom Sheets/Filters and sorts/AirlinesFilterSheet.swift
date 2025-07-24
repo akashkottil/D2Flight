@@ -18,14 +18,14 @@ struct AirlinesFilterSheet: View {
             // Header
             HStack {
                 Text("Airlines")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
                 Button(action: {
                     isPresented = false
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(CustomFont.font(.large, weight: .medium))
                         .foregroundColor(.black)
                 }
             }
@@ -67,7 +67,7 @@ struct AirlinesFilterSheet: View {
             VStack {
                 PrimaryButton(
                     title: "Apply",
-                    font: .system(size: 18),
+                    font: CustomFont.font(.large),
                     fontWeight: .semibold,
                     textColor: .white,
                     width: nil,
@@ -123,7 +123,7 @@ struct AirlinesFilterSheet: View {
                     
                     if isSelected {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(CustomFont.font(.small, weight: .bold))
                             .foregroundColor(.white)
                     }
                 }
@@ -136,14 +136,14 @@ struct AirlinesFilterSheet: View {
                         .frame(width: 32, height: 32)
                         .overlay(
                             Text(String(name.prefix(2)))
-                                .font(.system(size: 12, weight: .bold))
+                                .font(CustomFont.font(.small, weight: .bold))
                                 .foregroundColor(.white)
                         )
                 }
                 
                 // Airline Name
                 Text(name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(CustomFont.font(.medium, weight: .semibold))
                     .foregroundColor(.black)
                     .multilineTextAlignment(.leading)
                 
@@ -152,7 +152,7 @@ struct AirlinesFilterSheet: View {
                 // Price (only for individual airlines)
                 if let price = price {
                     Text("$\(Int(price))")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(CustomFont.font(.medium, weight: .semibold))
                         .foregroundColor(.black)
                 }
             }

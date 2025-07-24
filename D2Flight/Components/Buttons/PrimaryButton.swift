@@ -4,7 +4,7 @@ import SwiftUI
 
 struct PrimaryButton: View {
     var title: String
-    var font: Font = .system(size: 16)
+    var font: Font = CustomFont.font(.medium)
     var fontWeight: Font.Weight = .bold
     var textColor: Color = .white
     var width: CGFloat? = nil

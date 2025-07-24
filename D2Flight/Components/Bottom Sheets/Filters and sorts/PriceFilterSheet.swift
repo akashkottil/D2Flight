@@ -20,14 +20,14 @@ struct PriceFilterSheet: View {
             // Header
             HStack {
                 Text("Price")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
                 Button(action: {
                     isPresented = false
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(CustomFont.font(.large, weight: .medium))
                         .foregroundColor(.black)
                 }
             }
@@ -44,7 +44,7 @@ struct PriceFilterSheet: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text("Daily  + local taxes & fees")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(CustomFont.font(.regular, weight: .semibold))
                                 .foregroundColor(.black)
                             Spacer()
                             Image(systemName: "chevron.down")
@@ -74,7 +74,7 @@ struct PriceFilterSheet: View {
                 HStack(spacing: 12) {
                     SecondaryButton(
                         title: "Clear",
-                        font: .system(size: 16),
+                        font: CustomFont.font(.medium),
                         fontWeight: .semibold,
                         textColor: .gray,
                         width: nil,
@@ -87,7 +87,7 @@ struct PriceFilterSheet: View {
                     
                     PrimaryButton(
                         title: "Apply",
-                        font: .system(size: 16),
+                        font: CustomFont.font(.medium),
                         fontWeight: .semibold,
                         textColor: .white,
                         width: nil,
@@ -173,11 +173,11 @@ struct PriceRangeSlider: View {
             // Price labels
             HStack {
                 Text("$\(Int(range.lowerBound))")
-                    .font(.system(size: 12))
+                    .font(CustomFont.font(.small))
                     .foregroundColor(.gray)
                 Spacer()
                 Text("$\(Int(range.upperBound))")
-                    .font(.system(size: 12))
+                    .font(CustomFont.font(.small))
                     .foregroundColor(.gray)
             }
         }
