@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ResultView: View {
     @StateObject private var viewModel = ResultViewModel()
+    @StateObject private var headerViewModel = ResultHeaderViewModel() // ✅ Fixed: Use consistent naming
     @State private var selectedFlight: FlightResult? = nil
     @State private var navigateToDetails = false
 
@@ -9,9 +10,6 @@ struct ResultView: View {
     @State private var showAnimatedLoader = false
     @State private var hasInitialized = false
     @State private var isInitialLoad = false  // Track if this is the initial load
-    
-    // ✅ Reference to ResultHeader for updating airlines
-    @State private var resultHeaderRef: ResultHeader? = nil
 
     // To cancel any pending hide task
     @State private var loaderHideWorkItem: DispatchWorkItem? = nil
@@ -23,8 +21,9 @@ struct ResultView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // MARK: 1) Fixed Top Filter Bar
-                ResultHeader(
+                // MARK: 1) Fixed Top Filter Bar - ✅ Use ResultHeaderView instead of ResultHeaderWithRef
+                ResultHeaderView(
+                    headerViewModel: headerViewModel,
                     originCode: searchParameters.originCode,
                     destinationCode: searchParameters.destinationCode,
                     isRoundTrip: searchParameters.isRoundTrip,
@@ -183,31 +182,24 @@ struct ResultView: View {
                     viewModel.pollFlights(searchId: searchId)
                 }
             }
-            // In ResultView.swift, add this in the body or onReceive
-
-            .onReceive(viewModel.$flightResults) { flightResults in
-                print("🖥️ ResultView received \(flightResults.count) flight results")
-                print("Result view response: \(flightResults)")
-                for (index, flight) in flightResults.enumerated() {
-                    print("   Flight \(index + 1): \(flight.legs.first?.originCode ?? "?") → \(flight.legs.first?.destinationCode ?? "?") - \(flight.formattedPrice)")
-                }
-            }
+            // ✅ FIXED: Single onReceive for poll response that handles both logging and header updates
             .onReceive(viewModel.$pollResponse) { pollResponse in
                 if let response = pollResponse {
+                    // Log the response
                     print("🖥️ ResultView received poll response with \(response.results.count) results")
                     print("🖥️ Total available flights: \(response.count)")
                     print("🖥️ Available airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
+                    
+                    // Update header with poll data
+                    headerViewModel.updatePollData(response)
+                    print("✅ Updated ResultHeader with API data")
                 }
             }
-            // ✅ FIXED: Update airlines in ResultHeader when poll response comes in
-            .onReceive(viewModel.$pollResponse) { pollResponse in
-                if let response = pollResponse {
-                    print("📊 Poll response received with \(response.airlines.count) airlines")
-                    // Note: We need to access the ResultHeader somehow to update airlines
-                    // This is a bit tricky with the current architecture
-                    // For now, we'll print the airlines - you might need to use @StateObject
-                    // and pass the FilterViewModel between views for better integration
-                    print("✈️ Available airlines: \(response.airlines.map { $0.airlineName })")
+            // ✅ Keep this for flight results logging
+            .onReceive(viewModel.$flightResults) { flightResults in
+                print("🖥️ ResultView received \(flightResults.count) flight results")
+                for (index, flight) in flightResults.enumerated() {
+                    print("   Flight \(index + 1): \(flight.legs.first?.originCode ?? "?") → \(flight.legs.first?.destinationCode ?? "?") - \(flight.formattedPrice)")
                 }
             }
             .onReceive(viewModel.$isLoading) { isLoading in

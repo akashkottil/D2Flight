@@ -92,6 +92,8 @@ struct PollResponse: Codable {
     let airlines: [Airline]
     let min_duration: Int
     let max_duration: Int
+    let min_price: Double  // ✅ Add this
+    let max_price: Double  // ✅ Add this
     let agencies: [Agency]
     let cheapest_flight: FlightSummary?
     let best_flight: FlightSummary?

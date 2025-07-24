@@ -4,15 +4,11 @@ struct ResultHeader: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var filterViewModel = FilterViewModel()
     
-    // Sheet presentation states
-    @State private var showSortSheet = false
-    @State private var showTimesSheet = false
-    @State private var showClassesSheet = false
-    @State private var showDurationSheet = false
-    @State private var showAirlinesSheet = false
-    @State private var showPriceSheet = false  // ✅ Added price sheet
+    // Sheet presentation states - now using single sheet with filter type
+    @State private var showUnifiedFilterSheet = false
+    @State private var selectedFilterType: FilterType = .sort
     
-    // Dynamic trip and result data - NO MORE DEFAULTS
+    // Dynamic trip and result data
     let originCode: String
     let destinationCode: String
     let isRoundTrip: Bool
@@ -22,7 +18,6 @@ struct ResultHeader: View {
     // Callback for applying filters
     var onFiltersChanged: (PollRequest) -> Void
     
-    // Updated initializer without defaults - parameters are required
     init(
         originCode: String,
         destinationCode: String,
@@ -75,9 +70,10 @@ struct ResultHeader: View {
             // Filter Buttons
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    // Sort Button - ✅ Show active state when not "Best"
+                    // Sort Button
                     Button(action: {
-                        showSortSheet = true
+                        selectedFilterType = .sort
+                        showUnifiedFilterSheet = true
                     }) {
                         HStack {
                             Image("SortIcon")
@@ -91,67 +87,72 @@ struct ResultHeader: View {
                         .cornerRadius(20)
                     }
                     
-                    // ✅ Stops Filter - Show active state
+                    // Stops Filter
                     FilterButton(
                         title: "Stops",
                         isSelected: filterViewModel.maxStops < 3,
                         action: {
-                            // Cycle through stop options: All stops (3) -> Non-stop (0) -> 1 stop (1) -> 2 stops (2) -> All stops (3)
+                            // Cycle through stop options
                             switch filterViewModel.maxStops {
-                            case 3: filterViewModel.maxStops = 0 // All -> Non-stop
-                            case 0: filterViewModel.maxStops = 1 // Non-stop -> 1 stop
-                            case 1: filterViewModel.maxStops = 2 // 1 stop -> 2 stops
-                            case 2: filterViewModel.maxStops = 3 // 2 stops -> All
+                            case 3: filterViewModel.maxStops = 0
+                            case 0: filterViewModel.maxStops = 1
+                            case 1: filterViewModel.maxStops = 2
+                            case 2: filterViewModel.maxStops = 3
                             default: filterViewModel.maxStops = 3
                             }
                             applyFilters()
                         }
                     )
                     
-                    // ✅ Time Filter - Show active state
+                    // Time Filter
                     FilterButton(
                         title: "Time",
                         isSelected: filterViewModel.departureTimeRange != 0...1440 ||
                                    (isRoundTrip && filterViewModel.returnTimeRange != 0...1440),
                         action: {
-                            showTimesSheet = true
+                            selectedFilterType = .times
+                            showUnifiedFilterSheet = true
                         }
                     )
                     
-                    // ✅ Airlines Filter - Show active state
+                    // Airlines Filter
                     FilterButton(
                         title: "Airlines",
                         isSelected: !filterViewModel.selectedAirlines.isEmpty,
                         action: {
-                            showAirlinesSheet = true
+                            selectedFilterType = .airlines
+                            showUnifiedFilterSheet = true
                         }
                     )
                     
-                    // ✅ Duration Filter - Show active state
+                    // Duration Filter
                     FilterButton(
                         title: "Duration",
                         isSelected: filterViewModel.maxDuration < 1440,
                         action: {
-                            showDurationSheet = true
+                            selectedFilterType = .duration
+                            showUnifiedFilterSheet = true
                         }
                     )
                     
-                    // ✅ Price Filter - Show active state
+                    // Price Filter
                     FilterButton(
                         title: "Price",
                         isSelected: filterViewModel.priceRange.lowerBound > 0 ||
                                    filterViewModel.priceRange.upperBound < 10000,
                         action: {
-                            showPriceSheet = true
+                            selectedFilterType = .price
+                            showUnifiedFilterSheet = true
                         }
                     )
                     
-                    // ✅ Classes Filter - Show active state
+                    // Classes Filter
                     FilterButton(
                         title: "Classes",
                         isSelected: filterViewModel.selectedClass != .economy,
                         action: {
-                            showClassesSheet = true
+                            selectedFilterType = .classes
+                            showUnifiedFilterSheet = true
                         }
                     )
                 }
@@ -166,70 +167,28 @@ struct ResultHeader: View {
             print("   Date: \(travelDate)")
             print("   Travelers: \(travelerInfo)")
         }
-        // Bottom Sheets
-        .sheet(isPresented: $showSortSheet) {
-            SortSheet(
-                isPresented: $showSortSheet,
-                selectedSortOption: $filterViewModel.selectedSortOption,
-                onApply: applyFilters
-            )
-            .presentationDetents([.medium])
-        }
-        .sheet(isPresented: $showTimesSheet) {
-            TimesFilterSheet(
-                isPresented: $showTimesSheet,
-                departureTimeRange: $filterViewModel.departureTimeRange,
-                returnTimeRange: $filterViewModel.returnTimeRange,
+        // Single Unified Sheet
+        .sheet(isPresented: $showUnifiedFilterSheet) {
+            UnifiedFilterSheet(
+                isPresented: $showUnifiedFilterSheet,
+                filterType: selectedFilterType,
+                filterViewModel: filterViewModel,
                 isRoundTrip: isRoundTrip,
                 originCode: originCode,
                 destinationCode: destinationCode,
-                onApply: applyFilters
-            )
-            .presentationDetents([.large])
-        }
-        .sheet(isPresented: $showClassesSheet) {
-            ClassesSheet(
-                isPresented: $showClassesSheet,
-                selectedClass: $filterViewModel.selectedClass,
-                onApply: applyFilters
-            )
-            .presentationDetents([.medium])
-        }
-        .sheet(isPresented: $showDurationSheet) {
-            DurationFilterSheet(
-                isPresented: $showDurationSheet,
-                departureStopoverRange: $filterViewModel.departureStopoverRange,
-                departureLegRange: $filterViewModel.departureLegRange,
-                returnStopoverRange: $filterViewModel.returnStopoverRange,
-                returnLegRange: $filterViewModel.returnLegRange,
-                isRoundTrip: isRoundTrip,
-                originCode: originCode,
-                destinationCode: destinationCode,
-                onApply: applyFilters
-            )
-            .presentationDetents([.large])
-        }
-        .sheet(isPresented: $showAirlinesSheet) {
-            AirlinesFilterSheet(
-                isPresented: $showAirlinesSheet,
-                selectedAirlines: $filterViewModel.selectedAirlines,
                 availableAirlines: filterViewModel.availableAirlines,
-                onApply: applyFilters
-            )
-            .presentationDetents([.large])
-        }
-        // ✅ Added Price Filter Sheet
-        .sheet(isPresented: $showPriceSheet) {
-            PriceFilterSheet(
-                isPresented: $showPriceSheet,
-                priceRange: $filterViewModel.priceRange,
                 minPrice: 0,
                 maxPrice: 10000,
-                averagePrice: 500, // You might want to calculate this from actual data
+                averagePrice: 500,
                 onApply: applyFilters
             )
-            .presentationDetents([.medium])
+            .presentationDetents(getPresentationDetents())
         }
+    }
+    
+    // Helper to determine presentation detent - all sheets open to half screen
+    private func getPresentationDetents() -> Set<PresentationDetent> {
+        return [.medium]
     }
     
     private func applyFilters() {
@@ -246,7 +205,7 @@ struct ResultHeader: View {
         print("   Has Any Filters: \(pollRequest.hasFilters())")
     }
     
-    // ✅ Method to update available airlines from poll response
+    // Method to update available airlines from poll response
     func updateAvailableAirlines(_ airlines: [Airline]) {
         filterViewModel.updateAvailableAirlines(airlines)
         print("✈️ Updated available airlines in ResultHeader: \(airlines.count) airlines")
