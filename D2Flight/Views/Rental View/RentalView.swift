@@ -68,7 +68,18 @@ struct RentalView: View {
                         HStack {
                             Button(action: {
                                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                    let wasChanged = isSameDropOff != true
                                     isSameDropOff = true
+                                    
+                                    // Clear dates and times when switching to same drop-off
+                                    // so smart defaults will be applied when DateTimeSelectionView opens
+                                    if wasChanged {
+                                        selectedDates = []
+                                        selectedTimes = []
+                                        dropOffLocation = "" // Clear drop-off location for same drop-off
+                                        dropOffIATACode = ""
+                                        print("🔄 Switched to SAME drop-off - cleared dates/times for smart defaults")
+                                    }
                                 }
                             }) {
                                 Text("Same drop-off")
@@ -91,7 +102,16 @@ struct RentalView: View {
                             
                             Button(action: {
                                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                    let wasChanged = isSameDropOff != false
                                     isSameDropOff = false
+                                    
+                                    // Clear dates and times when switching to different drop-off
+                                    // so smart defaults will be applied when DateTimeSelectionView opens
+                                    if wasChanged {
+                                        selectedDates = []
+                                        selectedTimes = []
+                                        print("🔄 Switched to DIFFERENT drop-off - cleared dates/times for smart defaults")
+                                    }
                                 }
                             }) {
                                 Text("Different drop-off")
@@ -118,23 +138,12 @@ struct RentalView: View {
                         locationSection
                         
                         HStack(spacing: 10) {
-                            // Pick-up Date & Time - Always visible
+                            // Date & Time - Always visible with smart placeholder/actual data
                             dateTimeView(
                                 icon: "CalenderIcon",
-                                title: "Pick-up",
-                                pickUp: selectedDates.first ?? Date(),
-                                dropOff: selectedDates.count > 1 ? selectedDates[1] : Calendar.current.date(byAdding: .day, value: 2, to: Date()) ?? Date()
+                                title: isSameDropOff ? "Pick-up (Same drop-off)" : "Pick-up & Drop-off"
                             )
-                            .id("pickup_datetime")
-                            
-//                            // Drop-off Date & Time - Always visible
-//                            dateTimeView(
-//                                icon: "CalenderIcon",
-//                                title: isSameDropOff ? "Drop-off (Same location)" : "Drop-off",
-//                                pickUp: selectedDates.count > 1 ? selectedDates[1] : Calendar.current.date(byAdding: .day, value: 2, to: Date()) ?? Date(),
-//                                dropOff: selectedDates.count > 1 ? selectedDates[1] : Calendar.current.date(byAdding: .day, value: 2, to: Date()) ?? Date()
-//                            )
-//                            .id("dropoff_datetime")
+                            .id("datetime_selector")
                         }
                         
                         // Search Rentals Button with validation
@@ -213,8 +222,6 @@ struct RentalView: View {
                 updateDateTimeLabels()
             }
         }
-        // In RentalView.swift, update the fullScreenCover call:
-
         .fullScreenCover(isPresented: $navigateToLocationSelection) {
             LocationSelectionView(
                 originLocation: $pickUpLocation,
@@ -335,51 +342,46 @@ struct RentalView: View {
     }
     
     // MARK: - Date Time View
-    private func dateTimeView(icon: String, title: String, pickUp: Date, dropOff: Date) -> some View {
-        let isSameDay = Calendar.current.isDate(pickUp, inSameDayAs: dropOff)
-        let pickUpText = formattedDate(pickUp)
-        let dropOffText = isSameDay ? "" : formattedDate(dropOff)
+    private func dateTimeView(icon: String, title: String) -> some View {
+        // Use actual selected dates/times if available, otherwise show placeholder
+        let displayText: String
+        
+        if selectedDates.isEmpty || selectedTimes.isEmpty {
+            // Show smart placeholder based on mode
+            if isSameDropOff {
+                displayText = "Tap to select"
+            } else {
+                displayText = "Tap to select"
+            }
+        } else {
+            // Show actual selected dates and times
+            let actualPickUp = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
+            let actualDropOff = selectedDates.count > 1 && selectedTimes.count > 1 ?
+                               combineDateAndTime(date: selectedDates[1], time: selectedTimes[1]) : actualPickUp
+            
+            let isSameDay = Calendar.current.isDate(actualPickUp, inSameDayAs: actualDropOff)
+            
+            if isSameDropOff || isSameDay {
+                displayText = formattedDate(actualPickUp)
+            } else {
+                displayText = "\(formattedDate(actualPickUp)) • \(formattedDate(actualDropOff))"
+            }
+        }
 
         return Button(action: {
             navigateToDateTimeSelection = true
         }) {
-            VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Image(icon)
+                    .resizable()
+                    .frame(width: 22, height: 22)
+
+                Text(displayText)
+                    .foregroundColor(.gray)
+                    .fontWeight(.medium)
+                    .font(.system(size: 13))
                 
-                HStack {
-                    Image(icon)
-                        .resizable()
-                        .frame(width: 22, height: 22)
-
-                    Text(pickUpText)
-                        .foregroundColor(.gray)
-                        .fontWeight(.medium)
-                        .font(.system(size: 13))
-                    
-                    
-                   if isSameDropOff {
-                       Spacer()
-                    }
-                    
-//                    Spacer()
-
-                    // Only show drop-off text if it's different drop-off tab AND not same day
-                    if !isSameDropOff && !isSameDay {
-                        HStack{
-                            
-                        }
-                        .frame(width: 6, height: 6)
-                        .background(.gray)
-                        .cornerRadius(.infinity)
-                        
-                        
-                        Text(dropOffText)
-                            .foregroundColor(.gray)
-                            .fontWeight(.medium)
-                            .font(.system(size: 13))
-                        
-                        Spacer()
-                    }
-                }
+                Spacer()
             }
             .padding()
             .background(Color.white)
@@ -396,19 +398,13 @@ struct RentalView: View {
     }
     
     private func initializeDateTimes() {
-        if selectedDates.isEmpty {
-            selectedDates = [Date()]
-            let defaultDropOffDate = Calendar.current.date(byAdding: .day, value: 2, to: Date()) ?? Date()
-            selectedDates.append(defaultDropOffDate)
+        // Don't set defaults here - let DateTimeSelectionView handle smart defaults
+        // Only update labels if we have existing selected data
+        if !selectedDates.isEmpty && !selectedTimes.isEmpty {
+            updateDateTimeLabels()
         }
         
-        if selectedTimes.isEmpty {
-            let pickUpTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
-            let dropOffTime = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: Date()) ?? Date()
-            selectedTimes = [pickUpTime, dropOffTime]
-        }
-        
-        updateDateTimeLabels()
+        print("📅 RentalView initializeDateTimes completed. Mode: \(isSameDropOff ? "Same" : "Different") drop-off")
     }
     
     private func updateDateTimeLabels() {
@@ -596,5 +592,4 @@ struct RentalWebView: UIViewControllerRepresentable {
 
 #Preview {
     RentalView()
-    
 }

@@ -9,6 +9,7 @@ struct DateTimeSelectionView: View {
     
     @State private var showTimePicker = false
     @State private var activeTimeSelection: TimeSelectionType?
+    @State private var hasInitialized = false // NEW: Track initialization
     
     enum TimeSelectionType {
         case pickup, dropoff
@@ -47,7 +48,7 @@ struct DateTimeSelectionView: View {
             if selectedDates.count > 1 {
                 selectedDate = selectedDates.last
             } else if isSameDropOff, let firstDate = selectedDates.first {
-                selectedDate = Calendar.current.date(byAdding: .day, value: 2, to: firstDate)
+                selectedDate = firstDate // For same drop-off, use same date
             } else {
                 selectedDate = nil
             }
@@ -204,21 +205,67 @@ struct DateTimeSelectionView: View {
         .background(Color.white)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
-            initializeTimesIfNeeded()
+            // Only initialize once
+            if !hasInitialized {
+                initializeSmartDefaults()
+                hasInitialized = true
+            }
         }
     }
     
-    private func initializeTimesIfNeeded() {
-        if selectedTimes.isEmpty {
-            // Default pick-up time: 9:00 AM
-            let pickUpTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
-            // Default drop-off time: 10:00 AM
-            let dropOffTime = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: Date()) ?? Date()
-            selectedTimes = [pickUpTime, dropOffTime]
-        } else if selectedTimes.count == 1 {
-            // Ensure we have both times
-            let dropOffTime = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: Date()) ?? Date()
-            selectedTimes.append(dropOffTime)
+    // NEW: Smart default initialization based on isSameDropOff
+    private func initializeSmartDefaults() {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        if isSameDropOff {
+            // Same drop-off: Current date, current time + 2 hours for drop-off
+            print("🚗 Initializing for SAME drop-off")
+            
+            // Set current date for both pickup and drop-off
+            selectedDates = [now, now]
+            
+            // Set pickup time to current time (rounded to next hour)
+            let currentHour = calendar.component(.hour, from: now)
+            let currentMinute = calendar.component(.minute, from: now)
+            
+            let pickupTime: Date
+            if currentMinute > 0 {
+                // Round to next hour if current minute > 0
+                pickupTime = calendar.date(bySettingHour: currentHour + 1, minute: 0, second: 0, of: now) ?? now
+            } else {
+                // Use current hour if at exact hour
+                pickupTime = calendar.date(bySettingHour: currentHour, minute: 0, second: 0, of: now) ?? now
+            }
+            
+            // Set drop-off time to pickup time + 2 hours
+            let dropoffTime = calendar.date(byAdding: .hour, value: 2, to: pickupTime) ?? pickupTime
+            
+            selectedTimes = [pickupTime, dropoffTime]
+            
+            print("   📅 Same drop-off dates: \(selectedDates)")
+            print("   ⏰ Same drop-off times: \(selectedTimes)")
+            
+        } else {
+            // Different drop-off: 2 days later
+            print("🚗 Initializing for DIFFERENT drop-off")
+            
+            // Set pickup date to today
+            let pickupDate = now
+            
+            // Set drop-off date to 2 days later
+            let dropoffDate = calendar.date(byAdding: .day, value: 2, to: now) ?? now
+            
+            selectedDates = [pickupDate, dropoffDate]
+            
+            // Set default times: 9:00 AM pickup, 10:00 AM drop-off
+            let pickupTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+            let dropoffTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: now) ?? now
+            
+            selectedTimes = [pickupTime, dropoffTime]
+            
+            print("   📅 Different drop-off dates: \(selectedDates)")
+            print("   ⏰ Different drop-off times: \(selectedTimes)")
         }
     }
     
@@ -259,9 +306,8 @@ struct DateTimeSelectionView: View {
         if selectedDates.count > 1, let secondDate = selectedDates.last {
             return dateFormatter.string(from: secondDate)
         } else if isSameDropOff, let firstDate = selectedDates.first {
-            // For same drop-off, use a default return date (e.g., 2 days later)
-            let defaultReturnDate = Calendar.current.date(byAdding: .day, value: 2, to: firstDate) ?? firstDate
-            return dateFormatter.string(from: defaultReturnDate)
+            // For same drop-off, show the same date
+            return dateFormatter.string(from: firstDate)
         }
         return "Select date"
     }
@@ -297,6 +343,7 @@ struct DateTimeSelectionView: View {
     }
 }
 
+// MARK: - DateTimeCard
 struct DateTimeCard: View {
     let title: String
     let dateText: String
@@ -358,6 +405,7 @@ struct DateTimeCard: View {
     }
 }
 
+// MARK: - TimePickerSection
 struct TimePickerSection: View {
     let title: String
     let timeOptions: [String]
@@ -403,6 +451,7 @@ struct TimePickerSection: View {
     }
 }
 
+// MARK: - TimeOptionRow
 struct TimeOptionRow: View {
     let timeText: String
     let isSelected: Bool
@@ -453,135 +502,6 @@ struct TimeOptionRow: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
-    }
-}
-
-struct TimePickerSheet: View {
-    @Environment(\.presentationMode) var presentationMode
-    @Binding var selectedTime: Date
-    let onTimeSelected: (Date) -> Void
-    
-    @State private var showTimePicker = true
-    
-    private let hourFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        return formatter
-    }()
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button("Cancel") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-                .font(CustomFont.font(.medium, weight: .medium))
-                .foregroundColor(Color("Violet"))
-                
-                Spacer()
-                
-                Text("Select Time")
-                    .font(CustomFont.font(.large, weight: .semibold))
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Button("Done") {
-                    onTimeSelected(selectedTime)
-                    presentationMode.wrappedValue.dismiss()
-                }
-                .font(CustomFont.font(.medium, weight: .semibold))
-                .foregroundColor(Color("Violet"))
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            .background(Color.white)
-            
-            Divider()
-                .background(Color.gray.opacity(0.3))
-            
-            VStack(spacing: 20) {
-                // Time Display Card
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Selected Time")
-                        .font(CustomFont.font(.regular, weight: .medium))
-                        .foregroundColor(.gray)
-                    
-                    // Time Selector Button
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            showTimePicker.toggle()
-                        }
-                    }) {
-                        HStack(spacing: 6) {
-                            Text(hourFormatter.string(from: selectedTime))
-                                .font(CustomFont.font(.large, weight: .semibold))
-                                .foregroundColor(Color("Violet"))
-                            
-                            Image(systemName: "chevron.down")
-                                .rotationEffect(.degrees(showTimePicker ? 180 : 0))
-                                .foregroundColor(Color("Violet"))
-                                .font(CustomFont.font(.regular, weight: .medium))
-                                .animation(.easeInOut(duration: 0.3), value: showTimePicker)
-                        }
-                        .padding(.vertical, 8)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 16)
-                .padding(.horizontal, 20)
-                .background(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color("Violet"), lineWidth: 2)
-                )
-                .cornerRadius(16)
-                .padding(.horizontal, 20)
-                
-                // Time Picker
-                if showTimePicker {
-                    VStack(spacing: 0) {
-                        DatePicker(
-                            "",
-                            selection: $selectedTime,
-                            in: availableTimeRange(),
-                            displayedComponents: .hourAndMinute
-                        )
-                        .datePickerStyle(WheelDatePickerStyle())
-                        .labelsHidden()
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 20)
-                    }
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .bottom).combined(with: .opacity),
-                        removal: .move(edge: .bottom).combined(with: .opacity)
-                    ))
-                    .animation(.easeInOut(duration: 0.3), value: showTimePicker)
-                }
-                
-                Spacer()
-            }
-            .padding(.top, 20)
-        }
-        .background(Color(.systemGroupedBackground))
-        .ignoresSafeArea(.container, edges: .bottom)
-    }
-    
-    // 🔒 Disables past times if today is selected
-    private func availableTimeRange() -> ClosedRange<Date> {
-        let now = Date()
-        let calendar = Calendar.current
-        let selectedDay = calendar.startOfDay(for: selectedTime)
-        let today = calendar.startOfDay(for: now)
-        
-        if selectedDay == today {
-            return now...calendar.date(bySettingHour: 23, minute: 59, second: 59, of: now)!
-        } else {
-            let start = calendar.date(bySettingHour: 0, minute: 0, second: 0, of: selectedTime)!
-            let end = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: selectedTime)!
-            return start...end
-        }
     }
 }
 

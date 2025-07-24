@@ -183,6 +183,22 @@ struct ResultView: View {
                     viewModel.pollFlights(searchId: searchId)
                 }
             }
+            // In ResultView.swift, add this in the body or onReceive
+
+            .onReceive(viewModel.$flightResults) { flightResults in
+                print("🖥️ ResultView received \(flightResults.count) flight results")
+                print("Result view response: \(flightResults)")
+                for (index, flight) in flightResults.enumerated() {
+                    print("   Flight \(index + 1): \(flight.legs.first?.originCode ?? "?") → \(flight.legs.first?.destinationCode ?? "?") - \(flight.formattedPrice)")
+                }
+            }
+            .onReceive(viewModel.$pollResponse) { pollResponse in
+                if let response = pollResponse {
+                    print("🖥️ ResultView received poll response with \(response.results.count) results")
+                    print("🖥️ Total available flights: \(response.count)")
+                    print("🖥️ Available airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
+                }
+            }
             // ✅ FIXED: Update airlines in ResultHeader when poll response comes in
             .onReceive(viewModel.$pollResponse) { pollResponse in
                 if let response = pollResponse {
