@@ -163,9 +163,11 @@ struct DateTimeSelectionView: View {
                                 selectedTime: getCurrentSelectedTime(),
                                 onTimeSelected: { timeString in
                                     selectTime(timeString)
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        showTimePicker = false
-                                        activeTimeSelection = nil
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            showTimePicker = false
+                                            activeTimeSelection = nil
+                                        }
                                     }
                                 }
                             )
@@ -405,51 +407,56 @@ struct DateTimeCard: View {
     }
 }
 
-// MARK: - TimePickerSection
+
+// MARK: - TimePickerSection (HIG-Aligned Design)
 struct TimePickerSection: View {
     let title: String
     let timeOptions: [String]
     let selectedTime: String
     let onTimeSelected: (String) -> Void
     
+    @State private var tempSelectedTime: String = ""
+    
     var body: some View {
         VStack(spacing: 0) {
-            // Title
-            HStack {
-                Text(title)
-                    .font(CustomFont.font(.large, weight: .semibold))
-                    .foregroundColor(.primary)
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 12)
-            
-            // Time Options
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(timeOptions, id: \.self) { time in
-                        TimeOptionRow(
-                            timeText: time,
-                            isSelected: selectedTime == time,
-                            onTap: {
-                                onTimeSelected(time)
-                            }
-                        )
-                    }
+            Text(title)
+                .font(CustomFont.font(.large, weight: .semibold))
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+
+            Picker(selection: Binding(
+                get: { selectedTime },
+                set: { newValue in
+                    tempSelectedTime = newValue
+                    onTimeSelected(newValue)
+                }
+            ), label: Text("")) {
+                ForEach(timeOptions, id: \.self) { time in
+                    Text(formattedDisplay(time))
+                        .tag(time)
                 }
             }
-            .frame(maxHeight: 250)
-            .background(Color.white)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-            )
-            .cornerRadius(12)
-            .padding(.horizontal, 20)
+            .pickerStyle(WheelPickerStyle())
+            .frame(height: 150)
+            .clipped()
         }
+        .background(Color.white)
+        .cornerRadius(12)
+        .padding(.horizontal, 20)
         .padding(.bottom, 16)
     }
+    
+    private func formattedDisplay(_ time: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        guard let date = formatter.date(from: time) else { return time }
+        
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = "h:mm a"
+        return displayFormatter.string(from: date)
+    }
 }
+
 
 // MARK: - TimeOptionRow
 struct TimeOptionRow: View {
@@ -483,10 +490,10 @@ struct TimeOptionRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack {
+                Spacer()
                 Text("\(displayTime) \(ampmText)")
                     .font(CustomFont.font(.medium, weight: isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? Color("Violet") : .primary)
-                
                 Spacer()
                 
                 if isSelected {

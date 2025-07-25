@@ -53,6 +53,16 @@ struct FlightView: View {
     @State private var lastNetworkStatus = true
     
     @State private var swapButtonRotationAngle: Double = 0
+    
+    @State private var numberOfColumns: Int = 2
+
+        let images: [MasonryImage] = [
+            .init(imageName: "https://picsum.photos/200/300", height: 200),
+            .init(imageName: "https://picsum.photos/200", height: 150),
+            .init(imageName: "https://picsum.photos/id/237/200/300", height: 300),
+            .init(imageName: "https://picsum.photos/200/300/?blur", height: 180),
+            .init(imageName: "https://picsum.photos/200/600/?blur", height: 220),
+        ]
 
     var body: some View {
         NavigationStack {
@@ -197,6 +207,29 @@ struct FlightView: View {
                     .padding(.bottom, 30)
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
+                    
+                    
+//                    MasonryGrid(data: images, columns: numberOfColumns) { item in
+//                                        GeometryReader { geo in
+//                                            let width = geo.size.width
+//                                            let aspectRatio = 3 / 2.0
+//                                            let adjustedHeight = item.height * (width / 200)
+//
+//                                            AsyncImage(url: URL(string: item.imageName)) { image in
+//                                                image
+//                                                    .resizable()
+//                                                    .scaledToFill()
+//                                            } placeholder: {
+//                                                Color.gray.opacity(0.3)
+//                                            }
+//                                            .frame(width: width, height: adjustedHeight)
+//                                            .clipped()
+//                                            .cornerRadius(10)
+//                                        }
+//                                        .frame(height: item.height)
+//                                    }
+//                                    .padding(.horizontal)
+                    
                 FlightExploreCard()
                 }
                 .scrollIndicators(.hidden)
@@ -634,6 +667,10 @@ struct FlightView: View {
         }
     }
 }
+
+
+
+
 
 // MARK: - Supporting Types
 enum CalendarDateType {
