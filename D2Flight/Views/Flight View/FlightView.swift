@@ -345,10 +345,12 @@ struct FlightView: View {
             }
         }
         
-        // NEW: Auto-prefill recent locations on view appear
         .onAppear {
+            // Reset prefill state when view appears fresh
+            if originLocation.isEmpty && destinationLocation.isEmpty {
+                hasPrefilled = false
+            }
             prefillRecentLocationsIfNeeded()
-            // Initialize return date on first appear
             initializeReturnDate()
         }
     }
@@ -363,39 +365,28 @@ struct FlightView: View {
         }
     }
     
-    // NEW: Auto-prefill recent locations
     private func prefillRecentLocationsIfNeeded() {
-        // Only prefill if:
-        // 1. We haven't already prefilled this session
-        // 2. Both origin and destination are currently empty
-        // 3. We have recent locations to prefill
         guard !hasPrefilled,
               originLocation.isEmpty,
               destinationLocation.isEmpty else {
-            print("🚫 Skipping prefill - already prefilled or locations not empty")
+            print("🚫 FlightView: Skipping prefill - already prefilled or locations not empty")
             return
         }
         
-        let lastLocations = recentLocationsManager.getLastSearchLocations()
-        
-        // Try to prefill origin
-        if let origin = lastLocations.origin {
-            originLocation = origin.displayName
-            originIATACode = origin.iataCode
-            print("🔄 Auto-prefilled origin: \(origin.displayName) (\(origin.iataCode))")
+        // Only prefill from flight-specific recent searches
+        let recentPairs = recentLocationsManager.getRecentSearchPairs()
+        let flightPairs = recentPairs.filter { pair in
+            // Filter for flight-like searches (different origin/destination)
+            return pair.origin.iataCode != pair.destination.iataCode
         }
         
-        // Try to prefill destination
-        if let destination = lastLocations.destination {
-            destinationLocation = destination.displayName
-            destinationIATACode = destination.iataCode
-            print("🔄 Auto-prefilled destination: \(destination.displayName) (\(destination.iataCode))")
-        }
-        
-        // Mark as prefilled to prevent multiple prefills
-        if lastLocations.origin != nil || lastLocations.destination != nil {
+        if let lastFlightPair = flightPairs.first {
+            originLocation = lastFlightPair.origin.displayName
+            originIATACode = lastFlightPair.origin.iataCode
+            destinationLocation = lastFlightPair.destination.displayName
+            destinationIATACode = lastFlightPair.destination.iataCode
             hasPrefilled = true
-            print("✅ Auto-prefill completed")
+            print("✅ FlightView: Auto-prefilled from flight searches")
         }
     }
     

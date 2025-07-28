@@ -13,6 +13,7 @@ struct LocationInput: View {
     // NEW: Parameters to control rental-specific behavior
     let isFromRental: Bool
     let isSameDropOff: Bool
+    let isFromHotel: Bool
     
     enum Field {
         case origin, destination
@@ -31,6 +32,7 @@ struct LocationInput: View {
         self._searchText = searchText
         self.isFromRental = false
         self.isSameDropOff = true
+        self.isFromHotel = false // ADD this line
     }
     
     // New initializer for RentalView
@@ -48,11 +50,31 @@ struct LocationInput: View {
         self._searchText = searchText
         self.isFromRental = isFromRental
         self.isSameDropOff = isSameDropOff
+        self.isFromHotel = false // ADD this line
+    }
+    
+    // NEW: Hotel initializer
+    init(
+        originLocation: Binding<String>,
+        destinationLocation: Binding<String>,
+        isSelectingOrigin: Binding<Bool>,
+        searchText: Binding<String>,
+        isFromHotel: Bool
+    ) {
+        self._originLocation = originLocation
+        self._destinationLocation = destinationLocation
+        self._isSelectingOrigin = isSelectingOrigin
+        self._searchText = searchText
+        self.isFromRental = false
+        self.isSameDropOff = true
+        self.isFromHotel = isFromHotel
     }
     
     // Computed properties for dynamic text based on source
     private var originPlaceholder: String {
-        if isFromRental {
+        if isFromHotel {
+            return "Enter Hotel Location"
+        } else if isFromRental {
             return "Enter Pick-up Location"
         } else {
             return "Enter Departure"
@@ -69,7 +91,9 @@ struct LocationInput: View {
     
     // Determine if destination section should be shown
     private var shouldShowDestination: Bool {
-        if isFromRental && isSameDropOff {
+        if isFromHotel {
+            return false // Hotel only shows origin (location)
+        } else if isFromRental && isSameDropOff {
             return false // Hide destination for rental same drop-off
         }
         return true // Show for flight view and rental different drop-off
@@ -77,7 +101,9 @@ struct LocationInput: View {
     
     // Determine if swap button should be shown
     private var shouldShowSwapButton: Bool {
-        if isFromRental && isSameDropOff {
+        if isFromHotel {
+            return false // No swap for hotel
+        } else if isFromRental && isSameDropOff {
             return false // Hide swap button for rental same drop-off
         }
         return true // Show for flight view and rental different drop-off
@@ -202,8 +228,8 @@ struct LocationInput: View {
         .padding()
         .onAppear {
             // Set focus based on mode
-            if isFromRental && isSameDropOff {
-                focusedField = .origin // Only focus on pickup for same drop-off
+            if isFromHotel || (isFromRental && isSameDropOff) {
+                focusedField = .origin // Only focus on origin for hotel or same drop-off
             } else {
                 focusedField = .origin // Default behavior
             }

@@ -8,15 +8,58 @@ struct PassengerSheet: View {
     @Binding var children: Int
     @Binding var infants: Int
     @Binding var selectedClass: TravelClass
+    @Binding var rooms: Int
     @State private var childrenAges: [Int] = []
     
     var onDone: (String) -> Void
+    
+    let isFromHotel: Bool
+    
+    // Hotel initializer with rooms parameter
+    init(
+        isPresented: Binding<Bool>,
+        adults: Binding<Int>,
+        children: Binding<Int>,
+        infants: Binding<Int>,
+        rooms: Binding<Int>,
+        selectedClass: Binding<TravelClass>,
+        isFromHotel: Bool,
+        onDone: @escaping (String) -> Void
+    ) {
+        self._isPresented = isPresented
+        self._adults = adults
+        self._children = children
+        self._infants = infants
+        self._rooms = rooms
+        self._selectedClass = selectedClass
+        self.isFromHotel = isFromHotel
+        self.onDone = onDone
+    }
+    
+    // Update the existing initializer
+    init(
+        isPresented: Binding<Bool>,
+        adults: Binding<Int>,
+        children: Binding<Int>,
+        infants: Binding<Int>,
+        selectedClass: Binding<TravelClass>,
+        onDone: @escaping (String) -> Void
+    ) {
+        self._isPresented = isPresented
+        self._adults = adults
+        self._children = children
+        self._infants = infants
+        self._rooms = .constant(1)
+        self._selectedClass = selectedClass
+        self.isFromHotel = false // ADD this line
+        self.onDone = onDone
+    }
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Traveler and Class")
+                Text(isFromHotel ? "Guests and Rooms" : "Traveler and Class")
                     .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
@@ -38,53 +81,81 @@ struct PassengerSheet: View {
             
             ScrollView {
                 VStack(spacing: 32) {
-                    // Select Class Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Text("Select Class")
-                                .font(CustomFont.font(.regular, weight: .semibold))
-                                .foregroundColor(.gray)
-                            Spacer()
-                        }
-                        
-                        VStack(spacing: 20) {
-                            classSelectionRow(title: "Economy", class: .economy)
-                            classSelectionRow(title: "Premium Economy", class: .premiumEconomy)
-                            classSelectionRow(title: "Business", class: .business)
-                            classSelectionRow(title: "First Class", class: .firstClass)
+                    // Wrap the class selection section with this condition
+                    if !isFromHotel {
+                        // Select Class Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack {
+                                Text("Select Class")
+                                    .font(CustomFont.font(.regular, weight: .semibold))
+                                    .foregroundColor(.gray)
+                                Spacer()
+                            }
+                            
+                            VStack(spacing: 20) {
+                                classSelectionRow(title: "Economy", class: .economy)
+                                classSelectionRow(title: "Premium Economy", class: .premiumEconomy)
+                                classSelectionRow(title: "Business", class: .business)
+                                classSelectionRow(title: "First Class", class: .firstClass)
+                            }
                         }
                     }
                     
                     // Select Travellers Section
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Text("Select Travellers")
-                                .font(CustomFont.font(.regular, weight: .semibold))
-                                .foregroundColor(.gray)
+                            Text(isFromHotel ? "Select Guests and Rooms" : "Select Travellers")
+                                        .font(CustomFont.font(.regular, weight: .semibold))
+                                        .foregroundColor(.gray)
                             Spacer()
                         }
                         
                         VStack(spacing: 24) {
-                            passengerCountRow(
-                                title: "Adults",
-                                subtitle: "Over 11",
-                                count: $adults,
-                                minCount: 1
-                            )
-                            
-                            passengerCountRow(
-                                title: "Children",
-                                subtitle: "2-11",
-                                count: $children,
-                                minCount: 0
-                            )
-                            
-                            passengerCountRow(
-                                title: "Infants",
-                                subtitle: "Under 2",
-                                count: $infants,
-                                minCount: 0
-                            )
+                            if isFromHotel {
+                                // Hotel order: Rooms, Adults, Children
+                                passengerCountRow(
+                                    title: "Rooms",
+                                    subtitle: "Hotel rooms",
+                                    count: $rooms, // Use dedicated rooms binding
+                                    minCount: 1
+                                )
+                                
+                                passengerCountRow(
+                                    title: "Adults",
+                                    subtitle: "Over 11",
+                                    count: $adults,
+                                    minCount: 1
+                                )
+                                
+                                passengerCountRow(
+                                    title: "Children",
+                                    subtitle: "2-11",
+                                    count: $children,
+                                    minCount: 0
+                                )
+                            } else {
+                                // Flight/Rental order: Adults, Children, Infants
+                                passengerCountRow(
+                                    title: "Adults",
+                                    subtitle: "Over 11",
+                                    count: $adults,
+                                    minCount: 1
+                                )
+                                
+                                passengerCountRow(
+                                    title: "Children",
+                                    subtitle: "2-11",
+                                    count: $children,
+                                    minCount: 0
+                                )
+                                
+                                passengerCountRow(
+                                    title: "Infants",
+                                    subtitle: "Under 2",
+                                    count: $infants,
+                                    minCount: 0
+                                )
+                            }
                         }
                     }
                     
@@ -115,12 +186,32 @@ struct PassengerSheet: View {
             
             // Apply Button
             VStack{
-                PrimaryButton(title: "Apply", font: CustomFont.font(.large), fontWeight: .semibold, textColor: .white, width: 543, height: 56, horizontalPadding: 24, cornerRadius: 16, action: {
-                    let totalTravelers = adults + children + infants
-                    let travelersText = "\(totalTravelers) Traveller\(totalTravelers > 1 ? "s" : ""), \(selectedClass.displayName)"
-                    onDone(travelersText)
-                    isPresented = false
-                })
+                PrimaryButton(
+                    title: "Apply",
+                    font: CustomFont.font(.large),
+                    fontWeight: .semibold,
+                    textColor: .white,
+                    width: 543,
+                    height: 56,
+                    horizontalPadding: 24,
+                    cornerRadius: 16,
+                    action: {
+                        let finalText: String
+                        if isFromHotel {
+                            let totalGuests = adults + children
+                            let guestsText = "\(totalGuests) Guest\(totalGuests > 1 ? "s" : "")"
+                            let roomsText = "\(rooms) Room\(rooms > 1 ? "s" : "")"
+                            finalText = "\(guestsText), \(roomsText)"
+                        } else {
+                            let totalTravelers = adults + children + infants
+                            let travelersText = "\(totalTravelers) Traveller\(totalTravelers > 1 ? "s" : "")"
+                            finalText = "\(travelersText), \(selectedClass.displayName)"
+                        }
+                        
+                        onDone(finalText)
+                        isPresented = false
+                    }
+                )
             }
             .padding()
             .padding(.bottom,24)
@@ -304,6 +395,8 @@ enum TravelClass: String, CaseIterable {
         adults: .constant(1),
         children: .constant(2),
         infants: .constant(1),
-        selectedClass: .constant(.business)
+        rooms: .constant(1),
+        selectedClass: .constant(.business),
+        isFromHotel: false
     ) { _ in }
 }

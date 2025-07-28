@@ -6,12 +6,37 @@ struct DateSelectionView: View {
     @Binding var selectedDates: [Date]
     let isRoundTrip: Bool
     var onDatesSelected: ([Date]) -> Void
+    let isFromHotel: Bool
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd, MMM"
         return formatter
     }()
+    
+    // Add this new initializer
+    init(
+        selectedDates: Binding<[Date]>,
+        isFromHotel: Bool,
+        onDatesSelected: @escaping ([Date]) -> Void
+    ) {
+        self._selectedDates = selectedDates
+        self.isRoundTrip = true // Hotels always show two dates like round trip
+        self.isFromHotel = isFromHotel
+        self.onDatesSelected = onDatesSelected
+    }
+    
+    // ADD this original initializer for FlightView/RentalView compatibility
+    init(
+        selectedDates: Binding<[Date]>,
+        isRoundTrip: Bool,
+        onDatesSelected: @escaping ([Date]) -> Void
+    ) {
+        self._selectedDates = selectedDates
+        self.isRoundTrip = isRoundTrip
+        self.isFromHotel = false
+        self.onDatesSelected = onDatesSelected
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -71,7 +96,7 @@ struct DateSelectionView: View {
                             // Round trip - show both cards
                             HStack(spacing: 12) {
                                 DateCard(
-                                    title: "Departure",
+                                    title: isFromHotel ? "Check-in" : "Departure",
                                     dateText: formatDepartureDate(),
                                     isSelected: !selectedDates.isEmpty
                                 )
@@ -80,7 +105,7 @@ struct DateSelectionView: View {
                                     .frame(width: 16, height: 16)
                                 
                                 DateCard(
-                                    title: "Return",
+                                    title: isFromHotel ? "Check-out" : "Return",
                                     dateText: formatReturnDate(),
                                     isSelected: selectedDates.count > 1
                                 )
@@ -137,7 +162,13 @@ struct DateSelectionView: View {
         if selectedDates.count > 1, let secondDate = selectedDates.last {
             return dateFormatter.string(from: secondDate)
         }
-        return "Add Return"
+        
+        // Return different placeholder based on context
+        if isFromHotel {
+            return "Add Check-out"
+        } else {
+            return "Add Return"
+        }
     }
 }
 
@@ -171,6 +202,6 @@ struct DateCard: View {
 #Preview {
     DateSelectionView(
         selectedDates: .constant([Date()]),
-        isRoundTrip: true
+        isFromHotel: false
     ) { _ in }
 }

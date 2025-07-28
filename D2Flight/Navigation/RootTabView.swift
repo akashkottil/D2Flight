@@ -31,13 +31,13 @@ struct RootTabView: View {
                     Text("Rental")
                 }
             
-//            HotelView()
-//                .tag(2)
-//                .tabItem {
-//                    Image(selectedTab == 2 ? "TabHotelActive" : "TabHotel")
-//                        
-//                    Text("Hotel")
-//                }
+            HotelView()
+                .tag(2)
+                .tabItem {
+                    Image(selectedTab == 2 ? "TabHotelActive" : "TabHotel")
+                        
+                    Text("Hotel")
+                }
             
             
             

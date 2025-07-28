@@ -12,11 +12,12 @@ struct LocationSelectionView: View {
     // NEW: Parameters to identify source and mode
     let isFromRental: Bool
     let isSameDropOff: Bool
+    let isFromHotel: Bool
     
     // Updated closure to include IATA code
     var onLocationSelected: (String, Bool, String) -> Void // location, isOrigin, iataCode
     
-    // Default initializer for FlightView (maintains backward compatibility)
+    // Update the default initializer
     init(
         originLocation: Binding<String>,
         destinationLocation: Binding<String>,
@@ -27,9 +28,10 @@ struct LocationSelectionView: View {
         self.onLocationSelected = onLocationSelected
         self.isFromRental = false
         self.isSameDropOff = true
+        self.isFromHotel = false // ADD this line
     }
-    
-    // New initializer for RentalView
+
+    // Update the rental initializer
     init(
         originLocation: Binding<String>,
         destinationLocation: Binding<String>,
@@ -42,6 +44,22 @@ struct LocationSelectionView: View {
         self.onLocationSelected = onLocationSelected
         self.isFromRental = isFromRental
         self.isSameDropOff = isSameDropOff
+        self.isFromHotel = false // ADD this line
+    }
+    
+    // Add this new initializer
+    init(
+        originLocation: Binding<String>,
+        destinationLocation: Binding<String>,
+        isFromHotel: Bool,
+        onLocationSelected: @escaping (String, Bool, String) -> Void
+    ) {
+        self._originLocation = originLocation
+        self._destinationLocation = destinationLocation
+        self.onLocationSelected = onLocationSelected
+        self.isFromRental = false
+        self.isSameDropOff = true
+        self.isFromHotel = isFromHotel
     }
     
     var body: some View {
@@ -72,8 +90,7 @@ struct LocationSelectionView: View {
                 destinationLocation: $destinationLocation,
                 isSelectingOrigin: $viewModel.isSelectingOrigin,
                 searchText: $viewModel.searchText,
-                isFromRental: isFromRental,
-                isSameDropOff: isSameDropOff
+                isFromHotel: isFromHotel
             )
 
             Divider()
@@ -185,6 +202,17 @@ struct LocationSelectionView: View {
     }
     
     private func selectLocation(_ location: Location) {
+        if isFromHotel {
+            // For hotel, always select as origin and close immediately
+            originLocation = location.airportName
+            originIATACode = location.iataCode
+            print("🏨 Hotel location selected: \(location.displayName) (\(location.iataCode))")
+            onLocationSelected(location.airportName, true, location.iataCode)
+            presentationMode.wrappedValue.dismiss()
+            return
+        }
+        
+        // Existing logic for flight and rental...
         if viewModel.isSelectingOrigin {
             originLocation = location.airportName
             originIATACode = location.iataCode
@@ -216,7 +244,9 @@ struct LocationSelectionView: View {
     }
     
     private func getHeaderTitle() -> String {
-        if isFromRental {
+        if isFromHotel {
+            return "Select hotel location"
+        } else if isFromRental {
             if isSameDropOff {
                 return "Select pick-up location"
             } else {
