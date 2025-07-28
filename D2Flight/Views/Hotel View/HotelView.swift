@@ -4,17 +4,19 @@ struct HotelView: View {
     @State private var hotelLocation = ""
     @State private var hotelIATACode = ""
     
-    @State private var checkInDate: String = {
+    @State private var checkInDateTime: String = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        return formatter.string(from: Date())
+        formatter.dateFormat = "E dd MMM, HH:mm"
+        let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: Date()) ?? Date()
+        return formatter.string(from: defaultTime)
     }()
     
-    @State private var checkOutDate: String = {
+    @State private var checkOutDateTime: String = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
+        formatter.dateFormat = "E dd MMM, HH:mm"
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-        return formatter.string(from: tomorrow)
+        let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+        return formatter.string(from: defaultTime)
     }()
     
     @State private var guestsCount = "2 Guests, 1 Room"
@@ -26,9 +28,10 @@ struct HotelView: View {
     @State private var rooms = 1
     @State private var selectedClass: TravelClass = .economy // Not used for hotel but kept for compatibility
     
-    // Date Selection States
-    @State private var navigateToDateSelection = false
+    // Date and Time Selection States
+    @State private var navigateToDateTimeSelection = false
     @State private var selectedDates: [Date] = []
+    @State private var selectedTimes: [Date] = []
     
     // Location Selection States
     @State private var navigateToLocationSelection = false
@@ -57,7 +60,7 @@ struct HotelView: View {
                         HStack {
                             Image("HomeLogo")
                                 .frame(width: 32, height: 32)
-                            Text("Last Minute Hotels")
+                            Text("Last Minute Flights")
                                 .font(CustomFont.font(.large, weight: .bold))
                                 .foregroundColor(Color.white)
                         }
@@ -66,24 +69,27 @@ struct HotelView: View {
                         // Hotel Location Input (Single Input)
                         locationSection
                         
-                        // Date Section (Check-in and Check-out)
+                        // UPDATED: Two separate Date & Time Views (like original design)
                         VStack(spacing: 0) {
                             HStack(spacing: 10) {
-                                // Check-in Date
-                                dateView(
-                                    label: formatSelectedDate(for: .checkin),
+                                // Check-in Date & Time
+                                dateTimeView(
+                                    label: formatSelectedDateTime(for: .checkin),
                                     icon: "CalenderIcon",
                                     title: "Check-in"
                                 )
+                                .id("checkin_date")
                                 
-                                // Check-out Date
-                                dateView(
-                                    label: formatSelectedDate(for: .checkout),
+                                // Check-out Date & Time
+                                dateTimeView(
+                                    label: formatSelectedDateTime(for: .checkout),
                                     icon: "CalenderIcon",
                                     title: "Check-out"
                                 )
+                                .id("checkout_date")
                             }
                         }
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: selectedDates.count)
                         
                         // Guests Section
                         Button(action: {
@@ -185,13 +191,16 @@ struct HotelView: View {
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
         }
-        .fullScreenCover(isPresented: $navigateToDateSelection) {
-            DateSelectionView(
+        // DateTimeSelectionView - Both buttons open the same view
+        .fullScreenCover(isPresented: $navigateToDateTimeSelection) {
+            DateTimeSelectionView(
                 selectedDates: $selectedDates,
+                selectedTimes: $selectedTimes,
                 isFromHotel: true
-            ) { updatedDates in
+            ) { updatedDates, updatedTimes in
                 selectedDates = updatedDates
-                updateDateLabels()
+                selectedTimes = updatedTimes
+                updateDateTimeLabels()
             }
         }
         .fullScreenCover(isPresented: $navigateToLocationSelection) {
@@ -216,7 +225,7 @@ struct HotelView: View {
                 hasPrefilled = false
             }
             prefillRecentLocationsIfNeeded()
-            initializeDates()
+            initializeDateTimes()
         }
     }
     
@@ -247,15 +256,15 @@ struct HotelView: View {
         .cornerRadius(12)
     }
     
-    // MARK: - Date View (Check-in/Check-out)
-    func dateView(label: String, icon: String, title: String) -> some View {
+    // UPDATED: Individual Date Time View (with title)
+    func dateTimeView(label: String, icon: String, title: String) -> some View {
         Button(action: {
-            navigateToDateSelection = true
+            navigateToDateTimeSelection = true
         }) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(CustomFont.font(.small, weight: .medium))
-                    .foregroundColor(.gray)
+//                Text(title)
+//                    .font(CustomFont.font(.small, weight: .medium))
+//                    .foregroundColor(.gray)
                 
                 HStack {
                     Image(icon)
@@ -278,64 +287,96 @@ struct HotelView: View {
         case checkin, checkout
     }
     
-    private func formatSelectedDate(for type: HotelDateType) -> String {
+    private func formatSelectedDateTime(for type: HotelDateType) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
+        formatter.dateFormat = "E dd MMM, HH:mm"
         
         switch type {
         case .checkin:
-            if let firstDate = selectedDates.first {
-                return formatter.string(from: firstDate)
+            if selectedDates.count > 0 && selectedTimes.count > 0 {
+                let combinedDateTime = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
+                return formatter.string(from: combinedDateTime)
             }
-            return checkInDate // Fallback to default
+            return calculateDefaultCheckinDateTime()
             
         case .checkout:
-            if selectedDates.count > 1, let secondDate = selectedDates.last {
-                return formatter.string(from: secondDate)
+            if selectedDates.count > 1 && selectedTimes.count > 1 {
+                let combinedDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
+                return formatter.string(from: combinedDateTime)
             }
-            return calculateDefaultCheckOutDate()
+            return calculateDefaultCheckoutDateTime()
         }
     }
     
-    private func calculateDefaultCheckOutDate() -> String {
+    private func calculateDefaultCheckinDateTime() -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
+        formatter.dateFormat = "E dd MMM, HH:mm"
+        
+        // Use today with 3 PM as default check-in
+        let today = Date()
+        let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: today) ?? today
+        return formatter.string(from: defaultTime)
+    }
+    
+    private func calculateDefaultCheckoutDateTime() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM, HH:mm"
         
         // Use selected check-in date if available, otherwise use current date
-        let baseCheckInDate: Date
-        if let selectedCheckInDate = selectedDates.first {
-            baseCheckInDate = selectedCheckInDate
+        let baseCheckinDate: Date
+        if selectedDates.count > 0 {
+            baseCheckinDate = selectedDates[0]
         } else {
-            baseCheckInDate = Date()
+            baseCheckinDate = Date()
         }
         
-        // Add 1 day to the check-in date for check-out
-        let checkOutDate = Calendar.current.date(byAdding: .day, value: 1, to: baseCheckInDate) ?? baseCheckInDate
-        return formatter.string(from: checkOutDate)
+        // Add 1 day to the check-in date for check-out, with 11 AM time
+        let checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: baseCheckinDate) ?? baseCheckinDate
+        let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: checkoutDate) ?? checkoutDate
+        return formatter.string(from: defaultTime)
     }
     
-    private func initializeDates() {
-        if selectedDates.isEmpty {
-            let today = Date()
-            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
-            selectedDates = [today, tomorrow]
-            updateDateLabels()
+    private func initializeDateTimes() {
+        // Don't set defaults here - let DateTimeSelectionView handle smart defaults
+        // Only update labels if we have existing selected data
+        if !selectedDates.isEmpty && !selectedTimes.isEmpty {
+            updateDateTimeLabels()
+        }
+        
+        print("📅 HotelView initializeDateTimes completed")
+    }
+    
+    private func updateDateTimeLabels() {
+        let dateTimeFormatter = DateFormatter()
+        dateTimeFormatter.dateFormat = "E dd MMM, HH:mm"
+        
+        if selectedDates.count > 0 && selectedTimes.count > 0 {
+            let combinedCheckInDateTime = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
+            checkInDateTime = dateTimeFormatter.string(from: combinedCheckInDateTime)
+        }
+        
+        if selectedDates.count > 1 && selectedTimes.count > 1 {
+            let combinedCheckOutDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
+            checkOutDateTime = dateTimeFormatter.string(from: combinedCheckOutDateTime)
+        } else {
+            // Update checkout based on new checkin date
+            checkOutDateTime = calculateDefaultCheckoutDateTime()
         }
     }
     
-    private func updateDateLabels() {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
+    private func combineDateAndTime(date: Date, time: Date) -> Date {
+        let calendar = Calendar.current
+        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
+        let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
         
-        if let firstDate = selectedDates.first {
-            checkInDate = formatter.string(from: firstDate)
-        }
+        var combinedComponents = DateComponents()
+        combinedComponents.year = dateComponents.year
+        combinedComponents.month = dateComponents.month
+        combinedComponents.day = dateComponents.day
+        combinedComponents.hour = timeComponents.hour
+        combinedComponents.minute = timeComponents.minute
         
-        if selectedDates.count > 1, let secondDate = selectedDates.last {
-            checkOutDate = formatter.string(from: secondDate)
-        } else {
-            checkOutDate = calculateDefaultCheckOutDate()
-        }
+        return calendar.date(from: combinedComponents) ?? date
     }
     
     private func prefillRecentLocationsIfNeeded() {
@@ -428,8 +469,8 @@ struct HotelView: View {
         
         print("🎯 Hotel search parameters:")
         print("   Location: \(hotelLocation) (\(hotelIATACode))")
-        print("   Check-in: \(checkInDate)")
-        print("   Check-out: \(checkOutDate)")
+        print("   Check-in: \(checkInDateTime)")
+        print("   Check-out: \(checkOutDateTime)")
         print("   Guests: \(adults) adults, \(children) children")
         print("   Rooms: \(rooms)")
         

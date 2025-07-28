@@ -5,14 +5,43 @@ struct DateTimeSelectionView: View {
     @Binding var selectedDates: [Date]
     @Binding var selectedTimes: [Date]
     let isSameDropOff: Bool
+    let isFromHotel: Bool // NEW: Add hotel mode support
     var onDatesSelected: ([Date], [Date]) -> Void
     
     @State private var showTimePicker = false
     @State private var activeTimeSelection: TimeSelectionType?
-    @State private var hasInitialized = false // NEW: Track initialization
+    @State private var hasInitialized = false
     
     enum TimeSelectionType {
         case pickup, dropoff
+    }
+    
+    // NEW: Add hotel-specific initializer
+    init(
+        selectedDates: Binding<[Date]>,
+        selectedTimes: Binding<[Date]>,
+        isFromHotel: Bool,
+        onDatesSelected: @escaping ([Date], [Date]) -> Void
+    ) {
+        self._selectedDates = selectedDates
+        self._selectedTimes = selectedTimes
+        self.isSameDropOff = false // Not applicable for hotel
+        self.isFromHotel = isFromHotel
+        self.onDatesSelected = onDatesSelected
+    }
+    
+    // Keep existing rental initializer
+    init(
+        selectedDates: Binding<[Date]>,
+        selectedTimes: Binding<[Date]>,
+        isSameDropOff: Bool,
+        onDatesSelected: @escaping ([Date], [Date]) -> Void
+    ) {
+        self._selectedDates = selectedDates
+        self._selectedTimes = selectedTimes
+        self.isSameDropOff = isSameDropOff
+        self.isFromHotel = false
+        self.onDatesSelected = onDatesSelected
     }
     
     private let dateFormatter: DateFormatter = {
@@ -36,7 +65,7 @@ struct DateTimeSelectionView: View {
         return times
     }
     
-    // Filter times based on current time if date is today
+    // UPDATED: Filter times based on current time and validation
     private var availableTimeOptions: [String] {
         guard let activeSelection = activeTimeSelection else { return allTimeOptions }
         
@@ -47,8 +76,8 @@ struct DateTimeSelectionView: View {
         case .dropoff:
             if selectedDates.count > 1 {
                 selectedDate = selectedDates.last
-            } else if isSameDropOff, let firstDate = selectedDates.first {
-                selectedDate = firstDate // For same drop-off, use same date
+            } else if (isSameDropOff || isFromHotel), let firstDate = selectedDates.first {
+                selectedDate = firstDate // For same drop-off or hotel, use same date
             } else {
                 selectedDate = nil
             }
@@ -56,17 +85,75 @@ struct DateTimeSelectionView: View {
         
         guard let date = selectedDate else { return allTimeOptions }
         
-        // Check if selected date is today
         let calendar = Calendar.current
+        var filteredTimes = allTimeOptions
+        
+        // Filter based on current time if date is today
         if calendar.isDate(date, inSameDayAs: Date()) {
             let currentHour = calendar.component(.hour, from: Date())
-            return allTimeOptions.filter { timeString in
+            filteredTimes = allTimeOptions.filter { timeString in
                 let hour = Int(timeString.prefix(2)) ?? 0
                 return hour > currentHour
             }
         }
         
-        return allTimeOptions
+        // UPDATED: Additional validation for checkout/dropoff time
+        if activeSelection == .dropoff {
+            // Check if both dates are the same
+            let pickupDate = selectedDates.first ?? Date()
+            let dropoffDate = selectedDates.count > 1 ? selectedDates[1] : pickupDate
+            
+            if calendar.isDate(pickupDate, inSameDayAs: dropoffDate) {
+                // Same day: dropoff/checkout time must be after pickup/checkin time
+                if let pickupTime = selectedTimes.first {
+                    let pickupHour = calendar.component(.hour, from: pickupTime)
+                    filteredTimes = filteredTimes.filter { timeString in
+                        let hour = Int(timeString.prefix(2)) ?? 0
+                        return hour > pickupHour
+                    }
+                }
+            }
+        }
+        
+        return filteredTimes
+    }
+    
+    // UPDATED: Dynamic titles based on context
+    private var headerTitle: String {
+        if isFromHotel {
+            return "Select dates"
+        } else {
+            return "Select dates"
+        }
+    }
+    
+    private var firstCardTitle: String {
+        if isFromHotel {
+            return "Check-in"
+        } else {
+            return "Pick-up"
+        }
+    }
+    
+    private var secondCardTitle: String {
+        if isFromHotel {
+            return "Check-out"
+        } else if isSameDropOff {
+            return "Drop-off (Same location)"
+        } else {
+            return "Drop-off"
+        }
+    }
+    
+    private var timePickerTitle: String {
+        guard let activeSelection = activeTimeSelection else { return "" }
+        
+        switch activeSelection {
+        case .pickup:
+            return isFromHotel ? "Select Check-in Time" : "Select Pick-up Time"
+        case .dropoff:
+            return isFromHotel ? "Select Check-out Time" : "Select Drop-off Time"
+        }
     }
     
     var body: some View {
@@ -80,7 +167,7 @@ struct DateTimeSelectionView: View {
                         .padding(.horizontal)
                 }
                 
-                Text("Select dates & times")
+                Text(headerTitle)
                     .font(.system(size: 20, weight: .bold))
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.trailing, 44)
@@ -112,7 +199,7 @@ struct DateTimeSelectionView: View {
             ZStack {
                 SimplifiedCalendar(
                     selectedDates: $selectedDates,
-                    isRoundTrip: !isSameDropOff
+                    isRoundTrip: !isSameDropOff || isFromHotel // Hotel always shows two dates
                 )
                 
                 // Bottom section overlay
@@ -122,11 +209,11 @@ struct DateTimeSelectionView: View {
                     VStack(spacing: 16) {
                         // Date and Time selection cards
                         HStack(spacing: 12) {
-                            // Pick-up Date and Time
+                            // First Card (Check-in/Pick-up)
                             DateTimeCard(
-                                title: "Pick-up",
-                                dateText: formatPickUpDate(),
-                                timeText: formatPickUpTime(),
+                                title: firstCardTitle,
+                                dateText: formatFirstDate(),
+                                timeText: formatFirstTime(),
                                 isSelected: !selectedDates.isEmpty,
                                 onTimeTap: {
                                     activeTimeSelection = .pickup
@@ -139,12 +226,12 @@ struct DateTimeSelectionView: View {
                             Image("RoundedArrow")
                                 .frame(width: 16, height: 16)
                             
-                            // Drop-off Date and Time (always shown, but location may be same)
+                            // Second Card (Check-out/Drop-off)
                             DateTimeCard(
-                                title: isSameDropOff ? "Drop-off (Same location)" : "Drop-off",
-                                dateText: formatDropOffDate(),
-                                timeText: formatDropOffTime(),
-                                isSelected: selectedDates.count > 1 || isSameDropOff,
+                                title: secondCardTitle,
+                                dateText: formatSecondDate(),
+                                timeText: formatSecondTime(),
+                                isSelected: selectedDates.count > 1 || isSameDropOff || isFromHotel,
                                 onTimeTap: {
                                     activeTimeSelection = .dropoff
                                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -158,7 +245,7 @@ struct DateTimeSelectionView: View {
                         // Time Picker Section
                         if showTimePicker {
                             TimePickerSection(
-                                title: activeTimeSelection == .pickup ? "Select Pick-up Time" : "Select Drop-off Time",
+                                title: timePickerTitle,
                                 timeOptions: availableTimeOptions,
                                 selectedTime: getCurrentSelectedTime(),
                                 onTimeSelected: { timeString in
@@ -207,7 +294,6 @@ struct DateTimeSelectionView: View {
         .background(Color.white)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
-            // Only initialize once
             if !hasInitialized {
                 initializeSmartDefaults()
                 hasInitialized = true
@@ -215,32 +301,45 @@ struct DateTimeSelectionView: View {
         }
     }
     
-    // NEW: Smart default initialization based on isSameDropOff
+    // UPDATED: Smart default initialization for both rental and hotel
     private func initializeSmartDefaults() {
         let calendar = Calendar.current
         let now = Date()
         
-        if isSameDropOff {
+        if isFromHotel {
+            // Hotel: Today for check-in, tomorrow for check-out
+            print("🏨 Initializing for HOTEL")
+            
+            let checkinDate = now
+            let checkoutDate = calendar.date(byAdding: .day, value: 1, to: now) ?? now
+            
+            selectedDates = [checkinDate, checkoutDate]
+            
+            // Default times: 3:00 PM check-in, 11:00 AM check-out
+            let checkinTime = calendar.date(bySettingHour: 15, minute: 0, second: 0, of: now) ?? now
+            let checkoutTime = calendar.date(bySettingHour: 11, minute: 0, second: 0, of: now) ?? now
+            
+            selectedTimes = [checkinTime, checkoutTime]
+            
+            print("   📅 Hotel dates: \(selectedDates)")
+            print("   ⏰ Hotel times: \(selectedTimes)")
+            
+        } else if isSameDropOff {
             // Same drop-off: Current date, current time + 2 hours for drop-off
             print("🚗 Initializing for SAME drop-off")
             
-            // Set current date for both pickup and drop-off
             selectedDates = [now, now]
             
-            // Set pickup time to current time (rounded to next hour)
             let currentHour = calendar.component(.hour, from: now)
             let currentMinute = calendar.component(.minute, from: now)
             
             let pickupTime: Date
             if currentMinute > 0 {
-                // Round to next hour if current minute > 0
                 pickupTime = calendar.date(bySettingHour: currentHour + 1, minute: 0, second: 0, of: now) ?? now
             } else {
-                // Use current hour if at exact hour
                 pickupTime = calendar.date(bySettingHour: currentHour, minute: 0, second: 0, of: now) ?? now
             }
             
-            // Set drop-off time to pickup time + 2 hours
             let dropoffTime = calendar.date(byAdding: .hour, value: 2, to: pickupTime) ?? pickupTime
             
             selectedTimes = [pickupTime, dropoffTime]
@@ -252,15 +351,11 @@ struct DateTimeSelectionView: View {
             // Different drop-off: 2 days later
             print("🚗 Initializing for DIFFERENT drop-off")
             
-            // Set pickup date to today
             let pickupDate = now
-            
-            // Set drop-off date to 2 days later
             let dropoffDate = calendar.date(byAdding: .day, value: 2, to: now) ?? now
             
             selectedDates = [pickupDate, dropoffDate]
             
-            // Set default times: 9:00 AM pickup, 10:00 AM drop-off
             let pickupTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
             let dropoffTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: now) ?? now
             
@@ -276,9 +371,9 @@ struct DateTimeSelectionView: View {
         
         switch activeSelection {
         case .pickup:
-            return formatPickUpTime()
+            return formatFirstTime()
         case .dropoff:
-            return formatDropOffTime()
+            return formatSecondTime()
         }
     }
     
@@ -291,40 +386,51 @@ struct DateTimeSelectionView: View {
         
         switch activeSelection {
         case .pickup:
-            updatePickUpTime(time)
+            updateFirstTime(time)
         case .dropoff:
-            updateDropOffTime(time)
+            updateSecondTime(time)
         }
     }
     
-    private func formatPickUpDate() -> String {
+    private func formatFirstDate() -> String {
         guard let firstDate = selectedDates.first else {
             return "Select date"
         }
         return dateFormatter.string(from: firstDate)
     }
     
-    private func formatDropOffDate() -> String {
+    private func formatSecondDate() -> String {
         if selectedDates.count > 1, let secondDate = selectedDates.last {
             return dateFormatter.string(from: secondDate)
-        } else if isSameDropOff, let firstDate = selectedDates.first {
-            // For same drop-off, show the same date
-            return dateFormatter.string(from: firstDate)
+        } else if (isSameDropOff || isFromHotel), let firstDate = selectedDates.first {
+            // For same drop-off or hotel, show appropriate date
+            if isFromHotel {
+                // Hotel: show tomorrow as default checkout
+                let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: firstDate) ?? firstDate
+                return dateFormatter.string(from: tomorrow)
+            } else {
+                // Same drop-off: show the same date
+                return dateFormatter.string(from: firstDate)
+            }
         }
         return "Select date"
     }
     
-    private func formatPickUpTime() -> String {
-        guard selectedTimes.count > 0 else { return "09:00" }
+    private func formatFirstTime() -> String {
+        guard selectedTimes.count > 0 else {
+            return isFromHotel ? "15:00" : "09:00" // 3 PM for hotel, 9 AM for rental
+        }
         return timeFormatter.string(from: selectedTimes[0])
     }
     
-    private func formatDropOffTime() -> String {
-        guard selectedTimes.count > 1 else { return "10:00" }
+    private func formatSecondTime() -> String {
+        guard selectedTimes.count > 1 else {
+            return isFromHotel ? "11:00" : "10:00" // 11 AM checkout, 10 AM dropoff
+        }
         return timeFormatter.string(from: selectedTimes[1])
     }
     
-    private func updatePickUpTime(_ newTime: Date) {
+    private func updateFirstTime(_ newTime: Date) {
         if selectedTimes.count > 0 {
             selectedTimes[0] = newTime
         } else {
@@ -332,20 +438,19 @@ struct DateTimeSelectionView: View {
         }
     }
     
-    private func updateDropOffTime(_ newTime: Date) {
+    private func updateSecondTime(_ newTime: Date) {
         if selectedTimes.count > 1 {
             selectedTimes[1] = newTime
         } else if selectedTimes.count == 1 {
             selectedTimes.append(newTime)
         } else {
-            // This shouldn't happen, but handle it gracefully
-            let pickUpTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
-            selectedTimes = [pickUpTime, newTime]
+            let defaultFirstTime = Calendar.current.date(bySettingHour: isFromHotel ? 15 : 9, minute: 0, second: 0, of: Date()) ?? Date()
+            selectedTimes = [defaultFirstTime, newTime]
         }
     }
 }
 
-// MARK: - DateTimeCard
+// MARK: - Updated DateTimeCard (no changes needed, but showing for completeness)
 struct DateTimeCard: View {
     let title: String
     let dateText: String
@@ -407,8 +512,7 @@ struct DateTimeCard: View {
     }
 }
 
-
-// MARK: - TimePickerSection (HIG-Aligned Design)
+// MARK: - TimePickerSection (no changes needed)
 struct TimePickerSection: View {
     let title: String
     let timeOptions: [String]
@@ -455,67 +559,4 @@ struct TimePickerSection: View {
         displayFormatter.dateFormat = "h:mm a"
         return displayFormatter.string(from: date)
     }
-}
-
-
-// MARK: - TimeOptionRow
-struct TimeOptionRow: View {
-    let timeText: String
-    let isSelected: Bool
-    let onTap: () -> Void
-    
-    private var displayTime: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        
-        if let time = formatter.date(from: timeText) {
-            let displayFormatter = DateFormatter()
-            displayFormatter.dateFormat = "h:mm"
-            return displayFormatter.string(from: time)
-        }
-        return timeText
-    }
-    
-    private var ampmText: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        
-        if let time = formatter.date(from: timeText) {
-            let hour = Calendar.current.component(.hour, from: time)
-            return hour < 12 ? "AM" : "PM"
-        }
-        return "PM"
-    }
-    
-    var body: some View {
-        Button(action: onTap) {
-            HStack {
-                Spacer()
-                Text("\(displayTime) \(ampmText)")
-                    .font(CustomFont.font(.medium, weight: isSelected ? .semibold : .regular))
-                    .foregroundColor(isSelected ? Color("Violet") : .primary)
-                Spacer()
-                
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(CustomFont.font(.regular, weight: .semibold))
-                        .foregroundColor(Color("Violet"))
-                }
-            }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
-            .background(
-                isSelected ? Color("Violet").opacity(0.1) : Color.clear
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-#Preview {
-    DateTimeSelectionView(
-        selectedDates: .constant([Date()]),
-        selectedTimes: .constant([Date(), Date()]),
-        isSameDropOff: false
-    ) { _, _ in }
 }
