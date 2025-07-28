@@ -1,0 +1,136 @@
+//
+//  HotelRequest.swift
+//  D2Flight
+//
+//  Created by Akash Kottil on 28/07/25.
+//
+
+
+import Foundation
+
+// MARK: - Hotel Request Models
+struct HotelRequest {
+    let country: String
+    let userId: String
+    let cityName: String
+    let countryName: String
+    let checkin: String // Format: "YYYY-MM-DD"
+    let checkout: String // Format: "YYYY-MM-DD"
+    let rooms: Int
+    let adults: Int
+    let children: Int?
+    let id: String // hotel provider ID
+    
+    init(
+        country: String = "IN",
+        userId: String = "123",
+        cityName: String,
+        countryName: String = "IN",
+        checkin: String,
+        checkout: String,
+        rooms: Int,
+        adults: Int,
+        children: Int? = nil,
+        id: String = "0"
+    ) {
+        self.country = country
+        self.userId = userId
+        self.cityName = cityName
+        self.countryName = countryName
+        self.checkin = checkin
+        self.checkout = checkout
+        self.rooms = rooms
+        self.adults = adults
+        self.children = children
+        self.id = id
+    }
+}
+
+// MARK: - Hotel Response Models
+struct HotelResponse: Codable {
+    let deeplink: String
+    let status: String?
+    let message: String?
+}
+
+// MARK: - Hotel Search Parameters
+struct HotelSearchParameters {
+    let cityCode: String
+    let cityName: String
+    let checkinDate: Date
+    let checkoutDate: Date
+    let rooms: Int
+    let adults: Int
+    let children: Int
+    
+    // Computed properties for formatted display
+    var formattedCheckinDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM"
+        return formatter.string(from: checkinDate)
+    }
+    
+    var formattedCheckoutDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM"
+        return formatter.string(from: checkoutDate)
+    }
+    
+    var formattedDateRange: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd MMM"
+        return "\(formatter.string(from: checkinDate)) - \(formatter.string(from: checkoutDate))"
+    }
+    
+    var accommodationDisplayText: String {
+        let totalGuests = adults + children
+        let guestsText = "\(totalGuests) Guest\(totalGuests > 1 ? "s" : "")"
+        let roomsText = "\(rooms) Room\(rooms > 1 ? "s" : "")"
+        return "\(guestsText), \(roomsText)"
+    }
+    
+    var locationDisplayText: String {
+        return cityName
+    }
+    
+    // API format dates
+    var apiCheckinDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: checkinDate)
+    }
+    
+    var apiCheckoutDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: checkoutDate)
+    }
+    
+    var numberOfNights: Int {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.day], from: checkinDate, to: checkoutDate)
+        return max(1, components.day ?? 1)
+    }
+    
+    // Initialize with default values
+    init(
+        cityCode: String = "",
+        cityName: String = "",
+        checkinDate: Date = Date(),
+        checkoutDate: Date = {
+            let calendar = Calendar.current
+            return calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+        }(),
+        rooms: Int = 1,
+        adults: Int = 2,
+        children: Int = 0
+    ) {
+        self.cityCode = cityCode
+        self.cityName = cityName
+        self.checkinDate = checkinDate
+        self.checkoutDate = checkoutDate
+        self.rooms = rooms
+        self.adults = adults
+        self.children = children
+    }
+}

@@ -246,6 +246,10 @@ struct RentalView: View {
             }
         }
         .onAppear {
+            // Reset prefill state when view appears fresh
+            if pickUpLocation.isEmpty {
+                hasPrefilled = false
+            }
             prefillRecentLocationsIfNeeded()
             initializeDateTimes()
         }
@@ -445,28 +449,25 @@ struct RentalView: View {
     private func prefillRecentLocationsIfNeeded() {
         guard !hasPrefilled,
               pickUpLocation.isEmpty else {
+            print("🚫 RentalView: Skipping prefill - already prefilled or locations not empty")
             return
         }
         
-        let lastLocations = recentLocationsManager.getLastSearchLocations()
+        // Get all recent searches, prioritize rental-specific ones
+        let recentPairs = recentLocationsManager.getRecentSearchPairs()
         
-        // Always prefill pick-up location if available
-        if let origin = lastLocations.origin {
-            pickUpLocation = origin.displayName
-            pickUpIATACode = origin.iataCode
-            print("🔄 Auto-prefilled pick-up: \(origin.displayName) (\(origin.iataCode))")
-        }
-        
-        // Only prefill drop-off if we're in "different drop-off" mode
-        if !isSameDropOff, let destination = lastLocations.destination {
-            dropOffLocation = destination.displayName
-            dropOffIATACode = destination.iataCode
-            print("🔄 Auto-prefilled drop-off: \(destination.displayName) (\(destination.iataCode))")
-        }
-        
-        if lastLocations.origin != nil {
+        if let lastPair = recentPairs.first {
+            pickUpLocation = lastPair.origin.displayName
+            pickUpIATACode = lastPair.origin.iataCode
+            
+            // Only prefill drop-off if we're in "different drop-off" mode
+            if !isSameDropOff && lastPair.origin.iataCode != lastPair.destination.iataCode {
+                dropOffLocation = lastPair.destination.displayName
+                dropOffIATACode = lastPair.destination.iataCode
+            }
+            
             hasPrefilled = true
-            print("✅ Rental auto-prefill completed")
+            print("✅ RentalView: Auto-prefilled from recent searches")
         }
     }
     
