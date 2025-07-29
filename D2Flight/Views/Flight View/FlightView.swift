@@ -129,78 +129,25 @@ struct FlightView: View {
                         }
                         .padding(.vertical, 10)
                         
-                        // Location Input - Updated to navigate to LocationSelectionView
-                        locationSection
                         
-                        // Enhanced Date Section with Smooth Animations
-                        VStack(spacing: 0) {
-                            HStack(spacing: 10) {
-                                // Departure Date - Always visible with stable identity
-                                dateView(
-                                    label: formatSelectedDate(for: .departure),
-                                    icon: "CalenderIcon"
-                                )
-                                .id("departure_date") // Stable identity prevents recreation
-                                
-                                // Return Date with smooth conditional visibility
-                                Group {
-                                    if !isOneWay {
-                                        dateView(
-                                            label: formatSelectedDate(for: .return),
-                                            icon: "CalenderIcon"
-                                        )
-                                        .transition(
-                                            .asymmetric(
-                                                insertion: .scale(scale: 0.8)
-                                                    .combined(with: .opacity)
-                                                    .combined(with: .move(edge: .trailing)),
-                                                removal: .scale(scale: 0.8)
-                                                    .combined(with: .opacity)
-                                                    .combined(with: .move(edge: .trailing))
-                                            )
-                                        )
-                                    }
-                                }
-                                .frame(maxWidth: !isOneWay ? .infinity : 0)
-                                .opacity(!isOneWay ? 1 : 0)
-                                .scaleEffect(!isOneWay ? 1 : 0.8)
-                                .animation(
-                                    .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
-                                    value: isOneWay
-                                )
-                            }
-                        }
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
-                        
-                        // Passenger Section
-                        Button(action: {
-                            showPassengerSheet = true
-                        }) {
-                            HStack {
-                                Image("PassengerIcon")
-                                    .foregroundColor(.gray)
-                                    .frame(width: 22)
-                                Text(travelersCount)
-                                    .foregroundColor(.gray)
-                                    .fontWeight(.medium)
-                                    .font(CustomFont.font(.regular))
-                                Spacer()
-                            }
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(12)
-                        }
-                        
-                        // Updated Search Flights Button with validation
-                        PrimaryButton(title: "Search Flights",
-                                      font: CustomFont.font(.medium),
-                                      fontWeight: .bold,
-                                      textColor: .white,
-                                      verticalPadding: 20,
-                                      cornerRadius: 16,
-                                      action: {
-                            handleSearchFlights()
-                        })
+                        // Search Card Component
+                        SearchCard(
+                            isOneWay: $isOneWay,
+                            originLocation: $originLocation,
+                            destinationLocation: $destinationLocation,
+                            originIATACode: $originIATACode,
+                            destinationIATACode: $destinationIATACode,
+                            selectedDates: $selectedDates,
+                            travelersCount: $travelersCount,
+                            showPassengerSheet: $showPassengerSheet,
+                            adults: $adults,
+                            children: $children,
+                            infants: $infants,
+                            selectedClass: $selectedClass,
+                            navigateToLocationSelection: $navigateToLocationSelection,
+                            navigateToDateSelection: $navigateToDateSelection,
+                            onSearchFlights: handleSearchFlights
+                        )
                     }
                     .padding()
                     .padding(.top, 50)
