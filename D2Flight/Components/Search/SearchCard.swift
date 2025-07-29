@@ -36,9 +36,49 @@ struct SearchCard: View {
     // Animation state
     @State private var swapButtonRotationAngle: Double = 0
     
+    // NEW: Animation and state properties for expandable functionality
+    let buttonAnimationNamespace: Namespace.ID
+    
     // Action closure
     let onSearchFlights: () -> Void
     
+    // Updated initializer to include animation namespace
+    init(
+        isOneWay: Binding<Bool>,
+        originLocation: Binding<String>,
+        destinationLocation: Binding<String>,
+        originIATACode: Binding<String>,
+        destinationIATACode: Binding<String>,
+        selectedDates: Binding<[Date]>,
+        travelersCount: Binding<String>,
+        showPassengerSheet: Binding<Bool>,
+        adults: Binding<Int>,
+        children: Binding<Int>,
+        infants: Binding<Int>,
+        selectedClass: Binding<TravelClass>,
+        navigateToLocationSelection: Binding<Bool>,
+        navigateToDateSelection: Binding<Bool>,
+        buttonAnimationNamespace: Namespace.ID,
+        onSearchFlights: @escaping () -> Void
+    ) {
+        self._isOneWay = isOneWay
+        self._originLocation = originLocation
+        self._destinationLocation = destinationLocation
+        self._originIATACode = originIATACode
+        self._destinationIATACode = destinationIATACode
+        self._selectedDates = selectedDates
+        self._travelersCount = travelersCount
+        self._showPassengerSheet = showPassengerSheet
+        self._adults = adults
+        self._children = children
+        self._infants = infants
+        self._selectedClass = selectedClass
+        self._navigateToLocationSelection = navigateToLocationSelection
+        self._navigateToDateSelection = navigateToDateSelection
+        self.buttonAnimationNamespace = buttonAnimationNamespace
+        self.onSearchFlights = onSearchFlights
+    }
+
     var body: some View {
         VStack(alignment: .leading) {
             // Location Input
@@ -103,7 +143,7 @@ struct SearchCard: View {
                 .cornerRadius(12)
             }
             
-            // Search Flights Button
+            // Search Flights Button with matched geometry effect
             PrimaryButton(title: "Search Flights",
                           font: CustomFont.font(.medium),
                           fontWeight: .bold,
@@ -111,6 +151,7 @@ struct SearchCard: View {
                           verticalPadding: 20,
                           cornerRadius: 16,
                           action: onSearchFlights)
+            .matchedGeometryEffect(id: "searchButton", in: buttonAnimationNamespace)
         }
         .onAppear {
             initializeReturnDate()

@@ -63,6 +63,8 @@ struct FlightView: View {
             .init(imageName: "https://picsum.photos/200/300/?blur", height: 180),
             .init(imageName: "https://picsum.photos/200/600/?blur", height: 220),
         ]
+    
+    @State private var expandableSearchRef: ExpandableSearchContainer? = nil
 
     var body: some View {
         NavigationStack {
@@ -130,28 +132,28 @@ struct FlightView: View {
                         .padding(.vertical, 10)
                         
                         
-                        // Search Card Component
-                        SearchCard(
-                            isOneWay: $isOneWay,
-                            originLocation: $originLocation,
-                            destinationLocation: $destinationLocation,
-                            originIATACode: $originIATACode,
-                            destinationIATACode: $destinationIATACode,
-                            selectedDates: $selectedDates,
-                            travelersCount: $travelersCount,
-                            showPassengerSheet: $showPassengerSheet,
-                            adults: $adults,
-                            children: $children,
-                            infants: $infants,
-                            selectedClass: $selectedClass,
-                            navigateToLocationSelection: $navigateToLocationSelection,
-                            navigateToDateSelection: $navigateToDateSelection,
-                            onSearchFlights: handleSearchFlights
-                        )
+                        // REPLACE this section with ExpandableSearchContainer
+                                                ExpandableSearchContainer(
+                                                    isOneWay: $isOneWay,
+                                                    originLocation: $originLocation,
+                                                    destinationLocation: $destinationLocation,
+                                                    originIATACode: $originIATACode,
+                                                    destinationIATACode: $destinationIATACode,
+                                                    selectedDates: $selectedDates,
+                                                    travelersCount: $travelersCount,
+                                                    showPassengerSheet: $showPassengerSheet,
+                                                    adults: $adults,
+                                                    children: $children,
+                                                    infants: $infants,
+                                                    selectedClass: $selectedClass,
+                                                    navigateToLocationSelection: $navigateToLocationSelection,
+                                                    navigateToDateSelection: $navigateToDateSelection,
+                                                    onSearchFlights: handleSearchFlights
+                                                )
                     }
                     .padding()
                     .padding(.top, 50)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 10)
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
                     
