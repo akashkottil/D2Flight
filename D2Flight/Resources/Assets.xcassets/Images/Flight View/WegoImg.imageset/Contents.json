@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "Wego.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
