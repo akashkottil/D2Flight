@@ -15,7 +15,7 @@ struct D2FlightApp: App {
                 .environmentObject(userManager)
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                     // Track app becoming active
-                    UserManager.shared.createSession(eventType: .appLaunch, vertical: .general)
+                    UserManager.shared.createSession(eventType: .appLaunch, vertical: .flight)
                 }
         }
     }

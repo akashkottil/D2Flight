@@ -5,10 +5,10 @@
 //  Created by Akash Kottil on 30/07/25.
 //
 
-
 import Foundation
 import UIKit
 import Combine
+import AdSupport  // ✅ NEW: Added import for IDFA support
 
 class UserManager: ObservableObject {
     static let shared = UserManager()
@@ -23,6 +23,7 @@ class UserManager: ObservableObject {
     // UserDefaults keys
     private let userIdKey = "D2Flight_UserID"
     private let deviceIdKey = "D2Flight_DeviceID"
+    private let deviceIdTypeKey = "D2Flight_DeviceIDType"  // ✅ NEW: Store device ID type
     private let vendorIdKey = "D2Flight_VendorID"
     private let pseudoIdKey = "D2Flight_PseudoID"
     private let userCreatedKey = "D2Flight_UserCreated"
@@ -39,7 +40,7 @@ class UserManager: ObservableObject {
         if isUserCreated, let storedUserId = userId {
             print("👤 User already exists with ID: \(storedUserId)")
             // Create initial session for app launch
-            createSession(eventType: .appLaunch, vertical: .general)
+            createSession(eventType: .appLaunch, vertical: .flight)
         } else {
             print("👤 Creating new user...")
             createNewUser()
@@ -49,7 +50,7 @@ class UserManager: ObservableObject {
     /// Create a new session for user events
     func createSession(
         eventType: UserEventType,
-        vertical: UserVertical = .general,
+        vertical: UserVertical = .flight,
         tag: String? = nil,
         additionalData: [String: String]? = nil
     ) {
@@ -62,7 +63,7 @@ class UserManager: ObservableObject {
             user_id: userId,
             type: "api",
             tag: tag ?? eventType.rawValue,
-            route: "organic",
+            route: "unknown",
             vertical: vertical.rawValue,
             country_code: getCurrentCountryCode(),
             ad_id: additionalData?["ad_id"],
@@ -92,20 +93,30 @@ class UserManager: ObservableObject {
     // MARK: - Private Methods
     
     private func createNewUser() {
-        let deviceId = getOrCreateDeviceId()
+        let (deviceId, deviceIdType) = getOrCreateDeviceId()
         let vendorId = getOrCreateVendorId()
         let pseudoId = getOrCreatePseudoId()
         
         let request = UserCreationRequest(
             device_id: deviceId,
-            device_id_type: "idfa",
-            app: "d1_ios_sflight",
+            device_id_type: deviceIdType,
+            app: "d1_ios_flight",
             vendor_id: vendorId,
             pseudo_id: pseudoId,
             email: nil,
-            acquired_route: "organic",
+            acquired_route: "unknown",
             referrer_url: nil
         )
+        
+        #if DEBUG
+        print("👤 User Creation Parameters:")
+        print("   Device ID: \(deviceId)")
+        print("   Device ID Type: \(deviceIdType)")
+        print("   App: \(request.app)")
+        print("   Vendor ID: \(vendorId)")
+        print("   Pseudo ID: \(pseudoId)")
+        print("   Acquired Route: \(request.acquired_route)")
+        #endif
         
         userApi.createUser(request: request) { [weak self] result in
             DispatchQueue.main.async {
@@ -131,7 +142,7 @@ class UserManager: ObservableObject {
         print("✅ User created and stored successfully with ID: \(response.user_id)")
         
         // Create initial session for app launch
-        createSession(eventType: .appLaunch, vertical: .general)
+        createSession(eventType: .appLaunch, vertical: .flight)
     }
     
     private func handleUserCreationFailure(_ error: Error) {
@@ -143,25 +154,44 @@ class UserManager: ObservableObject {
         userId = userDefaults.object(forKey: userIdKey) as? Int
         isUserCreated = userDefaults.bool(forKey: userCreatedKey)
         
+        // ✅ UPDATED: Load device ID type for debugging/reference
+        let deviceIdType = userDefaults.string(forKey: deviceIdTypeKey) ?? "unknown"
+        
         if isUserCreated {
-            print("📱 Loaded stored user data - ID: \(userId ?? -1)")
+            print("📱 Loaded stored user data - ID: \(userId ?? -1), Device Type: \(deviceIdType)")
         }
     }
     
-    // MARK: - Device ID Generation
+    // MARK: - Device ID Generation with Fallback
     
-    private func getOrCreateDeviceId() -> String {
-        if let storedDeviceId = userDefaults.string(forKey: deviceIdKey) {
-            return storedDeviceId
+    // ✅ COMPLETELY UPDATED: New method with IDFA fallback to UUID
+    private func getOrCreateDeviceId() -> (deviceId: String, deviceIdType: String) {
+        // Check if we already have stored values
+        if let storedDeviceId = userDefaults.string(forKey: deviceIdKey),
+           let storedDeviceIdType = userDefaults.string(forKey: deviceIdTypeKey) {
+            print("📱 Using stored device ID: \(storedDeviceId) (type: \(storedDeviceIdType))")
+            return (storedDeviceId, storedDeviceIdType)
         }
         
-        // Try to get IDFA (Identifier for Advertisers)
-        // For now, we'll generate a random ID since Firebase is not configured
-        let deviceId = generateRandomDeviceId()
-        userDefaults.set(deviceId, forKey: deviceIdKey)
+        // Collect device ID with fallback logic (following reference code pattern)
+        var deviceId = ASIdentifierManager.shared().advertisingIdentifier.uuidString
+        var deviceIdType = "idfa"
         
-        print("📱 Generated new device ID: \(deviceId)")
-        return deviceId
+        // Check if IDFA is unavailable (all zeros means no tracking permission)
+        if deviceId == "00000000-0000-0000-0000-000000000000" {
+            deviceIdType = "uuid"
+            deviceId = UUID().uuidString
+            print("📱 IDFA unavailable, using UUID fallback")
+        } else {
+            print("📱 IDFA available and valid")
+        }
+        
+        // Store both values for future use
+        userDefaults.set(deviceId, forKey: deviceIdKey)
+        userDefaults.set(deviceIdType, forKey: deviceIdTypeKey)
+        
+        print("📱 Generated device ID: \(deviceId) (type: \(deviceIdType))")
+        return (deviceId, deviceIdType)
     }
     
     private func getOrCreateVendorId() -> String {
@@ -169,8 +199,8 @@ class UserManager: ObservableObject {
             return storedVendorId
         }
         
-        // Use iOS Vendor Identifier or generate random
-        let vendorId = UIDevice.current.identifierForVendor?.uuidString ?? generateRandomUUID()
+        // Use iOS Vendor Identifier or generate random UUID
+        let vendorId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         userDefaults.set(vendorId, forKey: vendorIdKey)
         
         print("🏭 Generated vendor ID: \(vendorId)")
@@ -191,16 +221,7 @@ class UserManager: ObservableObject {
     
     // MARK: - ID Generators
     
-    private func generateRandomDeviceId() -> String {
-        return String(format: "%d%d%d", 
-                     Int.random(in: 1000000...9999999),
-                     Int.random(in: 1000000...9999999),
-                     Int.random(in: 100000...999999))
-    }
-    
-    private func generateRandomUUID() -> String {
-        return UUID().uuidString
-    }
+    // ✅ REMOVED: generateRandomDeviceId() method - no longer needed
     
     private func generateRandomPseudoId() -> String {
         let chars = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -208,9 +229,13 @@ class UserManager: ObservableObject {
     }
     
     private func getCurrentCountryCode() -> String {
-        return Locale.current.regionCode ?? "IN"
+        if #available(iOS 16.0, *) {
+            return Locale.current.region?.identifier ?? "IN"
+        } else {
+            return Locale.current.regionCode ?? "IN"
+        }
     }
-    
+
     // MARK: - Utility Methods
     
     /// Check if user exists and is valid
@@ -228,7 +253,8 @@ class UserManager: ObservableObject {
         userDefaults.removeObject(forKey: userIdKey)
         userDefaults.removeObject(forKey: userCreatedKey)
         userDefaults.removeObject(forKey: installDateKey)
-        // Keep device-related IDs as they should persist
+        userDefaults.removeObject(forKey: deviceIdTypeKey)  // ✅ NEW: Clear device ID type
+        // Keep device-related IDs as they should persist across app sessions
         
         userId = nil
         currentSessionId = nil

@@ -5,7 +5,7 @@ extension View {
     /// Track user events with session creation
     func trackUserEvent(
         _ eventType: UserEventType,
-        vertical: UserVertical = .general,
+        vertical: UserVertical = .flight,
         tag: String? = nil,
         additionalData: [String: String]? = nil
     ) -> some View {
@@ -22,7 +22,7 @@ extension View {
     /// Track button taps specifically
     func trackButtonTap(
         _ eventType: UserEventType,
-        vertical: UserVertical = .general,
+        vertical: UserVertical = .flight,
         tag: String? = nil
     ) {
         UserManager.shared.createSession(
