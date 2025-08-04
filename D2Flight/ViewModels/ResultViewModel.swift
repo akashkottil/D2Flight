@@ -20,6 +20,10 @@ class ResultViewModel: ObservableObject {
     @Published var selectedFlight: FlightResult? = nil
     @Published var totalPollCount: Int = 0
     
+    // ✅ NEW: Ads integration properties
+    @Published var adsService = HotelAdsAPIService()
+    @Published var hasLoadedAds = false
+    
     private var cancellables = Set<AnyCancellable>()
     private let pollApi = PollApi.shared
     private var maxRetries = 10
@@ -65,6 +69,11 @@ class ResultViewModel: ObservableObject {
         pollStartTime = Date()
         currentRetries = 0
         shouldContinuouslyPoll = false
+        
+        // ✅ NEW: Reset ads loading state for new search
+        hasLoadedAds = false
+        adsService.ads = []
+        adsService.adsErrorMessage = nil
     }
     
     private func loadInitialResults(searchId: String) {
@@ -359,72 +368,72 @@ class ResultViewModel: ObservableObject {
     }
     
     // ✅ FIXED: Improved applyFilters method
-        func applyFilters(request: PollRequest) {
-            guard let searchId = searchId else {
-                print("❌ Cannot apply filters: no searchId")
-                return
-            }
-            
-            print("🔧 Applying filters with searchId: \(searchId)")
-            print("   Has filters: \(request.hasFilters())")
-            
-            // Stop continuous polling when applying filters
-            shouldContinuouslyPoll = false
-            
-            // Reset pagination when applying filters
-            resetPagination()
-            shouldContinuouslyPoll = false // Keep polling stopped for filter results
-            
-            isLoading = true
-            errorMessage = nil
-            flightResults = [] // Clear existing results
-            totalPollCount += 1
-            
-            print("📡 Making filtered poll request (poll #\(totalPollCount))")
-            
-            pollApi.pollFlights(
-                searchId: searchId,
-                request: request,
-                page: currentPage,
-                limit: initialPageSize
-            ) { [weak self] result in
-                DispatchQueue.main.async {
-                    guard let self = self else { return }
+    func applyFilters(request: PollRequest) {
+        guard let searchId = searchId else {
+            print("❌ Cannot apply filters: no searchId")
+            return
+        }
+        
+        print("🔧 Applying filters with searchId: \(searchId)")
+        print("   Has filters: \(request.hasFilters())")
+        
+        // Stop continuous polling when applying filters
+        shouldContinuouslyPoll = false
+        
+        // Reset pagination when applying filters
+        resetPagination()
+        shouldContinuouslyPoll = false // Keep polling stopped for filter results
+        
+        isLoading = true
+        errorMessage = nil
+        flightResults = [] // Clear existing results
+        totalPollCount += 1
+        
+        print("📡 Making filtered poll request (poll #\(totalPollCount))")
+        
+        pollApi.pollFlights(
+            searchId: searchId,
+            request: request,
+            page: currentPage,
+            limit: initialPageSize
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                self.isLoading = false
+                
+                switch result {
+                case .success(let response):
+                    print("✅ Filter poll successful!")
+                    print("   Results found: \(response.results.count)")
+                    print("   Total available: \(response.count)")
+                    print("   Cache status: \(response.cache)")
                     
-                    self.isLoading = false
+                    self.pollResponse = response
+                    self.flightResults = response.results
+                    self.currentPage = 2 // Next page will be 2
+                    self.totalResultsCount = response.count
+                    self.isCacheComplete = response.cache
                     
-                    switch result {
-                    case .success(let response):
-                        print("✅ Filter poll successful!")
-                        print("   Results found: \(response.results.count)")
-                        print("   Total available: \(response.count)")
-                        print("   Cache status: \(response.cache)")
-                        
-                        self.pollResponse = response
-                        self.flightResults = response.results
-                        self.currentPage = 2 // Next page will be 2
-                        self.totalResultsCount = response.count
-                        self.isCacheComplete = response.cache
-                        
-                        // Check if we need more results
-                        let hasAllResults = self.flightResults.count >= self.totalResultsCount
-                        self.hasMoreResults = !hasAllResults && !response.cache
-                        
-                        print("   Has all results: \(hasAllResults)")
-                        print("   Has more results: \(self.hasMoreResults)")
-                        
-                        // Don't start continuous polling for filtered results
-                        // User can manually load more if needed
-                        
-                    case .failure(let error):
-                        print("❌ Filter poll failed: \(error)")
-                        self.errorMessage = "Failed to apply filters: \(error.localizedDescription)"
-                        self.flightResults = []
-                        self.hasMoreResults = false
-                    }
+                    // Check if we need more results
+                    let hasAllResults = self.flightResults.count >= self.totalResultsCount
+                    self.hasMoreResults = !hasAllResults && !response.cache
+                    
+                    print("   Has all results: \(hasAllResults)")
+                    print("   Has more results: \(self.hasMoreResults)")
+                    
+                    // Don't start continuous polling for filtered results
+                    // User can manually load more if needed
+                    
+                case .failure(let error):
+                    print("❌ Filter poll failed: \(error)")
+                    self.errorMessage = "Failed to apply filters: \(error.localizedDescription)"
+                    self.flightResults = []
+                    self.hasMoreResults = false
                 }
             }
         }
+    }
     
     // Check if we should load more results based on scroll position
     func shouldLoadMore(currentItem: FlightResult) -> Bool {
@@ -462,6 +471,49 @@ class ResultViewModel: ObservableObject {
     func stopPolling() {
         shouldContinuouslyPoll = false
         print("🛑 Polling stopped")
+    }
+    
+    // ✅ NEW: Load ads for search - integrate with existing flight search
+    func loadAdsForSearch(searchParameters: SearchParameters) {
+        guard !hasLoadedAds else {
+            print("🎯 Ads already loaded for this search")
+            return
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = dateFormatter.string(from: searchParameters.departureDate)
+        
+        // Convert TravelClass to string
+        let cabinClass: String
+        switch searchParameters.selectedClass {
+        case .economy:
+            cabinClass = "economy"
+        case .premiumEconomy:
+            cabinClass = "premium_economy"
+        case .business:
+            cabinClass = "business"
+        case .firstClass:
+            cabinClass = "first"
+        }
+        
+        // Create passengers array
+        let passengerCount = searchParameters.adults + searchParameters.children + searchParameters.infants
+        let passengers = Array(repeating: "adult", count: max(1, passengerCount))
+        
+        Task {
+            await adsService.searchFlightAds(
+                originAirport: searchParameters.originCode,
+                destinationAirport: searchParameters.destinationCode,
+                date: dateString,
+                cabinClass: cabinClass,
+                passengers: passengers
+            )
+        }
+        
+        hasLoadedAds = true
+        print("🎯 Initiated ads loading for route: \(searchParameters.originCode) → \(searchParameters.destinationCode)")
+        print("🎯 Search parameters - Date: \(dateString), Class: \(cabinClass), Passengers: \(passengers.count)")
     }
     
     deinit {

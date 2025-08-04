@@ -1,23 +1,38 @@
-
 import SwiftUI
 
-struct LoginView : View {
+struct LoginView: View {
+    @Environment(\.presentationMode) var presentationMode
+    @Binding var isLoggedIn: Bool
+    
+    // State for handling authentication
+    @State private var isAuthenticating = false
+    @State private var authError: String? = nil
+    
+    @State private var isChecked = false
+
+    
     var body: some View {
-        
-        VStack{
-            HStack(){
+        VStack {
+            // Close button
+            HStack {
                 Spacer()
-                Image(systemName: "multiply")
-                    .foregroundColor(.white)
-                    .font(.system(size: 24))
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "multiply")
+                        .foregroundColor(.white)
+                        .font(.system(size: 24))
+                }
             }
             .padding()
+            
             Image("LoginFlight")
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity, alignment: .leading)
-            VStack(alignment: .leading){
-                Text("Let's find  great deals for you!")
+            
+            VStack(alignment: .leading) {
+                Text("Let's find great deals for you!")
                     .font(.system(size: 32))
                     .fontWeight(.bold)
                     .foregroundColor(.white)
@@ -29,31 +44,129 @@ struct LoginView : View {
             }
             .padding()
             .foregroundColor(.white)
+            
             Spacer()
-            VStack{
-                
-                SignInButton(text: "Continue with Facebook", imageName: "GoogleIcon") {
-                    print("Google Sign In tapped")
+            
+            VStack(spacing: 16) {
+                // Google Sign In Button
+                SignInButton(
+                    text: "Continue with Google",
+                    imageName: "GoogleIcon"
+                ) {
+                    handleGoogleSignIn()
                 }
                 
-                SignInButton(text: "Continue with Facebook", imageName: "FacebookIcon") {
-                    print("Continue with Facebook")
+                // Facebook Sign In Button
+                SignInButton(
+                    text: "Continue with Facebook",
+                    imageName: "FacebookIcon"
+                ) {
+                    handleFacebookSignIn()
+                }
+                
+                // Show loading indicator if authenticating
+                if isAuthenticating {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Signing in...")
+                            .font(CustomFont.font(.medium))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.top, 8)
+                }
+                
+                // Show error message if authentication failed
+                if let error = authError {
+                    Text(error)
+                        .font(CustomFont.font(.small))
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
                 }
             }
+            HStack(alignment: .top) {
+                Button(action: {
+                    isChecked.toggle()
+                }) {
+                    Image(systemName: isChecked ? "checkmark.square.fill" : "square")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.blue) // customize color if needed
+                }
+                .buttonStyle(PlainButtonStyle()) // removes default button styling
+
+                Text("Yes, keep me informed with the latest updates, alerts, and offers through email and push notifications")
+                    .font(CustomFont.font(.small)) // replace with your custom font if needed
+                    .foregroundColor(.primary)
+                    .padding(.leading, 8)
+            }
+            .padding()
+
             
-            Text("By creating or logging into an account you’re agreeing with our **Terms and conditions** and **Privacy policy**")
+            
+            Text("By creating or logging into an account you're agreeing with our **Terms and conditions** and **Privacy policy**")
                 .foregroundColor(.gray)
                 .padding(.vertical)
-                
-            
-            
+                .padding(.horizontal)
         }
         .frame(maxWidth: .infinity)
         .background(GradientColor.Primary)
     }
+    
+    // MARK: - Authentication Methods
+    private func handleGoogleSignIn() {
+        print("Google Sign In tapped")
+        authenticateUser(provider: "Google")
+    }
+    
+    private func handleFacebookSignIn() {
+        print("Facebook Sign In tapped")
+        authenticateUser(provider: "Facebook")
+    }
+    
+    private func authenticateUser(provider: String) {
+        isAuthenticating = true
+        authError = nil
+        
+        // Simulate authentication process
+        // Replace this with your actual authentication logic
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            // Simulate random success/failure for demo
+            let authSuccess = Bool.random()
+            
+            if authSuccess {
+                // Authentication successful
+                print("✅ \(provider) authentication successful")
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isLoggedIn = true
+                }
+                presentationMode.wrappedValue.dismiss()
+            } else {
+                // Authentication failed
+                print("❌ \(provider) authentication failed")
+                authError = "Failed to sign in with \(provider). Please try again."
+            }
+            
+            isAuthenticating = false
+        }
+        
+        // TODO: Implement actual authentication logic here
+        // This is where you would integrate with:
+        // - Firebase Authentication
+        // - Auth0
+        // - Apple Sign In
+        // - Your custom backend authentication
+        //
+        // Example integration points:
+        // - Google: GoogleSignIn.signIn()
+        // - Facebook: Facebook SDK login
+        // - Apple: ASAuthorizationAppleIDProvider
+        // - Custom: Your API calls
+    }
 }
 
-
+// MARK: - Preview
 #Preview {
-    LoginView()
+    LoginView(isLoggedIn: .constant(false))
 }
