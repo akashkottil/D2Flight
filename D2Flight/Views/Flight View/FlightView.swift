@@ -12,7 +12,7 @@ struct FlightView: View {
         formatter.dateFormat = "E dd MMM"
         return formatter.string(from: Date())
     }()
-
+    
     // Updated: Remove the static return date calculation
     @State private var returnDate: String = ""
     @State private var travelersCount = "2 Travellers, Economy"
@@ -55,305 +55,277 @@ struct FlightView: View {
     @State private var swapButtonRotationAngle: Double = 0
     
     @State private var numberOfColumns: Int = 2
-
-        let images: [MasonryImage] = [
-            .init(imageName: "https://picsum.photos/200/300", height: 200),
-            .init(imageName: "https://picsum.photos/200", height: 150),
-            .init(imageName: "https://picsum.photos/id/237/200/300", height: 300),
-            .init(imageName: "https://picsum.photos/200/300/?blur", height: 180),
-            .init(imageName: "https://picsum.photos/200/600/?blur", height: 220),
-        ]
-
+    
+    let images: [MasonryImage] = [
+        .init(imageName: "https://picsum.photos/200/300", height: 200),
+        .init(imageName: "https://picsum.photos/200", height: 150),
+        .init(imageName: "https://picsum.photos/id/237/200/300", height: 300),
+        .init(imageName: "https://picsum.photos/200/300/?blur", height: 180),
+        .init(imageName: "https://picsum.photos/200/600/?blur", height: 220),
+    ]
+    
+    @State private var expandableSearchRef: ExpandableSearchContainer? = nil
+    
     var body: some View {
         NavigationStack {
-            ZStack {
-                ScrollView {
-                    VStack(alignment: .leading) {
-                        // Header
-                        HStack {
-                            Image("HomeLogo")
-                                .frame(width: 32, height: 32)
-                            Text("Last Minute Flights")
-                                .font(CustomFont.font(.large, weight: .bold))
-                                .foregroundColor(Color.white)
-                        }
-                        .padding(.vertical, 10)
-                        
-                        // Enhanced Tabs with coordinated animations
-                        HStack {
-                            Button(action: {
-                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                    isOneWay = true
-                                }
-                            }) {
-                                Text("One Way")
-                                    .foregroundColor(isOneWay ? .white : .gray)
-                                    .font(CustomFont.font(.small))
-                                    .fontWeight(.semibold)
-                                    .frame(width: 87, height: 31)
-                                    .background(
-                                        Group {
-                                            if isOneWay {
-                                                Color("Violet")
-                                                    .matchedGeometryEffect(id: "tab", in: animationNamespace)
-                                            } else {
-                                                Color("Violet").opacity(0.15)
-                                            }
-                                        }
-                                    )
-                                    .cornerRadius(100)
-                            }
-                            
-                            Button(action: {
-                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                    isOneWay = false
-                                }
-                            }) {
-                                Text("Round Trip")
-                                    .foregroundColor(!isOneWay ? .white : .gray)
-                                    .font(CustomFont.font(.small))
-                                    .fontWeight(.semibold)
-                                    .frame(width: 87, height: 31)
-                                    .background(
-                                        Group {
-                                            if !isOneWay {
-                                                Color("Violet")
-                                                    .matchedGeometryEffect(id: "tab", in: animationNamespace)
-                                            } else {
-                                                Color("Violet").opacity(0.15)
-                                            }
-                                        }
-                                    )
-                                    .cornerRadius(100)
-                            }
-                        }
-                        .padding(.vertical, 10)
-                        
-                        // Location Input - Updated to navigate to LocationSelectionView
-                        locationSection
-                        
-                        // Enhanced Date Section with Smooth Animations
-                        VStack(spacing: 0) {
-                            HStack(spacing: 10) {
-                                // Departure Date - Always visible with stable identity
-                                dateView(
-                                    label: formatSelectedDate(for: .departure),
-                                    icon: "CalenderIcon"
-                                )
-                                .id("departure_date") // Stable identity prevents recreation
-                                
-                                // Return Date with smooth conditional visibility
-                                Group {
-                                    if !isOneWay {
-                                        dateView(
-                                            label: formatSelectedDate(for: .return),
-                                            icon: "CalenderIcon"
-                                        )
-                                        .transition(
-                                            .asymmetric(
-                                                insertion: .scale(scale: 0.8)
-                                                    .combined(with: .opacity)
-                                                    .combined(with: .move(edge: .trailing)),
-                                                removal: .scale(scale: 0.8)
-                                                    .combined(with: .opacity)
-                                                    .combined(with: .move(edge: .trailing))
-                                            )
-                                        )
-                                    }
-                                }
-                                .frame(maxWidth: !isOneWay ? .infinity : 0)
-                                .opacity(!isOneWay ? 1 : 0)
-                                .scaleEffect(!isOneWay ? 1 : 0.8)
-                                .animation(
-                                    .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
-                                    value: isOneWay
-                                )
-                            }
-                        }
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
-                        
-                        // Passenger Section
+            VStack {
+                // Top Section with Header and ExpandableSearchContainer
+                VStack(alignment: .leading) {
+                    // Header
+                    HStack {
+                        Image("HomeLogo")
+                            .frame(width: 32, height: 32)
+                        Text("Last Minute Flights")
+                            .font(CustomFont.font(.large, weight: .bold))
+                            .foregroundColor(Color.white)
+                    }
+                    .padding(.vertical, 10)
+                    
+                    // Enhanced Tabs with coordinated animations
+                    HStack {
                         Button(action: {
-                            showPassengerSheet = true
-                        }) {
-                            HStack {
-                                Image("PassengerIcon")
-                                    .foregroundColor(.gray)
-                                    .frame(width: 22)
-                                Text(travelersCount)
-                                    .foregroundColor(.gray)
-                                    .fontWeight(.medium)
-                                    .font(CustomFont.font(.regular))
-                                Spacer()
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                isOneWay = true
                             }
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(12)
+                        }) {
+                            Text("One Way")
+                                .foregroundColor(isOneWay ? .white : .gray)
+                                .font(CustomFont.font(.small))
+                                .fontWeight(.semibold)
+                                .frame(width: 87, height: 31)
+                                .background(
+                                    Group {
+                                        if isOneWay {
+                                            Color("Violet")
+                                                .matchedGeometryEffect(id: "tab", in: animationNamespace)
+                                        } else {
+                                            Color("Violet").opacity(0.15)
+                                        }
+                                    }
+                                )
+                                .cornerRadius(100)
                         }
                         
-                        // Updated Search Flights Button with validation
-                        PrimaryButton(title: "Search Flights",
-                                      font: CustomFont.font(.medium),
-                                      fontWeight: .bold,
-                                      textColor: .white,
-                                      verticalPadding: 20,
-                                      cornerRadius: 16,
-                                      action: {
-                            handleSearchFlights()
-                        })
+                        Button(action: {
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                isOneWay = false
+                            }
+                        }) {
+                            Text("Round Trip")
+                                .foregroundColor(!isOneWay ? .white : .gray)
+                                .font(CustomFont.font(.small))
+                                .fontWeight(.semibold)
+                                .frame(width: 87, height: 31)
+                                .background(
+                                    Group {
+                                        if !isOneWay {
+                                            Color("Violet")
+                                                .matchedGeometryEffect(id: "tab", in: animationNamespace)
+                                        } else {
+                                            Color("Violet").opacity(0.15)
+                                        }
+                                    }
+                                )
+                                .cornerRadius(100)
+                        }
                     }
-                    .padding()
-                    .padding(.top, 50)
-                    .padding(.bottom, 30)
-                    .background(GradientColor.Primary)
-                    .cornerRadius(20)
+                    .padding(.vertical, 10)
                     
-                    
-//                    MasonryGrid(data: images, columns: numberOfColumns) { item in
-//                                        GeometryReader { geo in
-//                                            let width = geo.size.width
-//                                            let aspectRatio = 3 / 2.0
-//                                            let adjustedHeight = item.height * (width / 200)
+                    // REPLACE this section with ExpandableSearchContainer
+                    ExpandableSearchContainer(
+                        isOneWay: $isOneWay,
+                        originLocation: $originLocation,
+                        destinationLocation: $destinationLocation,
+                        originIATACode: $originIATACode,
+                        destinationIATACode: $destinationIATACode,
+                        selectedDates: $selectedDates,
+                        travelersCount: $travelersCount,
+                        showPassengerSheet: $showPassengerSheet,
+                        adults: $adults,
+                        children: $children,
+                        infants: $infants,
+                        selectedClass: $selectedClass,
+                        navigateToLocationSelection: $navigateToLocationSelection,
+                        navigateToDateSelection: $navigateToDateSelection,
+                        onSearchFlights: handleSearchFlights
+                    )
+                }
+                .padding()
+                .padding(.top, 50) // Keep space from top
+                .padding(.bottom, 10)
+                .background(GradientColor.Primary)
+                .cornerRadius(20)
+
+            
+                ZStack {
+                    // ScrollView for the MasonryGrid and other content
+                    ScrollView {
+                        // MasonryGrid - Adjusted for the scrollable area
+//                        MasonryGrid(data: images, columns: numberOfColumns) { item in
+//                            GeometryReader { geo in
+//                                let width = geo.size.width
+//                                let aspectRatio = 3 / 2.0
+//                                let adjustedHeight = item.height * (width / 200)
 //
-//                                            AsyncImage(url: URL(string: item.imageName)) { image in
-//                                                image
-//                                                    .resizable()
-//                                                    .scaledToFill()
-//                                            } placeholder: {
-//                                                Color.gray.opacity(0.3)
-//                                            }
-//                                            .frame(width: width, height: adjustedHeight)
-//                                            .clipped()
-//                                            .cornerRadius(10)
-//                                        }
-//                                        .frame(height: item.height)
-//                                    }
-//                                    .padding(.horizontal)
-                    
-                FlightExploreCard()
-                }
-                .scrollIndicators(.hidden)
-                
-                // Notification Components Overlay
-                VStack {
-                    Spacer()
-                    
-                    if showNoInternet {
-                        NoInternet(isVisible: $showNoInternet)
-                            .padding(.bottom, 100) // Space above tab bar
+//                                AsyncImage(url: URL(string: item.imageName)) { image in
+//                                    image
+//                                        .resizable()
+//                                        .scaledToFill()
+//                                } placeholder: {
+//                                    Color.gray.opacity(0.3)
+//                                }
+//                                .frame(width: width, height: adjustedHeight)
+//                                .clipped()
+//                                .cornerRadius(10)
+//                            }
+//                            .frame(height: item.height)
+//                        }
+//                        .padding(.top, 20)
+//                        .padding(.horizontal)
+                        FlightExploreCard()
+                        
+                        AutoSlidingCardsView()
+                        
+                        BottomBar()
+
                     }
+                    .scrollIndicators(.hidden)
                     
-                    if showEmptySearch {
-                        EmptySearch(isVisible: $showEmptySearch)
-                            .padding(.bottom, 100) // Space above tab bar
+                    .ignoresSafeArea(.all, edges: .bottom) // Make ScrollView extend to screen edge
+                    
+                    // Notification Components Overlay - positioned absolutely
+                    VStack {
+                        Spacer()
+                        
+                        if showNoInternet {
+                            NoInternet(isVisible: $showNoInternet)
+                                .padding(.bottom, 50) // Reduced padding
+                        }
+                        
+                        if showEmptySearch {
+                            EmptySearch(isVisible: $showEmptySearch)
+                                .padding(.bottom, 50) // Reduced padding
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.3), value: showNoInternet)
+                    .animation(.easeInOut(duration: 0.3), value: showEmptySearch)
+                }
+                // Add navigation destination for ResultView with search parameters
+                .navigationDestination(isPresented: Binding(
+                    get: { currentSearchId != nil && navigateToResults && currentSearchParameters != nil },
+                    set: { newValue in
+                        if !newValue {
+                            currentSearchId = nil
+                            navigateToResults = false
+                            currentSearchParameters = nil
+                        }
+                    }
+                )) {
+                    if let validSearchId = currentSearchId,
+                       let searchParams = currentSearchParameters {
+                        ResultView(searchId: validSearchId, searchParameters: searchParams)
+                    } else {
+                        Text("Invalid Search Parameters")
                     }
                 }
-                .animation(.easeInOut(duration: 0.3), value: showNoInternet)
-                .animation(.easeInOut(duration: 0.3), value: showEmptySearch)
             }
             .ignoresSafeArea()
-            // Add navigation destination for ResultView with search parameters
-            .navigationDestination(isPresented: Binding(
-                get: { currentSearchId != nil && navigateToResults && currentSearchParameters != nil },
-                set: { newValue in
-                    if !newValue {
-                        currentSearchId = nil
-                        navigateToResults = false
-                        currentSearchParameters = nil
+            
+            .overlay(
+                VStack {
+                    HStack {
+                        Spacer()
+                        UserDebugPanel()
+                    }
+                    Spacer()
+                }
+                .padding()
+            )
+            // Network monitoring
+            .onReceive(networkMonitor.$isConnected) { isConnected in
+                // Show no internet notification when connection is lost
+                if lastNetworkStatus && !isConnected {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showNoInternet = true
+                        showEmptySearch = false // Hide other notifications
                     }
                 }
-            )) {
-                if let validSearchId = currentSearchId,
-                   let searchParams = currentSearchParameters {
-                    ResultView(searchId: validSearchId, searchParameters: searchParams)
-                } else {
-                    Text("Invalid Search Parameters")
+                lastNetworkStatus = isConnected
+            }
+            // Add search observation with AnimatedResultLoader integration
+            .onReceive(flightSearchVM.$searchId) { searchId in
+                if let searchId = searchId {
+                    currentSearchId = searchId
+                    
+                    // Create search parameters when search is successful
+                    createSearchParameters()
+                    
+                    // Delay to show the loader for minimum time, then navigate
+                    
+                    navigateToResults = true
+                    
+                    
+                    print("🔍 FlightView updated currentSearchId and will show loader: \(searchId)")
                 }
             }
-        }
-        // Network monitoring
-        .onReceive(networkMonitor.$isConnected) { isConnected in
-            // Show no internet notification when connection is lost
-            if lastNetworkStatus && !isConnected {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    showNoInternet = true
-                    showEmptySearch = false // Hide other notifications
+            .onReceive(flightSearchVM.$isLoading) { isLoading in
+                print("📡 FlightView - Search loading state: \(isLoading)")
+                
+            }
+            .onReceive(flightSearchVM.$errorMessage) { errorMessage in
+                if let error = errorMessage {
+                    print("⚠️ FlightView received error: \(error)")
+                    
                 }
             }
-            lastNetworkStatus = isConnected
-        }
-        // Add search observation with AnimatedResultLoader integration
-        .onReceive(flightSearchVM.$searchId) { searchId in
-            if let searchId = searchId {
-                currentSearchId = searchId
-                
-                // Create search parameters when search is successful
-                createSearchParameters()
-                
-                // Delay to show the loader for minimum time, then navigate
-                
-                navigateToResults = true
-                
-                
-                print("🔍 FlightView updated currentSearchId and will show loader: \(searchId)")
+            .sheet(isPresented: $showPassengerSheet) {
+                PassengerSheet(
+                    isPresented: $showPassengerSheet,
+                    adults: $adults,
+                    children: $children,
+                    infants: $infants,
+                    selectedClass: $selectedClass
+                ) { updatedTravelersText in
+                    travelersCount = updatedTravelersText
+                }
             }
-        }
-        .onReceive(flightSearchVM.$isLoading) { isLoading in
-            print("📡 FlightView - Search loading state: \(isLoading)")
+            .fullScreenCover(isPresented: $navigateToDateSelection) {
+                DateSelectionView(
+                    selectedDates: $selectedDates,
+                    isRoundTrip: !isOneWay
+                ) { updatedDates in
+                    selectedDates = updatedDates
+                    updateDateLabels()
+                }
+            }
+            .fullScreenCover(isPresented: $navigateToLocationSelection) {
+                LocationSelectionView(
+                    originLocation: $originLocation,
+                    destinationLocation: $destinationLocation
+                ) { selectedLocation, isOrigin, iataCode in
+                    if isOrigin {
+                        originLocation = selectedLocation
+                        originIATACode = iataCode
+                        print("📍 Origin location selected: \(selectedLocation) (\(iataCode))")
+                    } else {
+                        destinationLocation = selectedLocation
+                        destinationIATACode = iataCode
+                        print("📍 Destination location selected: \(selectedLocation) (\(iataCode))")
+                    }
+                }
+            }
             
-        }
-        .onReceive(flightSearchVM.$errorMessage) { errorMessage in
-            if let error = errorMessage {
-                print("⚠️ FlightView received error: \(error)")
-                
-            }
-        }
-        .sheet(isPresented: $showPassengerSheet) {
-            PassengerSheet(
-                isPresented: $showPassengerSheet,
-                adults: $adults,
-                children: $children,
-                infants: $infants,
-                selectedClass: $selectedClass
-            ) { updatedTravelersText in
-                travelersCount = updatedTravelersText
-            }
-        }
-        .fullScreenCover(isPresented: $navigateToDateSelection) {
-            DateSelectionView(
-                selectedDates: $selectedDates,
-                isRoundTrip: !isOneWay
-            ) { updatedDates in
-                selectedDates = updatedDates
-                updateDateLabels()
-            }
-        }
-        .fullScreenCover(isPresented: $navigateToLocationSelection) {
-            LocationSelectionView(
-                originLocation: $originLocation,
-                destinationLocation: $destinationLocation
-            ) { selectedLocation, isOrigin, iataCode in
-                if isOrigin {
-                    originLocation = selectedLocation
-                    originIATACode = iataCode
-                    print("📍 Origin location selected: \(selectedLocation) (\(iataCode))")
-                } else {
-                    destinationLocation = selectedLocation
-                    destinationIATACode = iataCode
-                    print("📍 Destination location selected: \(selectedLocation) (\(iataCode))")
+            .onAppear {
+                // Reset prefill state when view appears fresh
+                if originLocation.isEmpty && destinationLocation.isEmpty {
+                    hasPrefilled = false
                 }
+                prefillRecentLocationsIfNeeded()
+                initializeReturnDate()
             }
-        }
-        
-        .onAppear {
-            // Reset prefill state when view appears fresh
-            if originLocation.isEmpty && destinationLocation.isEmpty {
-                hasPrefilled = false
-            }
-            prefillRecentLocationsIfNeeded()
-            initializeReturnDate()
         }
     }
+
     
     // NEW: Initialize return date based on current date + 2 days initially
     private func initializeReturnDate() {
@@ -572,8 +544,8 @@ struct FlightView: View {
                 print("🔄 Swapped locations - Origin: \(originLocation), Destination: \(destinationLocation)")
                 // Toggle rotation state
                 withAnimation(.easeInOut(duration: 0.3)) {
-                        swapButtonRotationAngle -= 180
-                    }
+                    swapButtonRotationAngle -= 180
+                }
             }) {
                 Image("SwapIcon")
                     .rotationEffect(.degrees(swapButtonRotationAngle))
