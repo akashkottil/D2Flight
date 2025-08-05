@@ -85,30 +85,41 @@ struct LoginView: View {
                         .padding(.top, 8)
                 }
             }
-            HStack(alignment: .top) {
+            HStack(alignment: .center) {
                 Button(action: {
                     isChecked.toggle()
                 }) {
-                    Image(systemName: isChecked ? "checkmark.square.fill" : "square")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .foregroundColor(.blue) // customize color if needed
-                }
-                .buttonStyle(PlainButtonStyle()) // removes default button styling
+                    ZStack {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(isChecked ? Color.red : Color.gray, lineWidth: 2)
+                                    .frame(width: 20, height: 20)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .fill(isChecked ? Color.red : Color.clear)
+                                    )
 
+                                if isChecked {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 14, weight: .bold))
+                                }
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
                 Text("Yes, keep me informed with the latest updates, alerts, and offers through email and push notifications")
                     .font(CustomFont.font(.small)) // replace with your custom font if needed
-                    .foregroundColor(.primary)
+                    .foregroundColor(Color.white)
                     .padding(.leading, 8)
             }
-            .padding()
-
+            .padding(.horizontal,30)
+            .padding(.vertical)
             
             
             Text("By creating or logging into an account you're agreeing with our **Terms and conditions** and **Privacy policy**")
                 .foregroundColor(.gray)
                 .padding(.vertical)
                 .padding(.horizontal)
+                .font(CustomFont.font(.small))
         }
         .frame(maxWidth: .infinity)
         .background(GradientColor.Primary)
