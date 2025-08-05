@@ -14,6 +14,7 @@ struct ProfileItem: Identifiable {
 struct ProfileLists: View {
     
     @Binding var isLoggedIn: Bool
+    @EnvironmentObject var authManager: AuthenticationManager // ✅ Add this line
     
     // Top Section Items
     let topItems: [ProfileItem] = [
@@ -66,8 +67,11 @@ struct ProfileLists: View {
                     } else {
                         Button {
                             if item.title == "Logout" {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    isLoggedIn = false
+                                Task {
+                                    await authManager.signOut() // ✅ Now authManager is available
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        isLoggedIn = false
+                                    }
                                 }
                             } else {
                                 print("Tapped on \(item.title)")
@@ -137,5 +141,6 @@ struct DemoScreen: View {
 #Preview {
     NavigationView {
         ProfileLists(isLoggedIn: .constant(true))
+            .environmentObject(AuthenticationManager.shared) // ✅ Add this for preview
     }
 }

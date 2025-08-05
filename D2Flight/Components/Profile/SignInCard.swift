@@ -2,20 +2,29 @@ import SwiftUI
 
 struct SignInCard: View {
     @Binding var isLoggedIn: Bool
+    @EnvironmentObject var authManager: AuthenticationManager
     @State private var showLoginView = false
     
     var body: some View {
         VStack(alignment: .leading) {
             // Profile/Welcome Section
             HStack {
-                if isLoggedIn {
-                    Image("ProfileImg")
-                        .frame(width: 56, height: 56)
-                        .clipShape(Circle())
+                if authManager.isAuthenticated, let user = authManager.currentUser {
+                    // User profile image or placeholder
+                    AsyncImage(url: URL(string: user.profileImageURL ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Image("ProfileImg")
+                    }
+                    .frame(width: 56, height: 56)
+                    .clipShape(Circle())
+                    
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Akash kottil")
+                        Text(user.name)
                             .font(CustomFont.font(.medium, weight: .bold))
-                        Text("kottilakash@gmail.com")
+                        Text(user.email)
                             .font(CustomFont.font(.small))
                             .fontWeight(.medium)
                             .foregroundColor(Color.gray)
@@ -36,10 +45,9 @@ struct SignInCard: View {
             
             // Action Button Section
             VStack {
-                if isLoggedIn {
+                if authManager.isAuthenticated {
                     // Account Settings Button
                     Button(action: {
-                        // Handle account settings navigation
                         print("Navigate to Account Settings")
                     }) {
                         HStack {
@@ -54,7 +62,7 @@ struct SignInCard: View {
                         .foregroundColor(.white)
                     }
                 } else {
-                    // Sign In Button - Now navigates to LoginView
+                    // Sign In Button
                     Button(action: {
                         showLoginView = true
                     }) {
@@ -76,9 +84,12 @@ struct SignInCard: View {
         .background(GradientColor.Primary)
         .cornerRadius(16)
         .padding()
-        // Present LoginView as a full screen cover
         .fullScreenCover(isPresented: $showLoginView) {
             LoginView(isLoggedIn: $isLoggedIn)
+                .environmentObject(authManager)
+        }
+        .onReceive(authManager.$isAuthenticated) { authenticated in
+            isLoggedIn = authenticated
         }
     }
 }

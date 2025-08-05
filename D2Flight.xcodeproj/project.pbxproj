@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		8C4882442DE4E98300E903D0 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 8C4882432DE4E98300E903D0 /* Alamofire */; };
+		8CB27B992E41F3D0002CE17F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 8CB27B982E41F3D0002CE17F /* FirebaseAuth */; };
+		8CB27B9B2E41F3D0002CE17F /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8CB27B9A2E41F3D0002CE17F /* FirebaseCore */; };
+		8CB27B9D2E41F3EE002CE17F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 8CB27B9C2E41F3EE002CE17F /* GoogleSignIn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,9 +36,22 @@
 		8CD535462DE0410B00F3FD75 /* D2FlightUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = D2FlightUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8CB287B02E422AA3002CE17F /* Exceptions for "D2Flight" folder in "D2Flight" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8CD5352E2DE0410900F3FD75 /* D2Flight */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8CD535312DE0410900F3FD75 /* D2Flight */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8CB287B02E422AA3002CE17F /* Exceptions for "D2Flight" folder in "D2Flight" target */,
+			);
 			path = D2Flight;
 			sourceTree = "<group>";
 		};
@@ -57,6 +73,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				8C4882442DE4E98300E903D0 /* Alamofire in Frameworks */,
+				8CB27B9D2E41F3EE002CE17F /* GoogleSignIn in Frameworks */,
+				8CB27B9B2E41F3D0002CE17F /* FirebaseCore in Frameworks */,
+				8CB27B992E41F3D0002CE17F /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +137,9 @@
 			name = D2Flight;
 			packageProductDependencies = (
 				8C4882432DE4E98300E903D0 /* Alamofire */,
+				8CB27B982E41F3D0002CE17F /* FirebaseAuth */,
+				8CB27B9A2E41F3D0002CE17F /* FirebaseCore */,
+				8CB27B9C2E41F3EE002CE17F /* GoogleSignIn */,
 			);
 			productName = D2Flight;
 			productReference = 8CD5352F2DE0410900F3FD75 /* D2Flight.app */;
@@ -203,6 +225,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				8C4882422DE4E98300E903D0 /* XCRemoteSwiftPackageReference "Alamofire" */,
+				8C33EA0D2E41EABF00EBA869 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				8CB27B8A2E41EB1E002CE17F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8CD535302DE0410900F3FD75 /* Products */;
@@ -407,6 +431,7 @@
 				DEVELOPMENT_TEAM = J48UCV8X2N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = D2Flight/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -435,6 +460,7 @@
 				DEVELOPMENT_TEAM = J48UCV8X2N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = D2Flight/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -563,12 +589,28 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		8C33EA0D2E41EABF00EBA869 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.1.0;
+			};
+		};
 		8C4882422DE4E98300E903D0 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 5.10.2;
+			};
+		};
+		8CB27B8A2E41EB1E002CE17F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -578,6 +620,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8C4882422DE4E98300E903D0 /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
+		};
+		8CB27B982E41F3D0002CE17F /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8C33EA0D2E41EABF00EBA869 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		8CB27B9A2E41F3D0002CE17F /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8C33EA0D2E41EABF00EBA869 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		8CB27B9C2E41F3EE002CE17F /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8CB27B8A2E41EB1E002CE17F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
