@@ -66,8 +66,11 @@ struct ProfileLists: View {
                     } else {
                         Button {
                             if item.title == "Logout" {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    isLoggedIn = false
+                                Task {
+                                    await authManager.signOut()
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        isLoggedIn = false
+                                    }
                                 }
                             } else {
                                 print("Tapped on \(item.title)")
