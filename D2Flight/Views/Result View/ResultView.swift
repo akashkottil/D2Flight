@@ -1,8 +1,14 @@
 import SwiftUI
 
+// ✅ Content type enum for mixing flights and ads
+enum ContentType {
+    case flight(FlightResult)
+    case ad(AdResponse)
+}
+
 struct ResultView: View {
     @StateObject private var viewModel = ResultViewModel()
-    @StateObject private var headerViewModel = ResultHeaderViewModel() // ✅ Fixed: Use consistent naming
+    @StateObject private var headerViewModel = ResultHeaderViewModel()
     @State private var selectedFlight: FlightResult? = nil
     @State private var navigateToDetails = false
 
@@ -21,7 +27,7 @@ struct ResultView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // MARK: 1) Fixed Top Filter Bar - ✅ Use ResultHeaderView instead of ResultHeaderWithRef
+                // MARK: 1) Fixed Top Filter Bar
                 ResultHeaderView(
                     headerViewModel: headerViewModel,
                     originCode: searchParameters.originCode,
@@ -41,11 +47,11 @@ struct ResultView: View {
 
                 // MARK: 2) Content Area
                 if viewModel.isLoading {
-                    // A) Shimmer placeholders (still shown underneath)
+                    // A) Shimmer placeholders
                     ScrollView {
                         VStack(spacing: 16) {
                             ForEach(0..<5, id: \.self) { _ in
-                                ShimmerResultCard()
+                                ShimmerResultCard(isRoundTrip: searchParameters.isRoundTrip)
                             }
                         }
                         .padding()
@@ -101,26 +107,35 @@ struct ResultView: View {
                     .frame(maxHeight: .infinity)
 
                 } else {
-                    // D) Success: list of flight results with pagination
+                    // D) Success: list of flight results with ads integration
                     ScrollView {
                         LazyVStack(spacing: 16) {
-                            ForEach(viewModel.flightResults) { flight in
-                                Button {
-                                    viewModel.selectFlight(flight)
-                                    selectedFlight = flight
-                                    navigateToDetails = true
-                                } label: {
-                                    ResultCard(
-                                        flight: flight,
-                                        isRoundTrip: searchParameters.isRoundTrip
-                                    )
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .onAppear {
-                                    // Trigger pagination when user scrolls near the bottom
-                                    if viewModel.shouldLoadMore(currentItem: flight) {
-                                        print("🔄 Triggering load more for item: \(flight.id)")
-                                        viewModel.loadMoreResults()
+                            // ✅ Mix flight results and ads
+                            ForEach(Array(generateMixedContent().enumerated()), id: \.offset) { index, content in
+                                switch content {
+                                case .flight(let flight):
+                                    Button {
+                                        viewModel.selectFlight(flight)
+                                        selectedFlight = flight
+                                        navigateToDetails = true
+                                    } label: {
+                                        ResultCard(
+                                            flight: flight,
+                                            isRoundTrip: searchParameters.isRoundTrip
+                                        )
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    .onAppear {
+                                        // Trigger pagination when user scrolls near the bottom
+                                        if viewModel.shouldLoadMore(currentItem: flight) {
+                                            print("🔄 Triggering load more for item: \(flight.id)")
+                                            viewModel.loadMoreResults()
+                                        }
+                                    }
+                                    
+                                case .ad(let ad):
+                                    AdCardView(ad: ad) {
+                                        print("🎯 Ad tapped: \(ad.headline)")
                                     }
                                 }
                             }
@@ -175,14 +190,17 @@ struct ResultView: View {
                 // Only start polling (and loader) once, on first appear
                 guard !hasInitialized else { return }
                 hasInitialized = true
-                isInitialLoad = true  // Mark this as initial load
+                isInitialLoad = true
 
                 if let searchId = searchId {
                     print("🚀 Starting initial poll for searchId: \(searchId)")
                     viewModel.pollFlights(searchId: searchId)
+                    
+                    // ✅ Load ads in parallel
+                    viewModel.loadAdsForSearch(searchParameters: searchParameters)
                 }
             }
-            // ✅ FIXED: Single onReceive for poll response that handles both logging and header updates
+            // ✅ Handle poll response updates
             .onReceive(viewModel.$pollResponse) { pollResponse in
                 if let response = pollResponse {
                     // Log the response
@@ -195,13 +213,27 @@ struct ResultView: View {
                     print("✅ Updated ResultHeader with API data")
                 }
             }
-            // ✅ Keep this for flight results logging
+            // ✅ Handle flight results updates
             .onReceive(viewModel.$flightResults) { flightResults in
                 print("🖥️ ResultView received \(flightResults.count) flight results")
                 for (index, flight) in flightResults.enumerated() {
                     print("   Flight \(index + 1): \(flight.legs.first?.originCode ?? "?") → \(flight.legs.first?.destinationCode ?? "?") - \(flight.formattedPrice)")
                 }
             }
+            // ✅ Handle ads updates
+            .onReceive(viewModel.adsService.$ads) { ads in
+                print("🎯 ResultView received \(ads.count) ads")
+                for (index, ad) in ads.enumerated() {
+                    print("   Ad \(index + 1): \(ad.headline) - \(ad.companyName)")
+                }
+            }
+            // ✅ Handle ads errors (silently)
+            .onReceive(viewModel.adsService.$adsErrorMessage) { error in
+                if let error = error {
+                    print("🎯 Ads loading error (non-blocking): \(error)")
+                }
+            }
+            // ✅ Handle initial loading state for animated loader
             .onReceive(viewModel.$isLoading) { isLoading in
                 // Only trigger loader‐logic for the initial load, not for filter changes
                 guard hasInitialized && isInitialLoad else { return }
@@ -237,4 +269,58 @@ struct ResultView: View {
         // Add debug info for development
         .debugPagination(viewModel: viewModel)
     }
+    
+    // ✅ Generate mixed content with flights and ads
+    private func generateMixedContent() -> [ContentType] {
+        var mixedContent: [ContentType] = []
+        let flights = viewModel.flightResults
+        let ads = viewModel.adsService.ads
+        
+        // Add all flights first
+        for flight in flights {
+            mixedContent.append(.flight(flight))
+        }
+        
+        // Insert ads at strategic positions (every 3-4 flights)
+        var adIndex = 0
+        let positions = [2, 6, 10, 15, 20, 25, 30] // Positions where ads should appear
+        
+        for position in positions {
+            // Only insert ad if we have ads available and the position is valid
+            if position < mixedContent.count && adIndex < ads.count {
+                mixedContent.insert(.ad(ads[adIndex]), at: position + adIndex)
+                adIndex += 1
+            } else if adIndex >= ads.count {
+                // No more ads to insert
+                break
+            }
+        }
+        
+        print("🎯 Generated mixed content: \(flights.count) flights + \(adIndex) ads = \(mixedContent.count) total items")
+        
+        return mixedContent
+    }
+}
+
+// MARK: - Preview
+#Preview {
+    // Create sample data for preview
+    let sampleSearchParams = SearchParameters(
+        originCode: "NYC",
+        destinationCode: "LAX",
+        originName: "New York",
+        destinationName: "Los Angeles",
+        isRoundTrip: true,
+        departureDate: Date(),
+        returnDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()),
+        adults: 2,
+        children: 0,
+        infants: 0,
+        selectedClass: .economy
+    )
+    
+    ResultView(
+        searchId: "sample-search-id",
+        searchParameters: sampleSearchParams
+    )
 }

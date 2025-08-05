@@ -1,9 +1,8 @@
-
-
 import SwiftUI
 
 struct SignInCard: View {
     @Binding var isLoggedIn: Bool
+    @State private var showLoginView = false
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -54,15 +53,10 @@ struct SignInCard: View {
                         .background(Color.black.opacity(0.0))
                         .foregroundColor(.white)
                     }
-                    
-                    
-                    
                 } else {
-                    // Sign In Button
+                    // Sign In Button - Now navigates to LoginView
                     Button(action: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isLoggedIn = true
-                        }
+                        showLoginView = true
                     }) {
                         HStack {
                             Text("Sign in Now")
@@ -82,7 +76,9 @@ struct SignInCard: View {
         .background(GradientColor.Primary)
         .cornerRadius(16)
         .padding()
+        // Present LoginView as a full screen cover
+        .fullScreenCover(isPresented: $showLoginView) {
+            LoginView(isLoggedIn: $isLoggedIn)
+        }
     }
 }
-
-

@@ -1,30 +1,39 @@
-
 import SwiftUI
 
 struct FlightExploreCard: View {
     var body: some View {
-        VStack{
-            HStack{
-                VStack(alignment: .leading){
-                    Text("Explore")
-                        .font(CustomFont.font(.regular, weight: .bold))
-                    Text("Explore low fare flights to any destinations from your location")
-                        .font(CustomFont.font(.small, weight: .medium))
-                    
-                    PrimaryButton(title: "Explore", font: CustomFont.font(.small), fontWeight: .semibold, textColor: .white,
-                                  width: 68,
-                                  height: 31,
-                                  cornerRadius: 4, action: {
-                        print("exploring...")
-                    })
+        VStack {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Login to get some")
+                        .font(CustomFont.font(.medium, weight: .medium))
+                    Text("Exclusive deals")
+                        .font(CustomFont.font(.large, weight: .bold))
+                   
+                    PrimaryButton(
+                        title: "Explore",
+                        font: CustomFont.font(.regular),
+                        fontWeight: .semibold,
+                        textColor: .white,
+                        width: 68,
+                        height: 31,
+                        cornerRadius: 4,
+                        action: {
+                            print("exploring...")
+                        })
                 }
+                .foregroundColor(.white)
                 .padding()
-                HStack{
+                
+                Spacer()
+
+                HStack {
                     Image("FlightImg")
                 }
             }
-            .padding(.vertical,0)
-            .background(GradientColor.BlueWhite)
+            .padding(.vertical, 0)
+            .frame(maxWidth: .infinity) // Expand the content
+            .background(GradientColor.Primary) // Background fills the expanded area
             .cornerRadius(20)
             .overlay(
                 RoundedRectangle(cornerRadius: 20)
@@ -32,9 +41,10 @@ struct FlightExploreCard: View {
             )
         }
         .padding(.top, 30)
-        
+        .padding(.horizontal) // Optional: padding to keep inside screen safely
     }
 }
+
 
 #Preview {
     FlightExploreCard()
