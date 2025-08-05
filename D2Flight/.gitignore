@@ -1,9 +1,5 @@
-# macOS system files
-.DS_Store
-
-# Xcode user-specific files
+# Ignore Xcode user interface state and user-specific data
 *.xcuserstate
 *.xcuserdata/
-
-# Ignore xcuserdata directories within any .xcworkspace
-*.xcworkspace/xcuserdata/
+**/*.xcuserstate
+**/xcuserdata/
