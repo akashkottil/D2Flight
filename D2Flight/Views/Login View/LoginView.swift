@@ -54,10 +54,10 @@ struct LoginView: View {
                     }
                 }
                 
-                // Facebook Sign In Button
+                // Apple Sign In Button
                 SignInButton(
-                    text: "Continue with Facebook",
-                    imageName: "FacebookIcon"
+                    text: "Continue with Apple",
+                    imageName: "AppleIcon"
                 ) {
                     Task {
                         await authManager.signInWithFacebook()

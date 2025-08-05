@@ -36,9 +36,22 @@
 		8CD535462DE0410B00F3FD75 /* D2FlightUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = D2FlightUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8CB287B02E422AA3002CE17F /* Exceptions for "D2Flight" folder in "D2Flight" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8CD5352E2DE0410900F3FD75 /* D2Flight */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8CD535312DE0410900F3FD75 /* D2Flight */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8CB287B02E422AA3002CE17F /* Exceptions for "D2Flight" folder in "D2Flight" target */,
+			);
 			path = D2Flight;
 			sourceTree = "<group>";
 		};
@@ -418,6 +431,7 @@
 				DEVELOPMENT_TEAM = J48UCV8X2N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = D2Flight/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -446,6 +460,7 @@
 				DEVELOPMENT_TEAM = J48UCV8X2N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = D2Flight/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

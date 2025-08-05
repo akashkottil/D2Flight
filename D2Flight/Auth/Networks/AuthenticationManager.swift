@@ -1,11 +1,3 @@
-//
-//  AuthenticationManager.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 05/08/25.
-//
-
-
 import Foundation
 import SwiftUI
 import GoogleSignIn
@@ -151,13 +143,16 @@ class AuthenticationManager: ObservableObject {
     }
     
     private func performGoogleSignIn() async throws -> User {
-        guard let presentingViewController = await UIApplication.shared.windows.first?.rootViewController else {
+        // ✅ FIXED: Get the root view controller properly
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootViewController = window.rootViewController else {
             throw AuthError.configurationError
         }
         
         // Sign in with Google
         let result = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<GIDSignInResult, Error>) in
-            GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
+            GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
                 if let error = error {
                     let nsError = error as NSError
                     if nsError.code == GIDSignInError.canceled.rawValue {
@@ -174,10 +169,11 @@ class AuthenticationManager: ObservableObject {
         }
         
         // Get Google ID token and access token
-        guard let idToken = result.user.idToken?.tokenString,
-              let accessToken = result.user.accessToken.tokenString else {
+        guard let idToken = result.user.idToken?.tokenString else {
             throw AuthError.invalidCredentials
         }
+        
+        let accessToken = result.user.accessToken.tokenString
         
         // Create Firebase credential
         let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
@@ -217,14 +213,5 @@ class AuthenticationManager: ObservableObject {
         userDefaults.removeObject(forKey: Keys.isLoggedIn)
         userDefaults.removeObject(forKey: Keys.currentUser)
         keychain.deleteAccessToken()
-    }
-}
-
-// MARK: - UIApplication Extension
-extension UIApplication {
-    var windows: [UIWindow] {
-        return UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap { $0.windows }
     }
 }
