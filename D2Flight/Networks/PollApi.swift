@@ -11,7 +11,7 @@ class PollApi {
         searchId: String,
         request: PollRequest = PollRequest(), // Default empty request for initial poll
         page: Int = 1,
-        limit: Int = 8,
+        limit: Int = 30,
         completion: @escaping (Result<PollResponse, Error>) -> Void
     ) {
         let url = "\(baseURL)/poll/?search_id=\(searchId)&page=\(page)&limit=\(limit)"
@@ -45,6 +45,7 @@ class PollApi {
         .responseDecodable(of: PollResponse.self) { response in
             switch response.result {
             case .success(let pollResponse):
+                print("next page link:\(pollResponse.next != nil ? pollResponse.next! : "no links")")
                 print("✅ Poll successful! Found \(pollResponse.results.count) flights in this batch (total: \(pollResponse.count))")
                 print("   Cache status: \(pollResponse.cache)")
                 print("   Next page: \(pollResponse.next != nil ? "Available" : "None")")

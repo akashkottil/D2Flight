@@ -267,7 +267,7 @@ struct ResultView: View {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
         // Add debug info for development
-        .debugPagination(viewModel: viewModel)
+//        .debugPagination(viewModel: viewModel)
     }
     
     // ✅ Generate mixed content with flights and ads

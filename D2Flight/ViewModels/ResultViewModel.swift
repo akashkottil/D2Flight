@@ -20,6 +20,9 @@ class ResultViewModel: ObservableObject {
     @Published var selectedFlight: FlightResult? = nil
     @Published var totalPollCount: Int = 0
     
+    // ✅ NEW: Track next URL availability
+    private var nextPageURL: String? = nil
+    
     // ✅ NEW: Ads integration properties
     @Published var adsService = HotelAdsAPIService()
     @Published var hasLoadedAds = false
@@ -69,6 +72,7 @@ class ResultViewModel: ObservableObject {
         pollStartTime = Date()
         currentRetries = 0
         shouldContinuouslyPoll = false
+        nextPageURL = nil // ✅ Reset next page URL
         
         // ✅ NEW: Reset ads loading state for new search
         hasLoadedAds = false
@@ -115,10 +119,14 @@ class ResultViewModel: ObservableObject {
         totalResultsCount = response.count
         isCacheComplete = response.cache
         
+        // ✅ FIXED: Store next page URL
+        nextPageURL = response.next
+        
         print("✅ Initial poll successful!")
         print("   Total flights available: \(response.count)")
         print("   Results in this batch: \(response.results.count)")
         print("   Cache complete: \(response.cache)")
+        print("   Next page available: \(response.next != nil)")
         
         if response.results.isEmpty && response.count == 0 && currentRetries < maxRetries && !isCacheComplete {
             // If no results but API indicates there should be flights, retry
@@ -137,12 +145,11 @@ class ResultViewModel: ObservableObject {
             flightResults = response.results
             currentPage = 2 // Next page will be 2 (since we just loaded page 1)
             
-            // Check if we have more results to load
-            let hasAllResults = flightResults.count >= totalResultsCount
-            hasMoreResults = !isCacheComplete || !hasAllResults
+            // ✅ FIXED: Check next URL instead of count comparison
+            hasMoreResults = (response.next != nil)
             
             print("   Current results: \(flightResults.count), Total available: \(totalResultsCount)")
-            print("   Has all results: \(hasAllResults), Cache complete: \(isCacheComplete)")
+            print("   Has next page: \(response.next != nil)")
             print("   Has more results: \(hasMoreResults)")
             
             if response.results.isEmpty {
@@ -230,12 +237,15 @@ class ResultViewModel: ObservableObject {
                     self.isCacheComplete = response.cache
                     self.totalResultsCount = response.count
                     
+                    // ✅ FIXED: Update next page URL from cache check
+                    self.nextPageURL = response.next
+                    
                     print("   Cache status: \(previousCacheStatus) → \(response.cache)")
                     print("   Total count: \(self.totalResultsCount)")
+                    print("   Next page available: \(response.next != nil)")
                     
-                    // Update hasMoreResults based on current state
-                    let hasAllResults = self.flightResults.count >= self.totalResultsCount
-                    self.hasMoreResults = !response.cache || !hasAllResults
+                    // ✅ FIXED: Update hasMoreResults based on next URL
+                    self.hasMoreResults = (response.next != nil)
                     
                     // Continue polling if cache is still not complete
                     if !response.cache && self.shouldContinuouslyPoll {
@@ -267,16 +277,14 @@ class ResultViewModel: ObservableObject {
             return
         }
         
-        // Check if we should continue loading
-        let hasAllResults = flightResults.count >= totalResultsCount
-        let shouldContinue = hasMoreResults && !hasAllResults
+        // ✅ FIXED: Check if next page is available
+        guard hasMoreResults else {
+            print("🚫 Cannot load more: no next page available")
+            return
+        }
         
-        guard shouldContinue && !isLoadingMore && !isLoading else {
-            print("🚫 Cannot load more:")
-            print("   Should continue: \(shouldContinue)")
-            print("   Has more results: \(hasMoreResults)")
-            print("   Has all results: \(hasAllResults) (\(flightResults.count)/\(totalResultsCount))")
-            print("   Loading states - more: \(isLoadingMore), initial: \(isLoading)")
+        guard !isLoadingMore && !isLoading else {
+            print("🚫 Cannot load more: already loading")
             return
         }
         
@@ -289,6 +297,7 @@ class ResultViewModel: ObservableObject {
         
         print("📄 Loading more results - page: \(currentPage), pageSize: \(pageSize) (poll #\(totalPollCount))")
         print("   Current results: \(flightResults.count)/\(totalResultsCount)")
+        print("   Next page URL available: \(nextPageURL != nil)")
         
         let emptyRequest = PollRequest()
         
@@ -320,9 +329,13 @@ class ResultViewModel: ObservableObject {
         isCacheComplete = response.cache
         totalResultsCount = response.count
         
+        // ✅ FIXED: Update next page URL
+        nextPageURL = response.next
+        
         print("✅ Load more successful!")
         print("   New results count: \(response.results.count)")
         print("   Total count updated: \(previousTotal) → \(totalResultsCount)")
+        print("   Next page available: \(response.next != nil)")
         
         // Append new results to the existing results (avoid duplicates)
         let newResults = response.results.filter { newResult in
@@ -334,16 +347,16 @@ class ResultViewModel: ObservableObject {
         flightResults.append(contentsOf: newResults)
         currentPage += 1 // Increment page for the next request
         
-        let hasAllResults = flightResults.count >= totalResultsCount
-        hasMoreResults = !hasAllResults // Simplified logic
+        // ✅ FIXED: Check next URL to determine if more results available
+        hasMoreResults = (response.next != nil)
         
         print("   Total results in list: \(flightResults.count)")
         print("   Total available: \(totalResultsCount)")
         print("   Cache complete: \(isCacheComplete)")
         print("   Has more results: \(hasMoreResults)")
         
-        if flightResults.count >= totalResultsCount {
-            print("🏁 All results loaded!")
+        if response.next == nil {
+            print("🏁 No more pages available - all results loaded!")
             hasMoreResults = false
         }
     }
@@ -408,6 +421,7 @@ class ResultViewModel: ObservableObject {
                     print("   Results found: \(response.results.count)")
                     print("   Total available: \(response.count)")
                     print("   Cache status: \(response.cache)")
+                    print("   Next page available: \(response.next != nil)")
                     
                     self.pollResponse = response
                     self.flightResults = response.results
@@ -415,11 +429,12 @@ class ResultViewModel: ObservableObject {
                     self.totalResultsCount = response.count
                     self.isCacheComplete = response.cache
                     
-                    // Check if we need more results
-                    let hasAllResults = self.flightResults.count >= self.totalResultsCount
-                    self.hasMoreResults = !hasAllResults && !response.cache
+                    // ✅ FIXED: Store next page URL
+                    self.nextPageURL = response.next
                     
-                    print("   Has all results: \(hasAllResults)")
+                    // ✅ FIXED: Check next URL instead of comparing counts
+                    self.hasMoreResults = (response.next != nil)
+                    
                     print("   Has more results: \(self.hasMoreResults)")
                     
                     // Don't start continuous polling for filtered results
@@ -430,6 +445,7 @@ class ResultViewModel: ObservableObject {
                     self.errorMessage = "Failed to apply filters: \(error.localizedDescription)"
                     self.flightResults = []
                     self.hasMoreResults = false
+                    self.nextPageURL = nil
                 }
             }
         }
@@ -442,11 +458,8 @@ class ResultViewModel: ObservableObject {
         // Don't trigger if already loading or no search ID
         guard !isLoadingMore, !isLoading, searchId != nil else { return false }
         
-        // Check if we have all results
-        let hasAllResults = flightResults.count >= totalResultsCount
-        
-        // Only load more if we don't have all results
-        guard hasMoreResults && !hasAllResults else {
+        // ✅ FIXED: Only load more if next page is available
+        guard hasMoreResults else {
             return false
         }
         
@@ -462,6 +475,7 @@ class ResultViewModel: ObservableObject {
             print("   Threshold: \(thresholdIndex)")
             print("   Results: \(flightResults.count)/\(totalResultsCount)")
             print("   Has more: \(hasMoreResults)")
+            print("   Next page available: \(nextPageURL != nil)")
         }
         
         return shouldLoad
