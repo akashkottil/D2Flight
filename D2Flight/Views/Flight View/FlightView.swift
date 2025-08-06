@@ -57,12 +57,14 @@ struct FlightView: View {
     @State private var numberOfColumns: Int = 2
     
     let images: [MasonryImage] = [
-        .init(imageName: "https://picsum.photos/200/300", height: 200),
-        .init(imageName: "https://picsum.photos/200", height: 150),
-        .init(imageName: "https://picsum.photos/id/237/200/300", height: 300),
-        .init(imageName: "https://picsum.photos/200/300/?blur", height: 180),
-        .init(imageName: "https://picsum.photos/200/600/?blur", height: 220),
+        .init(imageName: "kochiImg", height: 250, isRemote: false),
+        .init(imageName: "sydneyImg", height: 180, isRemote: false),
+        .init(imageName: "milanImg", height: 210, isRemote: false),
+        .init(imageName: "berlinImg", height: 250, isRemote: false),
+        .init(imageName: "riodeImg", height: 250, isRemote: false),
+        .init(imageName: "cairoImg", height: 220, isRemote: false),
     ]
+
     
     @State private var expandableSearchRef: ExpandableSearchContainer? = nil
     
@@ -160,28 +162,45 @@ struct FlightView: View {
                 ZStack {
                     // ScrollView for the MasonryGrid and other content
                     ScrollView {
-                        // MasonryGrid - Adjusted for the scrollable area
-//                        MasonryGrid(data: images, columns: numberOfColumns) { item in
-//                            GeometryReader { geo in
-//                                let width = geo.size.width
-//                                let aspectRatio = 3 / 2.0
-//                                let adjustedHeight = item.height * (width / 200)
-//
-//                                AsyncImage(url: URL(string: item.imageName)) { image in
-//                                    image
-//                                        .resizable()
-//                                        .scaledToFill()
-//                                } placeholder: {
-//                                    Color.gray.opacity(0.3)
-//                                }
-//                                .frame(width: width, height: adjustedHeight)
-//                                .clipped()
-//                                .cornerRadius(10)
-//                            }
-//                            .frame(height: item.height)
-//                        }
-//                        .padding(.top, 20)
-//                        .padding(.horizontal)
+//                         MasonryGrid - Adjusted for the scrollable area
+                        HStack(){
+                            Text("Popular Locations")
+                                .font(.system(size: 18))
+                                .fontWeight(.bold)
+                                .padding(.top)
+                            Spacer()
+                        }
+                        .padding(.horizontal,20)
+                        
+                        MasonryGrid(data: images, columns: numberOfColumns) { item in
+                            GeometryReader { geo in
+                                let width = geo.size.width
+                                let aspectRatio = 3 / 2.0
+                                let adjustedHeight = item.height * (width / 200)
+
+                                Group {
+                                    if item.isRemote {
+                                        AsyncImage(url: URL(string: item.imageName)) { image in
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                        } placeholder: {
+                                            Color.gray.opacity(0.3)
+                                        }
+                                    } else {
+                                        Image(item.imageName)
+                                            .resizable()
+                                            .scaledToFill()
+                                    }
+                                }
+                                .frame(width: width, height: adjustedHeight)
+                                .clipped()
+                                .cornerRadius(10)
+                            }
+                            .frame(height: item.height)
+                        }
+                        .padding(.top)
+                        .padding(.horizontal)
                         FlightExploreCard()
                         
                         AutoSlidingCardsView()
