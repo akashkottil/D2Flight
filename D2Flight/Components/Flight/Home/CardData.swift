@@ -17,19 +17,19 @@ struct AutoSlidingCardsView: View {
             title: "Why Last Minute Flights ?",
             subtitle: "Easily handle all your flight bookings in one simple place.",
             iconName: "airplane",
-            backgroundImageName: "flight_bg"
+            backgroundImageName: "slide1"
         ),
         CardData(
             title: "Book Smart, Travel Easy",
             subtitle: "Find the best deals and compare prices instantly.",
             iconName: "star.fill",
-            backgroundImageName: "travel_bg"
+            backgroundImageName: "slide2"
         ),
         CardData(
             title: "24/7 Customer Support",
             subtitle: "We're here to help you every step of your journey.",
             iconName: "phone.fill",
-            backgroundImageName: "support_bg"
+            backgroundImageName: "slide3"
         )
     ]
     

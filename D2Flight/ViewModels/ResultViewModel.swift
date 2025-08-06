@@ -8,22 +8,22 @@ class ResultViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var searchId: String? = nil
     
-    // Updated pagination properties for page-based pagination
+    // ✅ UPDATED: Modified pagination properties for 30 initial + 8 per page
     @Published var hasMoreResults: Bool = true
     @Published var totalResultsCount: Int = 0
     private var currentPage: Int = 1
-    private let initialPageSize: Int = 8
-    private let subsequentPageSize: Int = 30
+    private let initialPageSize: Int = 30  // ✅ Changed from 8 to 30
+    private let subsequentPageSize: Int = 8 // ✅ Keep at 8 for subsequent pages
     
     // Poll response data
     @Published var pollResponse: PollResponse? = nil
     @Published var selectedFlight: FlightResult? = nil
     @Published var totalPollCount: Int = 0
     
-    // ✅ NEW: Track next URL availability
+    // ✅ Track next URL availability
     private var nextPageURL: String? = nil
     
-    // ✅ NEW: Ads integration properties
+    // ✅ Ads integration properties
     @Published var adsService = HotelAdsAPIService()
     @Published var hasLoadedAds = false
     
@@ -72,14 +72,15 @@ class ResultViewModel: ObservableObject {
         pollStartTime = Date()
         currentRetries = 0
         shouldContinuouslyPoll = false
-        nextPageURL = nil // ✅ Reset next page URL
+        nextPageURL = nil
         
-        // ✅ NEW: Reset ads loading state for new search
+        // Reset ads loading state for new search
         hasLoadedAds = false
         adsService.ads = []
         adsService.adsErrorMessage = nil
     }
     
+    // ✅ UPDATED: Load initial results with 30 items
     private func loadInitialResults(searchId: String) {
         // Safety check to prevent infinite polling
         guard totalPollCount < maxTotalPolls else {
@@ -93,12 +94,13 @@ class ResultViewModel: ObservableObject {
         let emptyRequest = PollRequest()
         
         print("📄 Loading initial results - page: \(currentPage), limit: \(initialPageSize) (poll #\(totalPollCount))")
+        print("   ✅ Using INITIAL page size: \(initialPageSize) results")
         
         pollApi.pollFlights(
             searchId: searchId,
             request: emptyRequest,
             page: currentPage,
-            limit: initialPageSize
+            limit: initialPageSize  // ✅ Use 30 for initial load
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -119,7 +121,7 @@ class ResultViewModel: ObservableObject {
         totalResultsCount = response.count
         isCacheComplete = response.cache
         
-        // ✅ FIXED: Store next page URL
+        // Store next page URL
         nextPageURL = response.next
         
         print("✅ Initial poll successful!")
@@ -127,6 +129,7 @@ class ResultViewModel: ObservableObject {
         print("   Results in this batch: \(response.results.count)")
         print("   Cache complete: \(response.cache)")
         print("   Next page available: \(response.next != nil)")
+        print("   ✅ Loaded \(response.results.count) results in INITIAL batch (target: \(initialPageSize))")
         
         if response.results.isEmpty && response.count == 0 && currentRetries < maxRetries && !isCacheComplete {
             // If no results but API indicates there should be flights, retry
@@ -143,14 +146,15 @@ class ResultViewModel: ObservableObject {
             // We have results or max retries reached
             isLoading = false
             flightResults = response.results
-            currentPage = 2 // Next page will be 2 (since we just loaded page 1)
+            currentPage = 2 // ✅ Next page will be 2 (since we just loaded page 1)
             
-            // ✅ FIXED: Check next URL instead of count comparison
+            // Check next URL instead of count comparison
             hasMoreResults = (response.next != nil)
             
             print("   Current results: \(flightResults.count), Total available: \(totalResultsCount)")
             print("   Has next page: \(response.next != nil)")
             print("   Has more results: \(hasMoreResults)")
+            print("   ✅ NEXT requests will use subsequent page size: \(subsequentPageSize)")
             
             if response.results.isEmpty {
                 print("⚠️ No flights found after \(currentRetries) retries")
@@ -211,6 +215,7 @@ class ResultViewModel: ObservableObject {
         }
     }
     
+    // ✅ UPDATED: Check for cache updates using initial page size
     private func checkForCacheUpdates(searchId: String) {
         guard totalPollCount < maxTotalPolls else {
             print("⚠️ Reached maximum poll limit for cache updates")
@@ -226,7 +231,7 @@ class ResultViewModel: ObservableObject {
             searchId: searchId,
             request: emptyRequest,
             page: 1,
-            limit: initialPageSize
+            limit: initialPageSize  // ✅ Use initial page size for cache checks
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -237,14 +242,14 @@ class ResultViewModel: ObservableObject {
                     self.isCacheComplete = response.cache
                     self.totalResultsCount = response.count
                     
-                    // ✅ FIXED: Update next page URL from cache check
+                    // Update next page URL from cache check
                     self.nextPageURL = response.next
                     
                     print("   Cache status: \(previousCacheStatus) → \(response.cache)")
                     print("   Total count: \(self.totalResultsCount)")
                     print("   Next page available: \(response.next != nil)")
                     
-                    // ✅ FIXED: Update hasMoreResults based on next URL
+                    // Update hasMoreResults based on next URL
                     self.hasMoreResults = (response.next != nil)
                     
                     // Continue polling if cache is still not complete
@@ -263,7 +268,7 @@ class ResultViewModel: ObservableObject {
         }
     }
     
-    // Single loadMoreResults method for user-triggered pagination
+    // ✅ UPDATED: Load more results method for user-triggered pagination (8 per page)
     func loadMoreResults() {
         guard let searchId = searchId else {
             print("🚫 Cannot load more: no searchId")
@@ -277,7 +282,7 @@ class ResultViewModel: ObservableObject {
             return
         }
         
-        // ✅ FIXED: Check if next page is available
+        // Check if next page is available
         guard hasMoreResults else {
             print("🚫 Cannot load more: no next page available")
             return
@@ -293,11 +298,13 @@ class ResultViewModel: ObservableObject {
         errorMessage = nil
         currentRetries = 0
         
-        let pageSize = currentPage == 1 ? initialPageSize : subsequentPageSize
+        // ✅ Use subsequentPageSize for all pagination requests
+        let pageSize = subsequentPageSize
         
         print("📄 Loading more results - page: \(currentPage), pageSize: \(pageSize) (poll #\(totalPollCount))")
         print("   Current results: \(flightResults.count)/\(totalResultsCount)")
         print("   Next page URL available: \(nextPageURL != nil)")
+        print("   ✅ Using SUBSEQUENT page size: \(pageSize) results")
         
         let emptyRequest = PollRequest()
         
@@ -305,7 +312,7 @@ class ResultViewModel: ObservableObject {
             searchId: searchId,
             request: emptyRequest,
             page: currentPage,
-            limit: pageSize
+            limit: pageSize  // ✅ Use 8 for subsequent loads
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -329,13 +336,14 @@ class ResultViewModel: ObservableObject {
         isCacheComplete = response.cache
         totalResultsCount = response.count
         
-        // ✅ FIXED: Update next page URL
+        // Update next page URL
         nextPageURL = response.next
         
         print("✅ Load more successful!")
         print("   New results count: \(response.results.count)")
         print("   Total count updated: \(previousTotal) → \(totalResultsCount)")
         print("   Next page available: \(response.next != nil)")
+        print("   ✅ Added \(response.results.count) results using page size: \(subsequentPageSize)")
         
         // Append new results to the existing results (avoid duplicates)
         let newResults = response.results.filter { newResult in
@@ -347,7 +355,7 @@ class ResultViewModel: ObservableObject {
         flightResults.append(contentsOf: newResults)
         currentPage += 1 // Increment page for the next request
         
-        // ✅ FIXED: Check next URL to determine if more results available
+        // Check next URL to determine if more results available
         hasMoreResults = (response.next != nil)
         
         print("   Total results in list: \(flightResults.count)")
@@ -380,7 +388,7 @@ class ResultViewModel: ObservableObject {
         }
     }
     
-    // ✅ FIXED: Improved applyFilters method
+    // ✅ UPDATED: Apply filters method with initial page size reset
     func applyFilters(request: PollRequest) {
         guard let searchId = searchId else {
             print("❌ Cannot apply filters: no searchId")
@@ -403,12 +411,13 @@ class ResultViewModel: ObservableObject {
         totalPollCount += 1
         
         print("📡 Making filtered poll request (poll #\(totalPollCount))")
+        print("   ✅ Filter request will use INITIAL page size: \(initialPageSize)")
         
         pollApi.pollFlights(
             searchId: searchId,
             request: request,
             page: currentPage,
-            limit: initialPageSize
+            limit: initialPageSize  // ✅ Use initial page size for filtered results
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -422,6 +431,7 @@ class ResultViewModel: ObservableObject {
                     print("   Total available: \(response.count)")
                     print("   Cache status: \(response.cache)")
                     print("   Next page available: \(response.next != nil)")
+                    print("   ✅ Filtered results loaded with INITIAL page size: \(self.initialPageSize)")
                     
                     self.pollResponse = response
                     self.flightResults = response.results
@@ -429,13 +439,14 @@ class ResultViewModel: ObservableObject {
                     self.totalResultsCount = response.count
                     self.isCacheComplete = response.cache
                     
-                    // ✅ FIXED: Store next page URL
+                    // Store next page URL
                     self.nextPageURL = response.next
                     
-                    // ✅ FIXED: Check next URL instead of comparing counts
+                    // Check next URL instead of comparing counts
                     self.hasMoreResults = (response.next != nil)
                     
                     print("   Has more results: \(self.hasMoreResults)")
+                    print("   ✅ Subsequent pagination will use page size: \(self.subsequentPageSize)")
                     
                     // Don't start continuous polling for filtered results
                     // User can manually load more if needed
@@ -458,7 +469,7 @@ class ResultViewModel: ObservableObject {
         // Don't trigger if already loading or no search ID
         guard !isLoadingMore, !isLoading, searchId != nil else { return false }
         
-        // ✅ FIXED: Only load more if next page is available
+        // Only load more if next page is available
         guard hasMoreResults else {
             return false
         }
@@ -476,6 +487,7 @@ class ResultViewModel: ObservableObject {
             print("   Results: \(flightResults.count)/\(totalResultsCount)")
             print("   Has more: \(hasMoreResults)")
             print("   Next page available: \(nextPageURL != nil)")
+            print("   ✅ Will load \(subsequentPageSize) more results")
         }
         
         return shouldLoad
@@ -487,7 +499,7 @@ class ResultViewModel: ObservableObject {
         print("🛑 Polling stopped")
     }
     
-    // ✅ NEW: Load ads for search - integrate with existing flight search
+    // Load ads for search - integrate with existing flight search
     func loadAdsForSearch(searchParameters: SearchParameters) {
         guard !hasLoadedAds else {
             print("🎯 Ads already loaded for this search")
