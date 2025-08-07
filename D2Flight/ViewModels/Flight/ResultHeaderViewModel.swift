@@ -16,13 +16,12 @@ class ResultHeaderViewModel: ObservableObject {
         let airlineOptions = createAirlineOptionsFromPollData(pollResponse)
         filterViewModel.availableAirlines = airlineOptions
         
-        // Update price range based on API data only if user hasn't modified it
+        // ✅ CRITICAL FIX: Update price range and store original API values
         let minPrice = pollResponse.min_price
         let maxPrice = pollResponse.max_price
         
-        if filterViewModel.priceRange == 0...10000 {
-            filterViewModel.priceRange = minPrice...maxPrice
-        }
+        // Update the FilterViewModel with API price range
+        filterViewModel.updatePriceRangeFromAPI(minPrice: minPrice, maxPrice: maxPrice)
         
         print("✅ Updated ResultHeader with API data:")
         print("   Airlines: \(pollResponse.airlines.count)")
@@ -30,51 +29,61 @@ class ResultHeaderViewModel: ObservableObject {
         for option in airlineOptions {
             print("     \(option.name) (\(option.code)): ₹\(option.price)")
         }
-        print("   Price Range: ₹\(minPrice) - ₹\(maxPrice)")
+        print("   API Price Range: ₹\(minPrice) - ₹\(maxPrice)")
+        print("   Current Filter Price Range: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
         print("   Duration Range: \(pollResponse.min_duration) - \(pollResponse.max_duration) minutes")
     }
     
     // ✅ NEW: Create airline options with real minimum prices from flight results
     private func createAirlineOptionsFromPollData(_ pollResponse: PollResponse) -> [AirlineOption] {
-        var airlineOptions: [AirlineOption] = []
-        
-        // Create a dictionary to track minimum price for each airline
-        var airlineMinPrices: [String: Double] = [:]
-        
-        // Go through all flight results to find minimum price for each airline
-        for flightResult in pollResponse.results {
-            for leg in flightResult.legs {
-                for segment in leg.segments {
-                    let airlineCode = segment.airlineIata
-                    let flightMinPrice = flightResult.min_price
-                    
-                    // Update minimum price for this airline
-                    if let existingPrice = airlineMinPrices[airlineCode] {
-                        airlineMinPrices[airlineCode] = min(existingPrice, flightMinPrice)
-                    } else {
-                        airlineMinPrices[airlineCode] = flightMinPrice
+            var airlineOptions: [AirlineOption] = []
+            
+            // Create a dictionary to track minimum price for each airline
+            var airlineMinPrices: [String: Double] = [:]
+            
+            // ✅ CRITICAL FIX: Only calculate prices if there are actual flight results
+            if !pollResponse.results.isEmpty {
+                // Go through all flight results to find minimum price for each airline
+                for flightResult in pollResponse.results {
+                    for leg in flightResult.legs {
+                        for segment in leg.segments {
+                            let airlineCode = segment.airlineIata
+                            let flightMinPrice = flightResult.min_price
+                            
+                            // Update minimum price for this airline
+                            if let existingPrice = airlineMinPrices[airlineCode] {
+                                airlineMinPrices[airlineCode] = min(existingPrice, flightMinPrice)
+                            } else {
+                                airlineMinPrices[airlineCode] = flightMinPrice
+                            }
+                        }
                     }
                 }
             }
-        }
-        
-        // Create AirlineOption objects with real data
-        for airline in pollResponse.airlines {
-            let minPrice = airlineMinPrices[airline.airlineIata] ?? 0
             
-            let airlineOption = AirlineOption(
-                code: airline.airlineIata,
-                name: airline.airlineName,
-                logo: airline.airlineLogo,
-                price: minPrice
-            )
+            // Create AirlineOption objects with real data
+            for airline in pollResponse.airlines {
+                // ✅ FIXED: Use actual minimum price if available, otherwise use a reasonable default
+                let minPrice = airlineMinPrices[airline.airlineIata] ?? 0
+                
+                let airlineOption = AirlineOption(
+                    code: airline.airlineIata,
+                    name: airline.airlineName,
+                    logo: airline.airlineLogo,
+                    price: minPrice
+                )
+                
+                airlineOptions.append(airlineOption)
+            }
             
-            airlineOptions.append(airlineOption)
+            // Sort by price (cheapest first) but only if we have real prices
+            if !airlineMinPrices.isEmpty {
+                return airlineOptions.sorted { $0.price < $1.price }
+            } else {
+                // If no flight results, sort alphabetically by name
+                return airlineOptions.sorted { $0.name < $1.name }
+            }
         }
-        
-        // Sort by price (cheapest first)
-        return airlineOptions.sorted { $0.price < $1.price }
-    }
     
     func calculateAveragePrice() -> Double {
         guard let pollData = pollResponseData else { return 500 }

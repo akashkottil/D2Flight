@@ -37,11 +37,21 @@ class FilterViewModel: ObservableObject {
     // Price filters
     @Published var priceRange: ClosedRange<Double> = 0...10000
     
+    private var originalAPIMinPrice: Double = 0
+    private var originalAPIMaxPrice: Double = 10000
+    private var hasAPIDataLoaded: Bool = false
+    
     // Trip type for conditional filtering
     var isRoundTrip: Bool = false
     
+    @Published var cachedSortedAirlinesForSheet: [AirlineOption] = []
+    
     init() {
         loadDefaultFilters()
+    }
+    
+    func cacheSortedAirlinesForSheet() {
+        cachedSortedAirlinesForSheet = getSortedAirlinesForSheet()
     }
     
     private func loadDefaultFilters() {
@@ -63,10 +73,26 @@ class FilterViewModel: ObservableObject {
                 code: airline.airlineIata,
                 name: airline.airlineName,
                 logo: airline.airlineLogo,
-                price: 350 // Default price, could be calculated from results
+                price: 350 // Default price, will be updated with real prices
             )
         }
         print("✈️ Updated available airlines: \(availableAirlines.count)")
+    }
+    
+    // ✅ NEW: Method to get sorted airlines for filter sheet (called only when sheet opens)
+    func getSortedAirlinesForSheet() -> [AirlineOption] {
+        return availableAirlines.sorted { airline1, airline2 in
+            let isSelected1 = selectedAirlines.contains(airline1.code)
+            let isSelected2 = selectedAirlines.contains(airline2.code)
+            
+            if isSelected1 && !isSelected2 {
+                return true // Selected airlines come first
+            } else if !isSelected1 && isSelected2 {
+                return false // Non-selected airlines come after
+            } else {
+                return airline1.name < airline2.name // Alphabetical within each group
+            }
+        }
     }
     
     func toggleAirlineSelection(_ airlineCode: String) {
@@ -89,136 +115,22 @@ class FilterViewModel: ObservableObject {
         loadDefaultFilters()
     }
     
-    // MARK: - Main buildPollRequest method
-    func buildPollRequest() -> PollRequest {
-            var request = PollRequest()
-            
-            // ✅ Sort options - always apply if not default
-            if selectedSortOption != .best {
-                switch selectedSortOption {
-                case .best:
-                    request.sort_by = "quality"
-                    request.sort_order = "desc"
-                case .cheapest:
-                    request.sort_by = "price"
-                    request.sort_order = "asc"
-                case .quickest:
-                    request.sort_by = "duration"
-                    request.sort_order = "asc"
-                case .earliest:
-                    request.sort_by = "departure"
-                    request.sort_order = "asc"
-                }
-            }
-            
-            // ✅ Duration filter - only apply if different from default
-            if maxDuration < 1440 {
-                request.duration_max = Int(maxDuration)
-            }
-            
-            // ✅ Stop count filter - only apply if different from default
-            if maxStops < 3 {
-                request.stop_count_max = maxStops
-            }
-            
-            // ✅ Time range filters - only apply if ranges are modified
-            var hasTimeFilters = false
-            var timeRanges: [ArrivalDepartureRange] = []
-            
-            if departureTimeRange != 0...1440 {
-                hasTimeFilters = true
-                timeRanges.append(ArrivalDepartureRange(
-                    arrival: TimeRange(
-                        min: Int(departureTimeRange.lowerBound),
-                        max: Int(departureTimeRange.upperBound)
-                    ),
-                    departure: TimeRange(
-                        min: Int(departureTimeRange.lowerBound),
-                        max: Int(departureTimeRange.upperBound)
-                    )
-                ))
-            }
-            
-            // Return leg time range (if round trip and different from default)
-            if isRoundTrip && returnTimeRange != 0...1440 {
-                hasTimeFilters = true
-                // Add return leg if not already added, or update existing one
-                if timeRanges.isEmpty {
-                    // Add departure with default values and return with filtered values
-                    timeRanges.append(ArrivalDepartureRange(
-                        arrival: TimeRange(min: 0, max: 1440),
-                        departure: TimeRange(min: 0, max: 1440)
-                    ))
-                }
-                timeRanges.append(ArrivalDepartureRange(
-                    arrival: TimeRange(
-                        min: Int(returnTimeRange.lowerBound),
-                        max: Int(returnTimeRange.upperBound)
-                    ),
-                    departure: TimeRange(
-                        min: Int(returnTimeRange.lowerBound),
-                        max: Int(returnTimeRange.upperBound)
-                    )
-                ))
-            }
-            
-            if hasTimeFilters {
-                request.arrival_departure_ranges = timeRanges
-            }
-            
-            // ✅ Airline filters - only apply if airlines are selected
-            if !selectedAirlines.isEmpty {
-                request.iata_codes_include = Array(selectedAirlines)
-            }
-            
-            if !excludedAirlines.isEmpty {
-                request.iata_codes_exclude = Array(excludedAirlines)
-            }
-            
-            // ✅ CRITICAL FIX: Price filters - only apply if user has actively modified them
-            // Don't apply price filters if they're at default values (0...10000)
-            let isDefaultPriceRange = (priceRange.lowerBound == 0 && priceRange.upperBound == 10000)
-            let hasUserModifiedPriceMin = priceRange.lowerBound > 0 && !isDefaultPriceRange
-            let hasUserModifiedPriceMax = priceRange.upperBound < 10000 && !isDefaultPriceRange
-            
-            // Only set price_min if user has actively increased it from 0
-            if hasUserModifiedPriceMin {
-                request.price_min = Int(priceRange.lowerBound)
-            }
-            
-            // Only set price_max if user has actively decreased it from 10000
-            if hasUserModifiedPriceMax {
-                request.price_max = Int(priceRange.upperBound)
-            }
-            
-            // ✅ Debug logging
-            print("🔧 Built PollRequest:")
-            print("   Sort: \(request.sort_by ?? "none") \(request.sort_order ?? "")")
-            print("   Max Duration: \(request.duration_max ?? -1)")
-            print("   Max Stops: \(request.stop_count_max ?? -1)")
-            print("   Selected Airlines: \(selectedAirlines.count)")
-            print("   Time Filters: \(hasTimeFilters)")
-            print("   Price Min (user modified): \(hasUserModifiedPriceMin ? request.price_min?.description ?? "nil" : "not set")")
-            print("   Price Max (user modified): \(hasUserModifiedPriceMax ? request.price_max?.description ?? "nil" : "not set")")
-            print("   Price Range: \(priceRange.lowerBound) - \(priceRange.upperBound)")
-            print("   Has Filters: \(request.hasFilters())")
-            
-            return request
-        }
-    
-    // Helper method to check if any filters are active
-    func hasActiveFilters() -> Bool {
-        return selectedSortOption != .best ||
-               departureTimeRange != 0...1440 ||
-               returnTimeRange != 0...1440 ||
-               maxDuration < 1440 ||
-               !selectedAirlines.isEmpty ||
-               !excludedAirlines.isEmpty ||
-               maxStops < 3 ||
-               priceRange != 0...10000
+    // ✅ Helper methods for price filter detection
+    private func getAPIMinPrice() -> Double {
+        return originalAPIMinPrice
     }
     
+    private func getAPIMaxPrice() -> Double {
+        return originalAPIMaxPrice
+    }
+    
+    // ✅ Update method to store original API prices
     func updatePriceRangeFromAPI(minPrice: Double, maxPrice: Double) {
+        // Store original API values for comparison
+        originalAPIMinPrice = minPrice
+        originalAPIMaxPrice = maxPrice
+        hasAPIDataLoaded = true
+        
         // Only update if the price range is still at default values
         if priceRange == 0...10000 {
             priceRange = minPrice...maxPrice
@@ -227,7 +139,130 @@ class FilterViewModel: ObservableObject {
             print("🔧 Price range already modified by user, keeping: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
         }
     }
-
+    
+    // MARK: - Main buildPollRequest method
+    func buildPollRequest() -> PollRequest {
+        var request = PollRequest()
+        
+        // ✅ Sort options - always apply if not default
+        if selectedSortOption != .best {
+            switch selectedSortOption {
+            case .best:
+                request.sort_by = "quality"
+                request.sort_order = "desc"
+            case .cheapest:
+                request.sort_by = "price"
+                request.sort_order = "asc"
+            case .quickest:
+                request.sort_by = "duration"
+                request.sort_order = "asc"
+            case .earliest:
+                request.sort_by = "departure"
+                request.sort_order = "asc"
+            }
+        }
+        
+        // ✅ Duration filter - only apply if different from default
+        if maxDuration < 1440 {
+            request.duration_max = Int(maxDuration)
+        }
+        
+        // ✅ Stop count filter - only apply if different from default
+        if maxStops < 3 {
+            request.stop_count_max = maxStops
+        }
+        
+        // ✅ Time range filters - only apply if ranges are modified
+        var hasTimeFilters = false
+        var timeRanges: [ArrivalDepartureRange] = []
+        
+        if departureTimeRange != 0...1440 {
+            hasTimeFilters = true
+            timeRanges.append(ArrivalDepartureRange(
+                arrival: TimeRange(
+                    min: Int(departureTimeRange.lowerBound),
+                    max: Int(departureTimeRange.upperBound)
+                ),
+                departure: TimeRange(
+                    min: Int(departureTimeRange.lowerBound),
+                    max: Int(departureTimeRange.upperBound)
+                )
+            ))
+        }
+        
+        // Return leg time range (if round trip and different from default)
+        if isRoundTrip && returnTimeRange != 0...1440 {
+            hasTimeFilters = true
+            // Add return leg if not already added, or update existing one
+            if timeRanges.isEmpty {
+                // Add departure with default values and return with filtered values
+                timeRanges.append(ArrivalDepartureRange(
+                    arrival: TimeRange(min: 0, max: 1440),
+                    departure: TimeRange(min: 0, max: 1440)
+                ))
+            }
+            timeRanges.append(ArrivalDepartureRange(
+                arrival: TimeRange(
+                    min: Int(returnTimeRange.lowerBound),
+                    max: Int(returnTimeRange.upperBound)
+                ),
+                departure: TimeRange(
+                    min: Int(returnTimeRange.lowerBound),
+                    max: Int(returnTimeRange.upperBound)
+                )
+            ))
+        }
+        
+        if hasTimeFilters {
+            request.arrival_departure_ranges = timeRanges
+        }
+        
+        // ✅ Airline filters - only apply if airlines are selected
+        if !selectedAirlines.isEmpty {
+            request.iata_codes_include = Array(selectedAirlines)
+        }
+        
+        if !excludedAirlines.isEmpty {
+            request.iata_codes_exclude = Array(excludedAirlines)
+        }
+        
+        // ✅ CRITICAL FIX: Price filters - only apply if user has actively modified them
+        if hasAPIDataLoaded {
+            // Check if user has manually adjusted the price slider from its API-initialized values
+            let hasUserModifiedPriceMin = priceRange.lowerBound > getAPIMinPrice()
+            let hasUserModifiedPriceMax = priceRange.upperBound < getAPIMaxPrice()
+            
+            // Only set price_min if user has actively moved the slider above the API minimum
+            if hasUserModifiedPriceMin {
+                request.price_min = Int(priceRange.lowerBound)
+            }
+            
+            // Only set price_max if user has actively moved the slider below the API maximum
+            if hasUserModifiedPriceMax {
+                request.price_max = Int(priceRange.upperBound)
+            }
+            
+            print("🔧 Price filter analysis:")
+            print("   API Range: ₹\(getAPIMinPrice()) - ₹\(getAPIMaxPrice())")
+            print("   Current Range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+            print("   User modified min: \(hasUserModifiedPriceMin)")
+            print("   User modified max: \(hasUserModifiedPriceMax)")
+        }
+        
+        // ✅ Debug logging
+        print("🔧 Built PollRequest:")
+        print("   Sort: \(request.sort_by ?? "none") \(request.sort_order ?? "")")
+        print("   Max Duration: \(request.duration_max ?? -1)")
+        print("   Max Stops: \(request.stop_count_max ?? -1)")
+        print("   Selected Airlines: \(selectedAirlines.count)")
+        print("   Time Filters: \(hasTimeFilters)")
+        print("   Price Min: \(request.price_min?.description ?? "not set")")
+        print("   Price Max: \(request.price_max?.description ?? "not set")")
+        print("   Has Filters: \(request.hasFilters())")
+        
+        return request
+    }
+    
     func clearFilters() {
         selectedSortOption = .best
         departureTimeRange = 0...1440
@@ -238,10 +273,9 @@ class FilterViewModel: ObservableObject {
         excludedAirlines.removeAll()
         maxStops = 3
         
-        // Don't reset price range to 0...10000 if we have API data
-        // This will be handled by updatePriceRangeFromAPI
-        if let pollData = getCurrentPollData() {
-            priceRange = pollData.min_price...pollData.max_price
+        // Reset price range to API values if available
+        if hasAPIDataLoaded {
+            priceRange = originalAPIMinPrice...originalAPIMaxPrice
         } else {
             priceRange = 0...10000
         }
@@ -253,6 +287,17 @@ class FilterViewModel: ObservableObject {
         return nil
     }
     
+    // Helper method to check if any filters are active
+    func hasActiveFilters() -> Bool {
+        return selectedSortOption != .best ||
+               departureTimeRange != 0...1440 ||
+               returnTimeRange != 0...1440 ||
+               maxDuration < 1440 ||
+               !selectedAirlines.isEmpty ||
+               !excludedAirlines.isEmpty ||
+               maxStops < 3 ||
+               (hasAPIDataLoaded && (priceRange.lowerBound > originalAPIMinPrice || priceRange.upperBound < originalAPIMaxPrice))
+    }
 }
 
 // MARK: - Supporting Models
