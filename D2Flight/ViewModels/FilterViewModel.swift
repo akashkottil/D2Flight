@@ -89,45 +89,52 @@ class FilterViewModel: ObservableObject {
         loadDefaultFilters()
     }
     
-    // ✅ FIXED: Improved buildPollRequest with better logic
+    // MARK: - Main buildPollRequest method
     func buildPollRequest() -> PollRequest {
         var request = PollRequest()
         
-        // ✅ Sort options - always apply if not default
+        print("🔧 Building PollRequest with user selections:")
+        
+        // ✅ Sort options - only if changed from default
         if selectedSortOption != .best {
             switch selectedSortOption {
             case .best:
-                request.sort_by = "quality"
-                request.sort_order = "desc"
+                break // Don't send anything for default
             case .cheapest:
                 request.sort_by = "price"
                 request.sort_order = "asc"
+                print("   Sort: price asc (cheapest)")
             case .quickest:
                 request.sort_by = "duration"
                 request.sort_order = "asc"
+                print("   Sort: duration asc (quickest)")
             case .earliest:
                 request.sort_by = "departure"
                 request.sort_order = "asc"
+                print("   Sort: departure asc (earliest)")
             }
         }
         
-        // ✅ Duration filter - only apply if different from default
+        // ✅ Duration filter - only if user changed it
         if maxDuration < 1440 {
             request.duration_max = Int(maxDuration)
+            print("   Duration max: \(Int(maxDuration)) minutes")
         }
         
-        // ✅ Stop count filter - only apply if different from default
+        // ✅ Stop count filter - only if user changed it
         if maxStops < 3 {
             request.stop_count_max = maxStops
+            print("   Max stops: \(maxStops)")
         }
         
-        // ✅ Time range filters - only apply if ranges are modified
-        var hasTimeFilters = false
+        // ✅ Time range filters - only if user modified them
         var timeRanges: [ArrivalDepartureRange] = []
+        var hasTimeFilters = false
         
+        // Departure time filter
         if departureTimeRange != 0...1440 {
             hasTimeFilters = true
-            timeRanges.append(ArrivalDepartureRange(
+            let range = ArrivalDepartureRange(
                 arrival: TimeRange(
                     min: Int(departureTimeRange.lowerBound),
                     max: Int(departureTimeRange.upperBound)
@@ -136,21 +143,15 @@ class FilterViewModel: ObservableObject {
                     min: Int(departureTimeRange.lowerBound),
                     max: Int(departureTimeRange.upperBound)
                 )
-            ))
+            )
+            timeRanges.append(range)
+            print("   Departure time: \(Int(departureTimeRange.lowerBound))-\(Int(departureTimeRange.upperBound))")
         }
         
-        // Return leg time range (if round trip and different from default)
+        // Return time filter (if round trip and modified)
         if isRoundTrip && returnTimeRange != 0...1440 {
             hasTimeFilters = true
-            // Add return leg if not already added, or update existing one
-            if timeRanges.isEmpty {
-                // Add departure with default values and return with filtered values
-                timeRanges.append(ArrivalDepartureRange(
-                    arrival: TimeRange(min: 0, max: 1440),
-                    departure: TimeRange(min: 0, max: 1440)
-                ))
-            }
-            timeRanges.append(ArrivalDepartureRange(
+            let range = ArrivalDepartureRange(
                 arrival: TimeRange(
                     min: Int(returnTimeRange.lowerBound),
                     max: Int(returnTimeRange.upperBound)
@@ -159,41 +160,39 @@ class FilterViewModel: ObservableObject {
                     min: Int(returnTimeRange.lowerBound),
                     max: Int(returnTimeRange.upperBound)
                 )
-            ))
+            )
+            timeRanges.append(range)
+            print("   Return time: \(Int(returnTimeRange.lowerBound))-\(Int(returnTimeRange.upperBound))")
         }
         
         if hasTimeFilters {
             request.arrival_departure_ranges = timeRanges
         }
         
-        // ✅ Airline filters - only apply if airlines are selected
+        // ✅ Airline filters - only if user selected airlines
         if !selectedAirlines.isEmpty {
             request.iata_codes_include = Array(selectedAirlines)
+            print("   Selected airlines: \(selectedAirlines)")
         }
         
         if !excludedAirlines.isEmpty {
             request.iata_codes_exclude = Array(excludedAirlines)
+            print("   Excluded airlines: \(excludedAirlines)")
         }
         
-        // ✅ Price filters - only apply if different from default
+        // ✅ Price filters - only if user modified them from defaults
+        // Use a more flexible approach for price comparison
         if priceRange.lowerBound > 0 {
             request.price_min = Int(priceRange.lowerBound)
+            print("   Price min: \(Int(priceRange.lowerBound))")
         }
         
         if priceRange.upperBound < 10000 {
             request.price_max = Int(priceRange.upperBound)
+            print("   Price max: \(Int(priceRange.upperBound))")
         }
         
-        // ✅ Debug logging
-        print("🔧 Built PollRequest:")
-        print("   Sort: \(request.sort_by ?? "none") \(request.sort_order ?? "")")
-        print("   Max Duration: \(request.duration_max ?? -1)")
-        print("   Max Stops: \(request.stop_count_max ?? -1)")
-        print("   Selected Airlines: \(selectedAirlines.count)")
-        print("   Time Filters: \(hasTimeFilters)")
-        print("   Price Range: \(request.price_min ?? 0) - \(request.price_max ?? -1)")
-        print("   Has Filters: \(request.hasFilters())")
-        
+        print("🔧 PollRequest built with \(request.hasFilters() ? "filters" : "no filters")")
         return request
     }
     

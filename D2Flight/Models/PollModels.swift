@@ -58,17 +58,36 @@ struct PollRequest: Codable {
     
     // Helper method to check if request has any filters
     func hasFilters() -> Bool {
-        return duration_max != nil ||
-               stop_count_max != nil ||
-               arrival_departure_ranges != nil ||
-               iata_codes_exclude != nil ||
-               iata_codes_include != nil ||
-               sort_by != nil ||
-               sort_order != nil ||
-               agency_exclude != nil ||
-               agency_include != nil ||
-               price_min != nil ||
-               price_max != nil
+        let hasDuration = duration_max != nil
+        let hasStops = stop_count_max != nil
+        let hasTimeRanges = arrival_departure_ranges != nil && !arrival_departure_ranges!.isEmpty
+        let hasExcludeAirlines = iata_codes_exclude != nil && !iata_codes_exclude!.isEmpty
+        let hasIncludeAirlines = iata_codes_include != nil && !iata_codes_include!.isEmpty
+        let hasSort = sort_by != nil
+        let hasSortOrder = sort_order != nil
+        let hasExcludeAgencies = agency_exclude != nil && !agency_exclude!.isEmpty
+        let hasIncludeAgencies = agency_include != nil && !agency_include!.isEmpty
+        let hasPriceMin = price_min != nil
+        let hasPriceMax = price_max != nil
+        
+        let totalFilters = [hasDuration, hasStops, hasTimeRanges, hasExcludeAirlines, hasIncludeAirlines,
+                           hasSort, hasSortOrder, hasExcludeAgencies, hasIncludeAgencies, hasPriceMin, hasPriceMax].filter { $0 }.count
+        
+        print("🔍 PollRequest.hasFilters() check:")
+        if hasDuration { print("   ✓ Duration filter") }
+        if hasStops { print("   ✓ Stops filter") }
+        if hasTimeRanges { print("   ✓ Time ranges filter") }
+        if hasExcludeAirlines { print("   ✓ Exclude airlines filter") }
+        if hasIncludeAirlines { print("   ✓ Include airlines filter") }
+        if hasSort { print("   ✓ Sort filter") }
+        if hasSortOrder { print("   ✓ Sort order filter") }
+        if hasExcludeAgencies { print("   ✓ Exclude agencies filter") }
+        if hasIncludeAgencies { print("   ✓ Include agencies filter") }
+        if hasPriceMin { print("   ✓ Price min filter") }
+        if hasPriceMax { print("   ✓ Price max filter") }
+        print("   📊 Total active filters: \(totalFilters)")
+        
+        return totalFilters > 0
     }
 }
 
@@ -92,8 +111,8 @@ struct PollResponse: Codable {
     let airlines: [Airline]
     let min_duration: Int
     let max_duration: Int
-    let min_price: Double  // ✅ Add this
-    let max_price: Double  // ✅ Add this
+    let min_price: Double
+    let max_price: Double
     let agencies: [Agency]
     let cheapest_flight: FlightSummary?
     let best_flight: FlightSummary?
