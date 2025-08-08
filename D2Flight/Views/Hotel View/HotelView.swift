@@ -1,5 +1,6 @@
 import SwiftUI
 
+// MARK: - Updated HotelView with Universal Warning System
 struct HotelView: View {
     @State private var hotelLocation = ""
     @State private var hotelIATACode = ""
@@ -26,7 +27,7 @@ struct HotelView: View {
     @State private var adults = 2
     @State private var children = 0
     @State private var rooms = 1
-    @State private var selectedClass: TravelClass = .economy // Not used for hotel but kept for compatibility
+    @State private var selectedClass: TravelClass = .economy
     
     // Date and Time Selection States
     @State private var navigateToDateTimeSelection = false
@@ -46,9 +47,8 @@ struct HotelView: View {
     @StateObject private var recentLocationsManager = RecentLocationsManager.shared
     @State private var hasPrefilled = false
     
-    // Notification States
-    @State private var showNoInternet = false
-    @State private var showEmptySearch = false
+    // ✅ UPDATED: Remove individual notification states, use WarningManager
+    @StateObject private var warningManager = WarningManager.shared
     @State private var lastNetworkStatus = true
     
     var body: some View {
@@ -69,10 +69,9 @@ struct HotelView: View {
                         // Hotel Location Input (Single Input)
                         locationSection
                         
-                        // UPDATED: Two separate Date & Time Views (like original design)
+                        // Date & Time Views
                         VStack(spacing: 0) {
                             HStack(spacing: 10) {
-                                // Check-in Date & Time
                                 dateTimeView(
                                     label: formatSelectedDateTime(for: .checkin),
                                     icon: "CalenderIcon",
@@ -80,7 +79,6 @@ struct HotelView: View {
                                 )
                                 .id("checkin_date")
                                 
-                                // Check-out Date & Time
                                 dateTimeView(
                                     label: formatSelectedDateTime(for: .checkout),
                                     icon: "CalenderIcon",
@@ -129,49 +127,30 @@ struct HotelView: View {
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
                     
-                                    PopularLocationsGrid(
-                                        searchType: .hotel,
-                                        selectedDates: selectedDates,
-                                        adults: adults,
-                                        children: children,
-                                        infants: 0, // Not used for hotels
-                                        selectedClass: .economy, // Not used for hotels
-                                        rooms: rooms,
-                                        onLocationTapped: handlePopularLocationTapped
-                                    )
+                    PopularLocationsGrid(
+                        searchType: .hotel,
+                        selectedDates: selectedDates,
+                        adults: adults,
+                        children: children,
+                        infants: 0,
+                        selectedClass: .economy,
+                        rooms: rooms,
+                        onLocationTapped: handlePopularLocationTapped
+                    )
                 }
                 .scrollIndicators(.hidden)
                 
-
-                
-                // Notification Components Overlay
-                VStack {
-                    Spacer()
-                    
-                    if showNoInternet {
-                        NoInternet(isVisible: $showNoInternet)
-                            .padding(.bottom, 100)
-                    }
-                    
-                    if showEmptySearch {
-                        EmptySearch(isVisible: $showEmptySearch)
-                            .padding(.bottom, 100)
-                    }
-                }
-                .animation(.easeInOut(duration: 0.3), value: showNoInternet)
-                .animation(.easeInOut(duration: 0.3), value: showEmptySearch)
+                // ✅ UPDATED: Universal Warning Overlay
+                WarningOverlay()
             }
             .ignoresSafeArea()
         }
-        // Network monitoring
+        // ✅ UPDATED: Use NetworkMonitor extension for centralized network handling
         .onReceive(networkMonitor.$isConnected) { isConnected in
-            if lastNetworkStatus && !isConnected {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    showNoInternet = true
-                    showEmptySearch = false
-                }
-            }
-            lastNetworkStatus = isConnected
+            networkMonitor.handleNetworkChange(
+                isConnected: isConnected,
+                lastNetworkStatus: &lastNetworkStatus
+            )
         }
         // Handle search results
         .onReceive(hotelSearchVM.$deeplink) { deeplink in
@@ -191,7 +170,7 @@ struct HotelView: View {
                 isPresented: $showPassengerSheet,
                 adults: $adults,
                 children: $children,
-                infants: .constant(0), // Not used for hotels
+                infants: .constant(0),
                 rooms: $rooms,
                 selectedClass: $selectedClass,
                 isFromHotel: true
@@ -201,7 +180,6 @@ struct HotelView: View {
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
         }
-        // DateTimeSelectionView - Both buttons open the same view
         .fullScreenCover(isPresented: $navigateToDateTimeSelection) {
             DateTimeSelectionView(
                 selectedDates: $selectedDates,
@@ -216,7 +194,7 @@ struct HotelView: View {
         .fullScreenCover(isPresented: $navigateToLocationSelection) {
             LocationSelectionView(
                 originLocation: $hotelLocation,
-                destinationLocation: .constant(""), // Not used for hotel
+                destinationLocation: .constant(""),
                 isFromHotel: true
             ) { selectedLocation, isOrigin, iataCode in
                 hotelLocation = selectedLocation
@@ -230,7 +208,6 @@ struct HotelView: View {
             }
         }
         .onAppear {
-            // Reset prefill state when view appears fresh
             if hotelLocation.isEmpty {
                 hasPrefilled = false
             }
@@ -246,7 +223,7 @@ struct HotelView: View {
         }) {
             VStack(spacing: 1) {
                 HStack {
-                    Image("HotelIcon") // Use hotel-specific icon
+                    Image("HotelIcon")
                         .frame(width: 20, height: 20)
                     Text(hotelLocation.isEmpty ? "Enter Hotel Location" : hotelLocation)
                         .foregroundColor(hotelLocation.isEmpty ? .gray : .black)
@@ -266,16 +243,12 @@ struct HotelView: View {
         .cornerRadius(12)
     }
     
-    // UPDATED: Individual Date Time View (with title)
+    // Date Time View
     func dateTimeView(label: String, icon: String, title: String) -> some View {
         Button(action: {
             navigateToDateTimeSelection = true
         }) {
             VStack(alignment: .leading, spacing: 4) {
-//                Text(title)
-//                    .font(CustomFont.font(.small, weight: .medium))
-//                    .foregroundColor(.gray)
-                
                 HStack {
                     Image(icon)
                         .frame(width: 16, height: 16)
@@ -290,6 +263,89 @@ struct HotelView: View {
             .background(Color.white)
             .cornerRadius(12)
         }
+    }
+    
+    // MARK: - Search Handler with Universal Validation
+    private func handleSearchHotels() {
+        print("🏨 Search Hotels button tapped!")
+        
+        // ✅ Use SearchValidationHelper for validation
+        if let warningType = SearchValidationHelper.validateHotelSearch(
+            hotelIATACode: hotelIATACode,
+            hotelLocation: hotelLocation,
+            isConnected: networkMonitor.isConnected
+        ) {
+            warningManager.showWarning(type: warningType)
+            return
+        }
+        
+        // Save current search
+        saveCurrentSearch()
+        
+        // Update ViewModel properties
+        hotelSearchVM.cityCode = hotelIATACode
+        hotelSearchVM.cityName = hotelLocation
+        hotelSearchVM.rooms = rooms
+        hotelSearchVM.adults = adults
+        hotelSearchVM.children = children
+        
+        if selectedDates.count > 0 {
+            hotelSearchVM.checkinDate = selectedDates[0]
+        }
+        if selectedDates.count > 1 {
+            hotelSearchVM.checkoutDate = selectedDates[1]
+        }
+        
+        print("🎯 Hotel search parameters validated and starting search")
+        
+        // Start the search
+        hotelSearchVM.searchHotels()
+    }
+    
+    // ✅ UPDATED: Popular Location Handler with Universal Validation
+    private func handlePopularLocationTapped(_ location: MasonryImage) {
+        print("🏨 Popular hotel location tapped: \(location.title) (\(location.iataCode))")
+        
+        // Set hotel location to popular location
+        hotelLocation = location.title
+        hotelIATACode = location.iataCode
+        
+        // ✅ Use SearchValidationHelper for validation
+        if let warningType = SearchValidationHelper.validateHotelSearch(
+            hotelIATACode: location.iataCode,
+            hotelLocation: location.title,
+            isConnected: networkMonitor.isConnected
+        ) {
+            warningManager.showWarning(type: warningType)
+            return
+        }
+        
+        // Save search for recent locations
+        savePopularHotelSearch(location: location)
+        
+        // Update ViewModel properties
+        hotelSearchVM.cityCode = location.iataCode
+        hotelSearchVM.cityName = location.title
+        hotelSearchVM.rooms = rooms
+        hotelSearchVM.adults = adults
+        hotelSearchVM.children = children
+        
+        if selectedDates.count > 0 {
+            hotelSearchVM.checkinDate = selectedDates[0]
+        } else {
+            hotelSearchVM.checkinDate = Date()
+        }
+        
+        if selectedDates.count > 1 {
+            hotelSearchVM.checkoutDate = selectedDates[1]
+        } else {
+            hotelSearchVM.checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: hotelSearchVM.checkinDate) ?? Date()
+        }
+        
+        print("🎯 Popular hotel search validated and starting")
+        
+        // Start the hotel search
+        hotelSearchVM.searchHotels()
     }
     
     // MARK: - Helper Methods
@@ -322,7 +378,6 @@ struct HotelView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd MMM, HH:mm"
         
-        // Use today with 3 PM as default check-in
         let today = Date()
         let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: today) ?? today
         return formatter.string(from: defaultTime)
@@ -332,7 +387,6 @@ struct HotelView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd MMM, HH:mm"
         
-        // Use selected check-in date if available, otherwise use current date
         let baseCheckinDate: Date
         if selectedDates.count > 0 {
             baseCheckinDate = selectedDates[0]
@@ -340,15 +394,12 @@ struct HotelView: View {
             baseCheckinDate = Date()
         }
         
-        // Add 1 day to the check-in date for check-out, with 11 AM time
         let checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: baseCheckinDate) ?? baseCheckinDate
         let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: checkoutDate) ?? checkoutDate
         return formatter.string(from: defaultTime)
     }
     
     private func initializeDateTimes() {
-        // Don't set defaults here - let DateTimeSelectionView handle smart defaults
-        // Only update labels if we have existing selected data
         if !selectedDates.isEmpty && !selectedTimes.isEmpty {
             updateDateTimeLabels()
         }
@@ -369,7 +420,6 @@ struct HotelView: View {
             let combinedCheckOutDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
             checkOutDateTime = dateTimeFormatter.string(from: combinedCheckOutDateTime)
         } else {
-            // Update checkout based on new checkin date
             checkOutDateTime = calculateDefaultCheckoutDateTime()
         }
     }
@@ -390,16 +440,12 @@ struct HotelView: View {
     }
     
     private func prefillRecentLocationsIfNeeded() {
-        guard !hasPrefilled,
-              hotelLocation.isEmpty else {
-            print("🚫 HotelView: Skipping prefill - already prefilled or location not empty")
+        guard !hasPrefilled, hotelLocation.isEmpty else {
             return
         }
         
-        // Only prefill from hotel-specific or city-based searches
         let recentPairs = recentLocationsManager.getRecentSearchPairs()
         let hotelPairs = recentPairs.filter { pair in
-            // Filter for hotel-like searches (same origin/destination or city-based)
             return pair.origin.iataCode == pair.destination.iataCode ||
                    pair.origin.type == "city"
         }
@@ -410,7 +456,6 @@ struct HotelView: View {
             hasPrefilled = true
             print("✅ HotelView: Auto-prefilled from hotel searches")
         } else if let anyRecentPair = recentPairs.first {
-            // Fallback to any recent location
             hotelLocation = anyRecentPair.origin.displayName
             hotelIATACode = anyRecentPair.origin.iataCode
             hasPrefilled = true
@@ -419,11 +464,10 @@ struct HotelView: View {
     }
     
     private func saveCurrentSearch() {
-        // Create Location object from current selection
         let hotelLocationObj = Location(
             iataCode: hotelIATACode,
             airportName: hotelLocation,
-            type: "city", // Hotels are usually city-based
+            type: "city",
             displayName: hotelLocation,
             cityName: hotelLocation,
             countryName: "",
@@ -432,119 +476,15 @@ struct HotelView: View {
             coordinates: Coordinates(latitude: "0", longitude: "0")
         )
         
-        // For hotels, save the same location as both origin and destination
         recentLocationsManager.addSearchPair(origin: hotelLocationObj, destination: hotelLocationObj)
         print("💾 HotelView: Saved hotel search: \(hotelLocation)")
     }
     
-    // MARK: - Search Handler
-    private func handleSearchHotels() {
-        print("🏨 Search Hotels button tapped!")
-        
-        // Check internet connection first
-        if !networkMonitor.isConnected {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                showNoInternet = true
-                showEmptySearch = false
-            }
-            return
-        }
-        
-        // Validate hotel location
-        guard !hotelIATACode.isEmpty else {
-            print("⚠️ Missing hotel location")
-            withAnimation(.easeInOut(duration: 0.3)) {
-                showEmptySearch = true
-                showNoInternet = false
-            }
-            return
-        }
-        
-        // Save current search
-        saveCurrentSearch()
-        
-        // Update ViewModel properties
-        hotelSearchVM.cityCode = hotelIATACode
-        hotelSearchVM.cityName = hotelLocation
-        hotelSearchVM.rooms = rooms
-        hotelSearchVM.adults = adults
-        hotelSearchVM.children = children
-        
-        if selectedDates.count > 0 {
-            hotelSearchVM.checkinDate = selectedDates[0]
-        }
-        if selectedDates.count > 1 {
-            hotelSearchVM.checkoutDate = selectedDates[1]
-        }
-        
-        print("🎯 Hotel search parameters:")
-        print("   Location: \(hotelLocation) (\(hotelIATACode))")
-        print("   Check-in: \(checkInDateTime)")
-        print("   Check-out: \(checkOutDateTime)")
-        print("   Guests: \(adults) adults, \(children) children")
-        print("   Rooms: \(rooms)")
-        
-        // Start the search
-        hotelSearchVM.searchHotels()
-    }
-    
-    private func handlePopularLocationTapped(_ location: MasonryImage) {
-        print("🏨 Popular hotel location tapped: \(location.title) (\(location.iataCode))")
-        
-        // Check internet connection first
-        if !networkMonitor.isConnected {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                showNoInternet = true
-                showEmptySearch = false
-            }
-            return
-        }
-        
-        // Set hotel location to popular location
-        hotelLocation = location.title
-        hotelIATACode = location.iataCode
-        
-        // Save search for recent locations
-        savePopularHotelSearch(location: location)
-        
-        // Update ViewModel properties for hotel search
-        hotelSearchVM.cityCode = location.iataCode
-        hotelSearchVM.cityName = location.title
-        hotelSearchVM.rooms = rooms
-        hotelSearchVM.adults = adults
-        hotelSearchVM.children = children
-        
-        // Use selected dates or default dates
-        if selectedDates.count > 0 {
-            hotelSearchVM.checkinDate = selectedDates[0]
-        } else {
-            hotelSearchVM.checkinDate = Date() // Today
-        }
-        
-        if selectedDates.count > 1 {
-            hotelSearchVM.checkoutDate = selectedDates[1]
-        } else {
-            // Default to tomorrow if no checkout date selected
-            hotelSearchVM.checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: hotelSearchVM.checkinDate) ?? Date()
-        }
-        
-        print("🎯 Popular hotel search parameters:")
-        print("   Location: \(location.title) (\(location.iataCode))")
-        print("   Check-in: \(hotelSearchVM.checkinDate)")
-        print("   Check-out: \(hotelSearchVM.checkoutDate)")
-        print("   Guests: \(adults) adults, \(children) children")
-        print("   Rooms: \(rooms)")
-        
-        // Start the hotel search
-        hotelSearchVM.searchHotels()
-    }
-
-    // Helper method to save popular hotel search
     private func savePopularHotelSearch(location: MasonryImage) {
         let hotelLocationObj = Location(
             iataCode: location.iataCode,
             airportName: location.title,
-            type: "city", // Hotels are city-based
+            type: "city",
             displayName: location.title,
             cityName: location.title,
             countryName: "",
@@ -553,7 +493,6 @@ struct HotelView: View {
             coordinates: Coordinates(latitude: "0", longitude: "0")
         )
         
-        // For hotels, save the same location as both origin and destination
         recentLocationsManager.addSearchPair(origin: hotelLocationObj, destination: hotelLocationObj)
         print("💾 Saved popular hotel search: \(location.title)")
     }
