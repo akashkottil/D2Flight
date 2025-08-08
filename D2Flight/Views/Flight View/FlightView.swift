@@ -57,12 +57,12 @@ struct FlightView: View {
     @State private var numberOfColumns: Int = 2
     
     let images: [MasonryImage] = [
-        .init(imageName: "kochiImg", height: 250, isRemote: false),
-        .init(imageName: "sydneyImg", height: 180, isRemote: false),
-        .init(imageName: "milanImg", height: 210, isRemote: false),
-        .init(imageName: "berlinImg", height: 250, isRemote: false),
-        .init(imageName: "riodeImg", height: 250, isRemote: false),
-        .init(imageName: "cairoImg", height: 220, isRemote: false),
+        .init(imageName: "kochiImg", height: 250, isRemote: false, title: "Kochi", subtitle: "God's Own Country"),
+        .init(imageName: "sydneyImg", height: 180, isRemote: false, title: "Sydney", subtitle: "Harbor City"),
+        .init(imageName: "milanImg", height: 210, isRemote: false, title: "Milan", subtitle: "Fashion Capital"),
+        .init(imageName: "berlinImg", height: 250, isRemote: false, title: "Berlin", subtitle: "Historic Germany"),
+        .init(imageName: "riodeImg", height: 250, isRemote: false, title: "Rio de Janeiro", subtitle: "City of Samba"),
+        .init(imageName: "cairoImg", height: 220, isRemote: false, title: "Cairo", subtitle: "Land of Pyramids"),
     ]
 
     
@@ -175,31 +175,66 @@ struct FlightView: View {
                         MasonryGrid(data: images, columns: numberOfColumns) { item in
                             GeometryReader { geo in
                                 let width = geo.size.width
-                                let aspectRatio = 3 / 2.0
                                 let adjustedHeight = item.height * (width / 200)
 
-                                Group {
-                                    if item.isRemote {
-                                        AsyncImage(url: URL(string: item.imageName)) { image in
-                                            image
+                                ZStack {
+                                    // Background Image
+                                    Group {
+                                        if item.isRemote {
+                                            AsyncImage(url: URL(string: item.imageName)) { image in
+                                                image
+                                                    .resizable()
+                                                    .scaledToFill()
+                                            }
+                                            placeholder: {
+                                                Color.gray.opacity(0.3)
+                                            }
+                                        } else {
+                                            Image(item.imageName)
                                                 .resizable()
                                                 .scaledToFill()
-                                        } placeholder: {
-                                            Color.gray.opacity(0.3)
                                         }
-                                    } else {
-                                        Image(item.imageName)
-                                            .resizable()
-                                            .scaledToFill()
                                     }
+                                    .frame(width: width, height: adjustedHeight)
+                                    .clipped()
+                                    .cornerRadius(10)
+                                    
+                                    // Text Overlay
+                                    VStack {
+                                        Spacer()
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(item.title)
+                                                    .font(CustomFont.font(.medium, weight: .bold))
+                                                    .foregroundColor(.white)
+                                                    .shadow(color: .black.opacity(0.7), radius: 2, x: 1, y: 1)
+                                                
+                                                if let subtitle = item.subtitle {
+                                                    Text(subtitle)
+                                                        .font(CustomFont.font(.small, weight: .medium))
+                                                        .foregroundColor(.white.opacity(0.9))
+                                                        .shadow(color: .black.opacity(0.7), radius: 1, x: 1, y: 1)
+                                                }
+                                            }
+                                            .padding(.bottom)
+                                            Spacer()
+                                        }
+                                        .background(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.4)]),
+                                                startPoint: .top,
+                                                endPoint: .bottom
+                                            )
+                                        )
+                                        .padding(12)
+                                        
+                                    }
+                                    .cornerRadius(10)
                                 }
-                                .frame(width: width, height: adjustedHeight)
-                                .clipped()
-                                .cornerRadius(10)
                             }
                             .frame(height: item.height)
                         }
-                        .padding(.top)
+
                         .padding(.horizontal)
                         FlightExploreCard()
                         
