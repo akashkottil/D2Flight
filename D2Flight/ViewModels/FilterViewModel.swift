@@ -37,11 +37,21 @@ class FilterViewModel: ObservableObject {
     // Price filters
     @Published var priceRange: ClosedRange<Double> = 0...10000
     
+    private var originalAPIMinPrice: Double = 0
+    private var originalAPIMaxPrice: Double = 10000
+    private var hasAPIDataLoaded: Bool = false
+    
     // Trip type for conditional filtering
     var isRoundTrip: Bool = false
     
+    @Published var cachedSortedAirlinesForSheet: [AirlineOption] = []
+    
     init() {
         loadDefaultFilters()
+    }
+    
+    func cacheSortedAirlinesForSheet() {
+        cachedSortedAirlinesForSheet = getSortedAirlinesForSheet()
     }
     
     private func loadDefaultFilters() {
@@ -63,10 +73,26 @@ class FilterViewModel: ObservableObject {
                 code: airline.airlineIata,
                 name: airline.airlineName,
                 logo: airline.airlineLogo,
-                price: 350 // Default price, could be calculated from results
+                price: 350 // Default price, will be updated with real prices
             )
         }
         print("✈️ Updated available airlines: \(availableAirlines.count)")
+    }
+    
+    // ✅ NEW: Method to get sorted airlines for filter sheet (called only when sheet opens)
+    func getSortedAirlinesForSheet() -> [AirlineOption] {
+        return availableAirlines.sorted { airline1, airline2 in
+            let isSelected1 = selectedAirlines.contains(airline1.code)
+            let isSelected2 = selectedAirlines.contains(airline2.code)
+            
+            if isSelected1 && !isSelected2 {
+                return true // Selected airlines come first
+            } else if !isSelected1 && isSelected2 {
+                return false // Non-selected airlines come after
+            } else {
+                return airline1.name < airline2.name // Alphabetical within each group
+            }
+        }
     }
     
     func toggleAirlineSelection(_ airlineCode: String) {
@@ -89,7 +115,32 @@ class FilterViewModel: ObservableObject {
         loadDefaultFilters()
     }
     
-    // ✅ FIXED: Improved buildPollRequest with better logic
+    // ✅ Helper methods for price filter detection
+    private func getAPIMinPrice() -> Double {
+        return originalAPIMinPrice
+    }
+    
+    private func getAPIMaxPrice() -> Double {
+        return originalAPIMaxPrice
+    }
+    
+    // ✅ Update method to store original API prices
+    func updatePriceRangeFromAPI(minPrice: Double, maxPrice: Double) {
+        // Store original API values for comparison
+        originalAPIMinPrice = minPrice
+        originalAPIMaxPrice = maxPrice
+        hasAPIDataLoaded = true
+        
+        // Only update if the price range is still at default values
+        if priceRange == 0...10000 {
+            priceRange = minPrice...maxPrice
+            print("🔧 Updated price range from API: ₹\(minPrice) - ₹\(maxPrice)")
+        } else {
+            print("🔧 Price range already modified by user, keeping: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+        }
+    }
+    
+    // MARK: - Main buildPollRequest method
     func buildPollRequest() -> PollRequest {
         var request = PollRequest()
         
@@ -175,13 +226,27 @@ class FilterViewModel: ObservableObject {
             request.iata_codes_exclude = Array(excludedAirlines)
         }
         
-        // ✅ Price filters - only apply if different from default
-        if priceRange.lowerBound > 0 {
-            request.price_min = Int(priceRange.lowerBound)
-        }
-        
-        if priceRange.upperBound < 10000 {
-            request.price_max = Int(priceRange.upperBound)
+        // ✅ CRITICAL FIX: Price filters - only apply if user has actively modified them
+        if hasAPIDataLoaded {
+            // Check if user has manually adjusted the price slider from its API-initialized values
+            let hasUserModifiedPriceMin = priceRange.lowerBound > getAPIMinPrice()
+            let hasUserModifiedPriceMax = priceRange.upperBound < getAPIMaxPrice()
+            
+            // Only set price_min if user has actively moved the slider above the API minimum
+            if hasUserModifiedPriceMin {
+                request.price_min = Int(priceRange.lowerBound)
+            }
+            
+            // Only set price_max if user has actively moved the slider below the API maximum
+            if hasUserModifiedPriceMax {
+                request.price_max = Int(priceRange.upperBound)
+            }
+            
+            print("🔧 Price filter analysis:")
+            print("   API Range: ₹\(getAPIMinPrice()) - ₹\(getAPIMaxPrice())")
+            print("   Current Range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+            print("   User modified min: \(hasUserModifiedPriceMin)")
+            print("   User modified max: \(hasUserModifiedPriceMax)")
         }
         
         // ✅ Debug logging
@@ -191,10 +256,35 @@ class FilterViewModel: ObservableObject {
         print("   Max Stops: \(request.stop_count_max ?? -1)")
         print("   Selected Airlines: \(selectedAirlines.count)")
         print("   Time Filters: \(hasTimeFilters)")
-        print("   Price Range: \(request.price_min ?? 0) - \(request.price_max ?? -1)")
+        print("   Price Min: \(request.price_min?.description ?? "not set")")
+        print("   Price Max: \(request.price_max?.description ?? "not set")")
         print("   Has Filters: \(request.hasFilters())")
         
         return request
+    }
+    
+    func clearFilters() {
+        selectedSortOption = .best
+        departureTimeRange = 0...1440
+        returnTimeRange = 0...1440
+        maxDuration = 1440
+        selectedClass = .economy
+        selectedAirlines.removeAll()
+        excludedAirlines.removeAll()
+        maxStops = 3
+        
+        // Reset price range to API values if available
+        if hasAPIDataLoaded {
+            priceRange = originalAPIMinPrice...originalAPIMaxPrice
+        } else {
+            priceRange = 0...10000
+        }
+        
+        print("🔧 Filters cleared, price range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+    }
+    
+    private func getCurrentPollData() -> PollResponse? {
+        return nil
     }
     
     // Helper method to check if any filters are active
@@ -206,7 +296,7 @@ class FilterViewModel: ObservableObject {
                !selectedAirlines.isEmpty ||
                !excludedAirlines.isEmpty ||
                maxStops < 3 ||
-               priceRange != 0...10000
+               (hasAPIDataLoaded && (priceRange.lowerBound > originalAPIMinPrice || priceRange.upperBound < originalAPIMaxPrice))
     }
 }
 

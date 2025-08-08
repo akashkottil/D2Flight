@@ -61,12 +61,9 @@ struct ResultView: View {
                 } else if let error = viewModel.errorMessage {
                     // B) Error State
                     VStack(spacing: 20) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-
-                        Text("Something went wrong")
-                            .font(.system(size: 20, weight: .semibold))
+                        Image("SomethingErrorImg")
+                        Text("Something went wrong!")
+                            .font(.system(size: 24, weight: .semibold))
 
                         Text(error)
                             .font(CustomFont.font(.regular))
@@ -90,22 +87,8 @@ struct ResultView: View {
                     .frame(maxHeight: .infinity)
 
                 } else if viewModel.flightResults.isEmpty {
-                    // C) Empty State
-                    VStack(spacing: 20) {
-                        Image(systemName: "airplane.slash")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-
-                        Text("No flights found")
-                            .font(.system(size: 20, weight: .semibold))
-
-                        Text("Try adjusting your search criteria or filters")
-                            .font(CustomFont.font(.regular))
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxHeight: .infinity)
-
+                    FilterNoFlights()
+                        .frame(maxHeight: .infinity)
                 } else {
                     // D) Success: list of flight results with ads integration
                     ScrollView {

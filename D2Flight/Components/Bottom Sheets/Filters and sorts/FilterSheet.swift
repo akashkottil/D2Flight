@@ -212,118 +212,142 @@ struct UnifiedFilterSheet: View {
     
     // MARK: - Airlines Content
     private var airlinesContent: some View {
-        VStack(spacing: 0) {
-            // Select All Option
-            airlineSelectionRow(
-                name: "Select All",
-                code: "ALL",
-                price: nil,
-                logo: "",
-                isSelected: filterViewModel.selectedAirlines.count == availableAirlines.count,
-                isSelectAll: true
-            )
-            
-            // Individual Airlines with real data
-            ForEach(availableAirlines) { airline in
-                airlineSelectionRow(
-                    name: airline.name,
-                    code: airline.code,
-                    price: airline.price,
-                    logo: airline.logo, // ✅ Pass real logo URL
-                    isSelected: filterViewModel.selectedAirlines.contains(airline.code)
-                )
+          VStack(spacing: 0) {
+              // Select All Option (always at top)
+              airlineSelectionRow(
+                  name: "Select All",
+                  code: "ALL",
+                  price: nil,
+                  logo: "",
+                  isSelected: filterViewModel.selectedAirlines.count == availableAirlines.count,
+                  isSelectAll: true
+              )
+              
+              // ✅ UPDATED: Use static sorting method (only sorts when sheet opens)
+              ForEach(filterViewModel.cachedSortedAirlinesForSheet, id: \.code) { airline in
+                  airlineSelectionRow(
+                      name: airline.name,
+                      code: airline.code,
+                      price: airline.price,
+                      logo: airline.logo,
+                      isSelected: filterViewModel.selectedAirlines.contains(airline.code)
+                  )
+              }
+          }
+          .onAppear {
+                  filterViewModel.cacheSortedAirlinesForSheet()
+              }
+      }
+    
+    private func getSortedAirlines() -> [AirlineOption] {
+            return availableAirlines.sorted { airline1, airline2 in
+                let isSelected1 = filterViewModel.selectedAirlines.contains(airline1.code)
+                let isSelected2 = filterViewModel.selectedAirlines.contains(airline2.code)
+                
+                if isSelected1 && !isSelected2 {
+                    return true // Selected airlines come first
+                } else if !isSelected1 && isSelected2 {
+                    return false // Non-selected airlines come after
+                } else {
+                    return airline1.name < airline2.name // Alphabetical within each group
+                }
             }
         }
-    }
     
     private func airlineSelectionRow(
-        name: String,
-        code: String,
-        price: Double?,
-        logo: String, // ✅ Add logo parameter
-        isSelected: Bool,
-        isSelectAll: Bool = false
-    ) -> some View {
-        Button(action: {
-            if isSelectAll {
-                if filterViewModel.selectedAirlines.count == availableAirlines.count {
-                    // Deselect all
-                    filterViewModel.selectedAirlines.removeAll()
+            name: String,
+            code: String,
+            price: Double?,
+            logo: String,
+            isSelected: Bool,
+            isSelectAll: Bool = false
+        ) -> some View {
+            Button(action: {
+                if isSelectAll {
+                    if filterViewModel.selectedAirlines.count == availableAirlines.count {
+                        // Deselect all
+                        filterViewModel.selectedAirlines.removeAll()
+                    } else {
+                        // Select all
+                        filterViewModel.selectedAirlines = Set(availableAirlines.map { $0.code })
+                    }
                 } else {
-                    // Select all
-                    filterViewModel.selectedAirlines = Set(availableAirlines.map { $0.code })
-                }
-            } else {
-                if filterViewModel.selectedAirlines.contains(code) {
-                    filterViewModel.selectedAirlines.remove(code)
-                } else {
-                    filterViewModel.selectedAirlines.insert(code)
-                }
-            }
-        }) {
-            HStack(spacing: 16) {
-                // Checkbox
-                ZStack {
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(isSelected ? Color("Violet") : Color.gray.opacity(0.3), lineWidth: 2)
-                        .frame(width: 20, height: 20)
-                        .background(
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(isSelected ? Color("Violet") : Color.clear)
-                        )
-                    
-                    if isSelected {
-                        Image(systemName: "checkmark")
-                            .font(CustomFont.font(.small, weight: .bold))
-                            .foregroundColor(.white)
+                    if filterViewModel.selectedAirlines.contains(code) {
+                        filterViewModel.selectedAirlines.remove(code)
+                    } else {
+                        filterViewModel.selectedAirlines.insert(code)
                     }
                 }
-                
-                // Airline Logo (only for individual airlines)
-                if !isSelectAll {
-                    // ✅ Use AsyncImage to load real airline logo
-                    AsyncImage(url: URL(string: logo)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } placeholder: {
-                        // Fallback with airline initials
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.blue.opacity(0.8))
-                            .overlay(
-                                Text(String(name.prefix(2)))
-                                    .font(CustomFont.font(.small, weight: .bold))
-                                    .foregroundColor(.white)
+            }) {
+                HStack(spacing: 16) {
+                    // Checkbox
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(isSelected ? Color("Violet") : Color.gray.opacity(0.3), lineWidth: 2)
+                            .frame(width: 20, height: 20)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(isSelected ? Color("Violet") : Color.clear)
                             )
+                        
+                        if isSelected {
+                            Image(systemName: "checkmark")
+                                .font(CustomFont.font(.small, weight: .bold))
+                                .foregroundColor(.white)
+                        }
                     }
-                    .frame(width: 32, height: 32)
-                    .cornerRadius(8)
-                }
-                
-                // Airline Name
-                Text(name)
-                    .font(CustomFont.font(.medium, weight: .semibold))
-                    .foregroundColor(.black)
-                    .multilineTextAlignment(.leading)
-                
-                Spacer()
-                
-                // ✅ Show real minimum price for each airline
-                if let price = price, price > 0 {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("₹\(Int(price))")
-                            .font(CustomFont.font(.medium, weight: .semibold))
-                            .foregroundColor(.black)
-                        Text("from")
-                            .font(CustomFont.font(.tiny))
-                            .foregroundColor(.gray)
+                    
+                    // Airline Logo (only for individual airlines)
+                    if !isSelectAll {
+                        AsyncImage(url: URL(string: logo)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                        } placeholder: {
+                            // Fallback with airline initials
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.blue.opacity(0.8))
+                                .overlay(
+                                    Text(String(name.prefix(2)))
+                                        .font(CustomFont.font(.small, weight: .bold))
+                                        .foregroundColor(.white)
+                                )
+                        }
+                        .frame(width: 32, height: 32)
+                        .cornerRadius(8)
+                    }
+                    
+                    // Airline Name
+                    Text(name)
+                        .font(CustomFont.font(.medium, weight: .semibold))
+                        .foregroundColor(.black)
+                        .multilineTextAlignment(.leading)
+                    
+                    Spacer()
+                    
+                    // ✅ FIXED: Show real minimum price only if price > 0
+                    if let price = price, price > 0 {
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("₹\(Int(price))")
+                                .font(CustomFont.font(.medium, weight: .semibold))
+                                .foregroundColor(.black)
+                            Text("from")
+                                .font(CustomFont.font(.tiny))
+                                .foregroundColor(.gray)
+                        }
+                    } else if !isSelectAll {
+                        // Show "Price varies" when no specific price is available
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("Varies")
+                                .font(CustomFont.font(.small, weight: .medium))
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
+                .padding(.vertical, 16)
             }
-            .padding(.vertical, 16)
+            .buttonStyle(PlainButtonStyle())
         }
-        .buttonStyle(PlainButtonStyle())
-    }
     
     // MARK: - Duration Content
     private var durationContent: some View {

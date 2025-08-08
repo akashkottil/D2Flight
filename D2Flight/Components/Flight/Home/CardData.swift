@@ -5,6 +5,7 @@ struct CardData {
     let subtitle: String
     let iconName: String
     let backgroundImageName: String
+    let iconImage : String
 }
 
 struct AutoSlidingCardsView: View {
@@ -15,21 +16,24 @@ struct AutoSlidingCardsView: View {
     let cards = [
         CardData(
             title: "Why Last Minute Flights ?",
-            subtitle: "Easily handle all your flight bookings in one simple place.",
+            subtitle: "Compare flights from various airlines to find the best prices.",
             iconName: "airplane",
-            backgroundImageName: "slide1"
+            backgroundImageName: "slide1",
+            iconImage: "priceHand"
         ),
         CardData(
             title: "Book Smart, Travel Easy",
-            subtitle: "Find the best deals and compare prices instantly.",
+            subtitle: "Save money by comparing affordable flights from top airlines quickly.",
             iconName: "star.fill",
-            backgroundImageName: "slide2"
+            backgroundImageName: "slide2",
+            iconImage: "calendarTime"
         ),
         CardData(
             title: "24/7 Customer Support",
-            subtitle: "We're here to help you every step of your journey.",
+            subtitle: "Find flights instantly, then book directly with your chosen provider.",
             iconName: "phone.fill",
-            backgroundImageName: "slide3"
+            backgroundImageName: "slide3",
+            iconImage: "tickets"
         )
     ]
     
@@ -71,28 +75,6 @@ struct AutoSlidingCardsView: View {
                 }
                 .offset(x: -(currentIndex * totalWidth) + dragOffset)
                 .animation(.easeInOut(duration: 0.5), value: currentIndex)
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if value.translation.width > 0 {
-                                dragOffset = min(value.translation.width, 100)
-                            }
-                        }
-                        .onEnded { value in
-                            dragOffset = 0
-                            if value.translation.width > 100 && currentIndex > 0 {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentIndex -= 1
-                                }
-                                resetTimer()
-                            } else if value.translation.width < -100 && currentIndex < CGFloat(infiniteCards.count - 1) {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentIndex += 1
-                                }
-                                resetTimer()
-                            }
-                        }
-                )
                 .onAppear {
                     // Start from the middle set to allow smooth infinite scrolling
                     currentIndex = CGFloat(cards.count)
@@ -128,65 +110,41 @@ struct CardView: View {
     
     var body: some View {
         ZStack {
-            // Background with gradient overlay
-            RoundedRectangle(cornerRadius: 20)
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color.black.opacity(0.7),
-                            Color.blue.opacity(0.8),
-                            Color.purple.opacity(0.6)
-                        ]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
             
-            // Airplane wing image overlay (simulated)
-            HStack {
-                Spacer()
-                VStack {
-                    Spacer()
-                    Image(systemName: "airplane")
-                        .font(.system(size: 60))
-                        .foregroundColor(.white.opacity(0.2))
-                        .rotationEffect(.degrees(45))
-                        .offset(x: 20, y: 20)
-                }
-            }
+            RoundedRectangle(cornerRadius: 20)
+            Image(card.backgroundImageName)
+                    .resizable()
+//                    .scaledToFill()
+                    .frame(height: 180)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+            
+            
             
             // Content
             HStack {
                 VStack(alignment: .leading, spacing: 16) {
                     // Icon circle
                     ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.2))
-                            .frame(width: 50, height: 50)
                         
-                        Image(systemName: card.iconName)
+                        Image(card.iconImage)
                             .font(.system(size: 20))
                             .foregroundColor(.white)
                     }
                     
                     // Text content
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(card.title)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.leading)
+
                         
                         Text(card.subtitle)
                             .font(.body)
                             .foregroundColor(.white.opacity(0.9))
                             .multilineTextAlignment(.leading)
-                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     
                     Spacer()
                 }
-                .padding(.leading, 24)
+                .padding(.leading, 14)
                 .padding(.vertical, 24)
                 
                 Spacer()
@@ -194,5 +152,12 @@ struct CardView: View {
         }
         .frame(height: 180)
         .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
+}
+
+
+struct AutoSlidingCardsView_Previews: PreviewProvider {
+    static var previews: some View {
+        AutoSlidingCardsView()
     }
 }
