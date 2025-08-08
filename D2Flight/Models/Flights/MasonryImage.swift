@@ -7,4 +7,5 @@ struct MasonryImage: Identifiable {
     let isRemote: Bool
     let title: String        // Main title text
     let subtitle: String?    // Optional subtitle text
+    let iataCode: String     // Airport/City IATA code for API calls
 }

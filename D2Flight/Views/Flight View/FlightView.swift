@@ -56,14 +56,7 @@ struct FlightView: View {
     
     @State private var numberOfColumns: Int = 2
     
-    let images: [MasonryImage] = [
-        .init(imageName: "kochiImg", height: 250, isRemote: false, title: "Kochi", subtitle: "God's Own Country"),
-        .init(imageName: "sydneyImg", height: 180, isRemote: false, title: "Sydney", subtitle: "Harbor City"),
-        .init(imageName: "milanImg", height: 210, isRemote: false, title: "Milan", subtitle: "Fashion Capital"),
-        .init(imageName: "berlinImg", height: 250, isRemote: false, title: "Berlin", subtitle: "Historic Germany"),
-        .init(imageName: "riodeImg", height: 250, isRemote: false, title: "Rio de Janeiro", subtitle: "City of Samba"),
-        .init(imageName: "cairoImg", height: 220, isRemote: false, title: "Cairo", subtitle: "Land of Pyramids"),
-    ]
+
 
     
     @State private var expandableSearchRef: ExpandableSearchContainer? = nil
@@ -162,80 +155,18 @@ struct FlightView: View {
                 ZStack {
                     // ScrollView for the MasonryGrid and other content
                     ScrollView {
-//                         MasonryGrid - Adjusted for the scrollable area
-                        HStack(){
-                            Text("Popular Locations")
-                                .font(.system(size: 18))
-                                .fontWeight(.bold)
-                                .padding(.top)
-                            Spacer()
-                        }
-                        .padding(.horizontal,20)
                         
-                        MasonryGrid(data: images, columns: numberOfColumns) { item in
-                            GeometryReader { geo in
-                                let width = geo.size.width
-                                let adjustedHeight = item.height * (width / 200)
+                        PopularLocationsGrid(
+                            searchType: .flight,
+                            selectedDates: selectedDates,
+                            adults: adults,
+                            children: children,
+                            infants: infants,
+                            selectedClass: selectedClass,
+                            rooms: 1, // Not used for flights
+                            onLocationTapped: handlePopularLocationTapped
+                        )
 
-                                ZStack {
-                                    // Background Image
-                                    Group {
-                                        if item.isRemote {
-                                            AsyncImage(url: URL(string: item.imageName)) { image in
-                                                image
-                                                    .resizable()
-                                                    .scaledToFill()
-                                            }
-                                            placeholder: {
-                                                Color.gray.opacity(0.3)
-                                            }
-                                        } else {
-                                            Image(item.imageName)
-                                                .resizable()
-                                                .scaledToFill()
-                                        }
-                                    }
-                                    .frame(width: width, height: adjustedHeight)
-                                    .clipped()
-                                    .cornerRadius(10)
-                                    
-                                    // Text Overlay
-                                    VStack {
-                                        Spacer()
-                                        HStack {
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(item.title)
-                                                    .font(CustomFont.font(.medium, weight: .bold))
-                                                    .foregroundColor(.white)
-                                                    .shadow(color: .black.opacity(0.7), radius: 2, x: 1, y: 1)
-                                                
-                                                if let subtitle = item.subtitle {
-                                                    Text(subtitle)
-                                                        .font(CustomFont.font(.small, weight: .medium))
-                                                        .foregroundColor(.white.opacity(0.9))
-                                                        .shadow(color: .black.opacity(0.7), radius: 1, x: 1, y: 1)
-                                                }
-                                            }
-                                            .padding(.bottom)
-                                            Spacer()
-                                        }
-                                        .background(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.4)]),
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            )
-                                        )
-                                        .padding(12)
-                                        
-                                    }
-                                    .cornerRadius(10)
-                                }
-                            }
-                            .frame(height: item.height)
-                        }
-
-                        .padding(.horizontal)
                         FlightExploreCard()
                         
                         AutoSlidingCardsView()
@@ -683,6 +614,88 @@ struct FlightView: View {
             returnDate = calculateDefaultReturnDate()
         }
     }
+    
+    private func handlePopularLocationTapped(_ location: MasonryImage) {
+        print("🌍 Popular location tapped: \(location.title) (\(location.iataCode))")
+        
+        // Check internet connection first
+        if !networkMonitor.isConnected {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showNoInternet = true
+                showEmptySearch = false
+            }
+            return
+        }
+        
+        // Use current location as origin, selected popular location as destination
+        let currentOrigin = originLocation.isEmpty ? "Current Location" : originLocation
+        let currentOriginIATA = originIATACode.isEmpty ? "COK" : originIATACode // Default to Kochi if no origin set
+        
+        // Set destination to popular location
+        destinationLocation = location.title
+        destinationIATACode = location.iataCode
+        
+        // Save search pair for recent locations
+        savePopularLocationSearchPair(originIATA: currentOriginIATA, destinationLocation: location)
+        
+        // Update ViewModel properties for flight search
+        flightSearchVM.departureIATACode = currentOriginIATA
+        flightSearchVM.destinationIATACode = location.iataCode
+        flightSearchVM.isRoundTrip = false // Always one way for popular destinations
+        
+        // Use selected dates or default to today
+        if let firstDate = selectedDates.first {
+            flightSearchVM.travelDate = firstDate
+        } else {
+            flightSearchVM.travelDate = Date()
+        }
+        
+        // Use current passenger configuration
+        flightSearchVM.adults = adults
+        flightSearchVM.childrenAges = Array(repeating: 2, count: children)
+        flightSearchVM.cabinClass = selectedClass.rawValue
+        
+        print("🎯 Popular destination search parameters:")
+        print("   Route: \(currentOriginIATA) to \(location.iataCode)")
+        print("   Trip Type: One Way")
+        print("   Departure: \(flightSearchVM.travelDate)")
+        print("   Travelers: \(adults) adults, \(children) children, \(infants) infants")
+        print("   Class: \(selectedClass.displayName)")
+        
+        // Start the search - this will trigger the same workflow as search button
+        flightSearchVM.searchFlights()
+    }
+
+    // Helper method to save popular location search pair
+    private func savePopularLocationSearchPair(originIATA: String, destinationLocation: MasonryImage) {
+        let originLocationObj = Location(
+            iataCode: originIATA,
+            airportName: originLocation.isEmpty ? "Current Location" : originLocation,
+            type: "airport",
+            displayName: originLocation.isEmpty ? "Current Location" : originLocation,
+            cityName: originLocation.isEmpty ? "Current Location" : originLocation,
+            countryName: "",
+            countryCode: "",
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0")
+        )
+        
+        let destinationLocationObj = Location(
+            iataCode: destinationLocation.iataCode,
+            airportName: destinationLocation.title,
+            type: "airport",
+            displayName: destinationLocation.title,
+            cityName: destinationLocation.title,
+            countryName: "",
+            countryCode: "",
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0")
+        )
+        
+        recentLocationsManager.addSearchPair(origin: originLocationObj, destination: destinationLocationObj)
+        print("💾 Saved popular destination search pair: \(originIATA) → \(destinationLocation.title)")
+    }
+
 }
 
 

@@ -164,8 +164,16 @@ struct RentalView: View {
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
                     
-                    // Explore section (you can customize this for rentals)
-                    //                    RentalExploreCard()
+                    PopularLocationsGrid(
+                        searchType: .rental,
+                        selectedDates: selectedDates,
+                        adults: 1, // Not really used for rentals, but required by component
+                        children: 0, // Not used for rentals
+                        infants: 0, // Not used for rentals
+                        selectedClass: .economy, // Not used for rentals
+                        rooms: 1, // Not used for rentals
+                        onLocationTapped: handlePopularLocationTapped
+                    )
                 }
                 .scrollIndicators(.hidden)
                 
@@ -573,6 +581,125 @@ struct RentalView: View {
         }
         
         rentalSearchVM.searchRentals()
+    }
+    
+    
+    private func handlePopularLocationTapped(_ location: MasonryImage) {
+        print("🚗 Popular rental location tapped: \(location.title) (\(location.iataCode))")
+        
+        // Check internet connection first
+        if !networkMonitor.isConnected {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showNoInternet = true
+                showEmptySearch = false
+            }
+            return
+        }
+        
+        // Set pickup location to popular location
+        pickUpLocation = location.title
+        pickUpIATACode = location.iataCode
+        
+        // For same drop-off, don't set drop-off location (it's the same)
+        // For different drop-off, keep existing drop-off or clear it
+        if !isSameDropOff && dropOffLocation.isEmpty {
+            // You might want to suggest a different drop-off location
+            // For now, we'll leave it empty for user to select
+        }
+        
+        // Save search for recent locations
+        savePopularRentalSearch(location: location)
+        
+        // Update ViewModel properties for rental search
+        rentalSearchVM.pickUpIATACode = location.iataCode
+        rentalSearchVM.dropOffIATACode = isSameDropOff ? "" : dropOffIATACode
+        rentalSearchVM.isSameDropOff = isSameDropOff
+        
+        // Use selected dates and times or default values
+        if selectedDates.count > 0 {
+            rentalSearchVM.pickUpDate = selectedDates[0]
+        } else {
+            rentalSearchVM.pickUpDate = Date() // Today
+        }
+        
+        if selectedDates.count > 1 {
+            rentalSearchVM.dropOffDate = selectedDates[1]
+        } else {
+            // Default to 2 days later for different drop-off, same day for same drop-off
+            let daysToAdd = isSameDropOff ? 0 : 2
+            rentalSearchVM.dropOffDate = Calendar.current.date(byAdding: .day, value: daysToAdd, to: rentalSearchVM.pickUpDate) ?? Date()
+        }
+        
+        // Use selected times or default times
+        if selectedTimes.count > 0 {
+            rentalSearchVM.pickUpTime = selectedTimes[0]
+        } else {
+            // Default to 9:00 AM
+            rentalSearchVM.pickUpTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
+        }
+        
+        if selectedTimes.count > 1 {
+            rentalSearchVM.dropOffTime = selectedTimes[1]
+        } else {
+            // Default based on same/different drop-off
+            let defaultHour = isSameDropOff ? 11 : 10 // 11 AM for same drop-off, 10 AM for different
+            rentalSearchVM.dropOffTime = Calendar.current.date(bySettingHour: defaultHour, minute: 0, second: 0, of: Date()) ?? Date()
+        }
+        
+        print("🎯 Popular rental search parameters:")
+        print("   Same Drop-off: \(isSameDropOff)")
+        print("   Pick-up: \(location.title) (\(location.iataCode))")
+        if !isSameDropOff && !dropOffLocation.isEmpty {
+            print("   Drop-off: \(dropOffLocation) (\(dropOffIATACode))")
+        }
+        print("   Pick-up Date: \(rentalSearchVM.pickUpDate)")
+        print("   Drop-off Date: \(rentalSearchVM.dropOffDate)")
+        
+        // Start the rental search
+        rentalSearchVM.searchRentals()
+    }
+
+    // Helper method to save popular rental search
+    private func savePopularRentalSearch(location: MasonryImage) {
+        let pickUpLocationObj = Location(
+            iataCode: location.iataCode,
+            airportName: location.title,
+            type: "airport",
+            displayName: location.title,
+            cityName: location.title,
+            countryName: "",
+            countryCode: "",
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0")
+        )
+        
+        // For same drop-off, use the same location for both
+        let dropOffLocationObj: Location
+        if isSameDropOff {
+            dropOffLocationObj = pickUpLocationObj
+        } else if !dropOffLocation.isEmpty {
+            dropOffLocationObj = Location(
+                iataCode: dropOffIATACode,
+                airportName: dropOffLocation,
+                type: "airport",
+                displayName: dropOffLocation,
+                cityName: dropOffLocation,
+                countryName: "",
+                countryCode: "",
+                imageUrl: "",
+                coordinates: Coordinates(latitude: "0", longitude: "0")
+            )
+        } else {
+            dropOffLocationObj = pickUpLocationObj // Fallback to same location
+        }
+        
+        recentLocationsManager.addSearchPair(origin: pickUpLocationObj, destination: dropOffLocationObj)
+        
+        if isSameDropOff {
+            print("💾 Saved popular rental search (same location): \(location.title)")
+        } else {
+            print("💾 Saved popular rental search: \(location.title) → \(dropOffLocation.isEmpty ? location.title : dropOffLocation)")
+        }
     }
 }
 

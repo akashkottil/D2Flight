@@ -129,10 +129,20 @@ struct HotelView: View {
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
                     
-                    // Hotel Explore Card (you can create this similar to FlightExploreCard)
-                    // HotelExploreCard()
+                                    PopularLocationsGrid(
+                                        searchType: .hotel,
+                                        selectedDates: selectedDates,
+                                        adults: adults,
+                                        children: children,
+                                        infants: 0, // Not used for hotels
+                                        selectedClass: .economy, // Not used for hotels
+                                        rooms: rooms,
+                                        onLocationTapped: handlePopularLocationTapped
+                                    )
                 }
                 .scrollIndicators(.hidden)
+                
+
                 
                 // Notification Components Overlay
                 VStack {
@@ -476,6 +486,76 @@ struct HotelView: View {
         
         // Start the search
         hotelSearchVM.searchHotels()
+    }
+    
+    private func handlePopularLocationTapped(_ location: MasonryImage) {
+        print("🏨 Popular hotel location tapped: \(location.title) (\(location.iataCode))")
+        
+        // Check internet connection first
+        if !networkMonitor.isConnected {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showNoInternet = true
+                showEmptySearch = false
+            }
+            return
+        }
+        
+        // Set hotel location to popular location
+        hotelLocation = location.title
+        hotelIATACode = location.iataCode
+        
+        // Save search for recent locations
+        savePopularHotelSearch(location: location)
+        
+        // Update ViewModel properties for hotel search
+        hotelSearchVM.cityCode = location.iataCode
+        hotelSearchVM.cityName = location.title
+        hotelSearchVM.rooms = rooms
+        hotelSearchVM.adults = adults
+        hotelSearchVM.children = children
+        
+        // Use selected dates or default dates
+        if selectedDates.count > 0 {
+            hotelSearchVM.checkinDate = selectedDates[0]
+        } else {
+            hotelSearchVM.checkinDate = Date() // Today
+        }
+        
+        if selectedDates.count > 1 {
+            hotelSearchVM.checkoutDate = selectedDates[1]
+        } else {
+            // Default to tomorrow if no checkout date selected
+            hotelSearchVM.checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: hotelSearchVM.checkinDate) ?? Date()
+        }
+        
+        print("🎯 Popular hotel search parameters:")
+        print("   Location: \(location.title) (\(location.iataCode))")
+        print("   Check-in: \(hotelSearchVM.checkinDate)")
+        print("   Check-out: \(hotelSearchVM.checkoutDate)")
+        print("   Guests: \(adults) adults, \(children) children")
+        print("   Rooms: \(rooms)")
+        
+        // Start the hotel search
+        hotelSearchVM.searchHotels()
+    }
+
+    // Helper method to save popular hotel search
+    private func savePopularHotelSearch(location: MasonryImage) {
+        let hotelLocationObj = Location(
+            iataCode: location.iataCode,
+            airportName: location.title,
+            type: "city", // Hotels are city-based
+            displayName: location.title,
+            cityName: location.title,
+            countryName: "",
+            countryCode: "",
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0")
+        )
+        
+        // For hotels, save the same location as both origin and destination
+        recentLocationsManager.addSearchPair(origin: hotelLocationObj, destination: hotelLocationObj)
+        print("💾 Saved popular hotel search: \(location.title)")
     }
 }
 
