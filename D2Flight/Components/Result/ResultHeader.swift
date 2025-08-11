@@ -48,135 +48,148 @@ struct ResultHeader: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header Section with dynamic content
-            HStack {
-                Button(action: {
-                    dismiss() // Navigate back to previous screen
-                }) {
-                    Image("BlackArrow")
-                        .padding(.trailing, 10)
-                }
-                
-                VStack(alignment: .leading) {
-                    Text("\(originCode) to \(destinationCode)")
-                        .font(CustomFont.font(.regular))
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
-                    Text("\(travelDate), \(travelerInfo)")
-                        .font(CustomFont.font(.small))
-                        .fontWeight(.light)
-                        .foregroundColor(.gray)
-                }
-                Spacer()
-                
-                // ✅ UPDATED: Edit button with sheet trigger
-                Button(action: {
-                    showEditSearchSheet = true
-                }) {
-                    VStack(alignment: .trailing) {
-                        Image("EditIcon")
-                            .frame(width: 14, height: 14)
-                        Text("Edit")
-                            .font(CustomFont.font(.small))
-                            .fontWeight(.semibold)
-                            .foregroundColor(.black)
+            // ✅ UPDATED: Header Section with conditional visibility
+            Group {
+                if !showEditSearchSheet {
+                    HStack {
+                        Button(action: {
+                            dismiss() // Navigate back to previous screen
+                        }) {
+                            Image("BlackArrow")
+                                .padding(.trailing, 10)
+                        }
+                        
+                        VStack(alignment: .leading) {
+                            Text("\(originCode) to \(destinationCode)")
+                                .font(CustomFont.font(.regular))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.black)
+                            Text("\(travelDate), \(travelerInfo)")
+                                .font(CustomFont.font(.small))
+                                .fontWeight(.light)
+                                .foregroundColor(.gray)
+                        }
+                        Spacer()
+                        
+                        // ✅ UPDATED: Edit button with sheet trigger
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                showEditSearchSheet = true
+                            }
+                        }) {
+                            VStack(alignment: .trailing) {
+                                Image("EditIcon")
+                                    .frame(width: 14, height: 14)
+                                Text("Edit")
+                                    .font(CustomFont.font(.small))
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.black)
+                            }
+                        }
                     }
+                    .padding(.bottom, 16)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
-            .padding(.bottom, 16)
             
-            // Filter Buttons (unchanged)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    // Sort Button
-                    Button(action: {
-                        selectedFilterType = .sort
-                        showUnifiedFilterSheet = true
-                    }) {
-                        HStack {
-                            Image("SortIcon")
-                            Text("Sort: \(filterViewModel.selectedSortOption.displayName)")
-                        }
-                        .font(CustomFont.font(.small, weight: .semibold))
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                        .background(filterViewModel.selectedSortOption != .best ? Color("Violet") : Color.gray.opacity(0.1))
-                        .foregroundColor(filterViewModel.selectedSortOption != .best ? .white : .gray)
-                        .cornerRadius(20)
-                    }
-                    
-                    // Stops Filter
-                    FilterButton(
-                        title: "Stops",
-                        isSelected: filterViewModel.maxStops < 3,
-                        action: {
-                            // Cycle through stop options
-                            switch filterViewModel.maxStops {
-                            case 3: filterViewModel.maxStops = 0
-                            case 0: filterViewModel.maxStops = 1
-                            case 1: filterViewModel.maxStops = 2
-                            case 2: filterViewModel.maxStops = 3
-                            default: filterViewModel.maxStops = 3
+            // ✅ UPDATED: Filter Buttons with conditional visibility
+            Group {
+                if !showEditSearchSheet {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            // Sort Button
+                            Button(action: {
+                                selectedFilterType = .sort
+                                showUnifiedFilterSheet = true
+                            }) {
+                                HStack {
+                                    Image("SortIcon")
+                                    Text("Sort: \(filterViewModel.selectedSortOption.displayName)")
+                                }
+                                .font(CustomFont.font(.small, weight: .semibold))
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 16)
+                                .background(filterViewModel.selectedSortOption != .best ? Color("Violet") : Color.gray.opacity(0.1))
+                                .foregroundColor(filterViewModel.selectedSortOption != .best ? .white : .gray)
+                                .cornerRadius(20)
                             }
-                            applyFilters()
+                            
+                            // Stops Filter
+                            FilterButton(
+                                title: "Stops",
+                                isSelected: filterViewModel.maxStops < 3,
+                                action: {
+                                    // Cycle through stop options
+                                    switch filterViewModel.maxStops {
+                                    case 3: filterViewModel.maxStops = 0
+                                    case 0: filterViewModel.maxStops = 1
+                                    case 1: filterViewModel.maxStops = 2
+                                    case 2: filterViewModel.maxStops = 3
+                                    default: filterViewModel.maxStops = 3
+                                    }
+                                    applyFilters()
+                                }
+                            )
+                            
+                            // Time Filter
+                            FilterButton(
+                                title: "Time",
+                                isSelected: filterViewModel.departureTimeRange != 0...1440 ||
+                                           (isRoundTrip && filterViewModel.returnTimeRange != 0...1440),
+                                action: {
+                                    selectedFilterType = .times
+                                    showUnifiedFilterSheet = true
+                                }
+                            )
+                            
+                            // Airlines Filter
+                            FilterButton(
+                                title: "Airlines",
+                                isSelected: !filterViewModel.selectedAirlines.isEmpty,
+                                action: {
+                                    selectedFilterType = .airlines
+                                    showUnifiedFilterSheet = true
+                                }
+                            )
+                            
+                            // Duration Filter
+                            FilterButton(
+                                title: "Duration",
+                                isSelected: filterViewModel.maxDuration < 1440,
+                                action: {
+                                    selectedFilterType = .duration
+                                    showUnifiedFilterSheet = true
+                                }
+                            )
+                            
+                            // Price Filter
+                            FilterButton(
+                                title: "Price",
+                                isSelected: filterViewModel.priceRange.lowerBound > 0 ||
+                                           filterViewModel.priceRange.upperBound < 10000,
+                                action: {
+                                    selectedFilterType = .price
+                                    showUnifiedFilterSheet = true
+                                }
+                            )
+                            
+                            // Classes Filter
+                            FilterButton(
+                                title: "Classes",
+                                isSelected: filterViewModel.selectedClass != .economy,
+                                action: {
+                                    selectedFilterType = .classes
+                                    showUnifiedFilterSheet = true
+                                }
+                            )
                         }
-                    )
-                    
-                    // Time Filter
-                    FilterButton(
-                        title: "Time",
-                        isSelected: filterViewModel.departureTimeRange != 0...1440 ||
-                                   (isRoundTrip && filterViewModel.returnTimeRange != 0...1440),
-                        action: {
-                            selectedFilterType = .times
-                            showUnifiedFilterSheet = true
-                        }
-                    )
-                    
-                    // Airlines Filter
-                    FilterButton(
-                        title: "Airlines",
-                        isSelected: !filterViewModel.selectedAirlines.isEmpty,
-                        action: {
-                            selectedFilterType = .airlines
-                            showUnifiedFilterSheet = true
-                        }
-                    )
-                    
-                    // Duration Filter
-                    FilterButton(
-                        title: "Duration",
-                        isSelected: filterViewModel.maxDuration < 1440,
-                        action: {
-                            selectedFilterType = .duration
-                            showUnifiedFilterSheet = true
-                        }
-                    )
-                    
-                    // Price Filter
-                    FilterButton(
-                        title: "Price",
-                        isSelected: filterViewModel.priceRange.lowerBound > 0 ||
-                                   filterViewModel.priceRange.upperBound < 10000,
-                        action: {
-                            selectedFilterType = .price
-                            showUnifiedFilterSheet = true
-                        }
-                    )
-                    
-                    // Classes Filter
-                    FilterButton(
-                        title: "Classes",
-                        isSelected: filterViewModel.selectedClass != .economy,
-                        action: {
-                            selectedFilterType = .classes
-                            showUnifiedFilterSheet = true
-                        }
-                    )
+                        .padding(.horizontal, 16)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
-                .padding(.horizontal, 16)
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: showEditSearchSheet)
         .onAppear {
             filterViewModel.isRoundTrip = isRoundTrip
             print("🎛️ ResultHeader configured with:")
@@ -201,7 +214,6 @@ struct ResultHeader: View {
                     print("✅ Edit search completed in ResultHeader")
                 }
             )
-            .frame(maxHeight: UIScreen.main.bounds.height * 0.8)
         }
         
         // Single Unified Filter Sheet (unchanged)

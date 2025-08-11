@@ -1,14 +1,6 @@
-//
-//  EditSearchSheet.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 11/08/25.
-//
-
-
 import SwiftUI
 
-// MARK: - Edit Search Sheet (Top Sheet Implementation)
+// MARK: - Improved Edit Search Sheet (Full Screen Dropdown)
 struct EditSearchSheet: View {
     @Binding var isPresented: Bool
     @Binding var searchParameters: SearchParameters
@@ -71,195 +63,171 @@ struct EditSearchSheet: View {
     }
     
     var body: some View {
-//        VStack(spacing: 0) {
-//            // Drag Handle
-//            RoundedRectangle(cornerRadius: 2.5)
-//                .fill(Color.gray.opacity(0.4))
-//                .frame(width: 40, height: 5)
-//                .padding(.top, 12)
-//                .padding(.bottom, 8)
-//            
-            // Header
-//            HStack {
-//                Button("Cancel") {
-//                    withAnimation(.easeInOut(duration: 0.3)) {
-//                        isPresented = false
-//                    }
-//                }
-//                .font(CustomFont.font(.medium))
-//                .foregroundColor(.gray)
-//                
-//                Spacer()
-//                
-//                Text("Edit Search")
-//                    .font(CustomFont.font(.large, weight: .bold))
-//                    .foregroundColor(.black)
-//                
-//                Spacer()
-//                
-//                Button("Done") {
-//                    handleSearchFlights()
-//                }
-//                .font(CustomFont.font(.medium, weight: .semibold))
-//                .foregroundColor(Color("Violet"))
-//                .opacity(isSearching ? 0.6 : 1.0)
-//                .disabled(isSearching)
-//            }
-//            .padding(.horizontal, 24)
-//            .padding(.bottom, 20)
-            
-            // Content - Exact copy of ExpandableSearchContainer content
+        VStack(spacing: 0) {
+            // Full screen content taking exactly half the screen
             VStack(alignment: .leading, spacing: 0) {
-                // Enhanced Tabs with coordinated animations
-                HStack {
-                    Button(action: {
-                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                            isOneWay = true
-                        }
-                    }) {
-                        Text("One Way")
-                            .foregroundColor(isOneWay ? .white : .gray)
-                            .font(CustomFont.font(.small))
-                            .fontWeight(.semibold)
-                            .frame(width: 87, height: 31)
-                            .background(
-                                Group {
-                                    if isOneWay {
-                                        Color("Violet")
-                                            .matchedGeometryEffect(id: "tab", in: animationNamespace)
-                                    } else {
-                                        Color("Violet").opacity(0.15)
-                                    }
-                                }
-                            )
-                            .cornerRadius(100)
-                    }
+                // Header section with padding from top
+                VStack(spacing: 0) {
+                    // Top padding for status bar
+                    Rectangle()
+                        .fill(GradientColor.Primary)
+                        .frame(height: 50)
                     
-                    Button(action: {
-                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                            isOneWay = false
-                        }
-                    }) {
-                        Text("Round Trip")
-                            .foregroundColor(!isOneWay ? .white : .gray)
-                            .font(CustomFont.font(.small))
-                            .fontWeight(.semibold)
-                            .frame(width: 87, height: 31)
-                            .background(
-                                Group {
-                                    if !isOneWay {
-                                        Color("Violet")
-                                            .matchedGeometryEffect(id: "tab", in: animationNamespace)
-                                    } else {
-                                        Color("Violet").opacity(0.15)
-                                    }
+                    // Header content
+                    VStack(alignment: .leading, spacing: 10) {
+
+                        
+                        // Enhanced Tabs with coordinated animations
+                        HStack {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                    isOneWay = true
                                 }
-                            )
-                            .cornerRadius(100)
-                    }
-                }
-                .padding(.bottom, 20)
-                
-                // Search Card Content - Exact copy from SearchCard
-                VStack(alignment: .leading, spacing: 16) {
-                    // Location Input
-                    locationSection
-                    
-                    // Enhanced Date Section
-                    VStack(spacing: 0) {
-                        HStack(spacing: 10) {
-                            // Departure Date
-                            dateView(
-                                label: formatSelectedDate(for: .departure),
-                                icon: "CalenderIcon"
-                            )
-                            .id("departure_date")
+                            }) {
+                                Text("One Way")
+                                    .foregroundColor(isOneWay ? .white : .gray)
+                                    .font(CustomFont.font(.small))
+                                    .fontWeight(.semibold)
+                                    .frame(width: 87, height: 31)
+                                    .background(
+                                        Group {
+                                            if isOneWay {
+                                                Color("Violet")
+                                                    .matchedGeometryEffect(id: "tab", in: animationNamespace)
+                                            } else {
+                                                Color("Violet").opacity(0.15)
+                                            }
+                                        }
+                                    )
+                                    .cornerRadius(100)
+                            }
                             
-                            // Return Date with smooth conditional visibility
-                            Group {
-                                if !isOneWay {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                    isOneWay = false
+                                }
+                            }) {
+                                Text("Round Trip")
+                                    .foregroundColor(!isOneWay ? .white : .gray)
+                                    .font(CustomFont.font(.small))
+                                    .fontWeight(.semibold)
+                                    .frame(width: 87, height: 31)
+                                    .background(
+                                        Group {
+                                            if !isOneWay {
+                                                Color("Violet")
+                                                    .matchedGeometryEffect(id: "tab", in: animationNamespace)
+                                            } else {
+                                                Color("Violet").opacity(0.15)
+                                            }
+                                        }
+                                    )
+                                    .cornerRadius(100)
+                            }
+                        }
+                        
+                        // Search Card Content
+                        VStack(alignment: .leading, spacing: 16) {
+                            // Location Input
+                            locationSection
+                            
+                            // Enhanced Date Section
+                            VStack(spacing: 0) {
+                                HStack(spacing: 10) {
+                                    // Departure Date
                                     dateView(
-                                        label: formatSelectedDate(for: .return),
+                                        label: formatSelectedDate(for: .departure),
                                         icon: "CalenderIcon"
                                     )
-                                    .transition(
-                                        .asymmetric(
-                                            insertion: .scale(scale: 0.8)
-                                                .combined(with: .opacity)
-                                                .combined(with: .move(edge: .trailing)),
-                                            removal: .scale(scale: 0.8)
-                                                .combined(with: .opacity)
-                                                .combined(with: .move(edge: .trailing))
-                                        )
+                                    .id("departure_date")
+                                    
+                                    // Return Date with smooth conditional visibility
+                                    Group {
+                                        if !isOneWay {
+                                            dateView(
+                                                label: formatSelectedDate(for: .return),
+                                                icon: "CalenderIcon"
+                                            )
+                                            .transition(
+                                                .asymmetric(
+                                                    insertion: .scale(scale: 0.8)
+                                                        .combined(with: .opacity)
+                                                        .combined(with: .move(edge: .trailing)),
+                                                    removal: .scale(scale: 0.8)
+                                                        .combined(with: .opacity)
+                                                        .combined(with: .move(edge: .trailing))
+                                                )
+                                            )
+                                        }
+                                    }
+                                    .frame(maxWidth: !isOneWay ? .infinity : 0)
+                                    .opacity(!isOneWay ? 1 : 0)
+                                    .scaleEffect(!isOneWay ? 1 : 0.8)
+                                    .animation(
+                                        .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
+                                        value: isOneWay
                                     )
                                 }
                             }
-                            .frame(maxWidth: !isOneWay ? .infinity : 0)
-                            .opacity(!isOneWay ? 1 : 0)
-                            .scaleEffect(!isOneWay ? 1 : 0.8)
-                            .animation(
-                                .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
-                                value: isOneWay
+                            .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
+                            
+                            // Passenger Section
+                            Button(action: {
+                                showPassengerSheet = true
+                            }) {
+                                HStack {
+                                    Image("PassengerIcon")
+                                        .foregroundColor(.gray)
+                                        .frame(width: 22)
+                                    Text(travelersCount)
+                                        .foregroundColor(.gray)
+                                        .fontWeight(.medium)
+                                        .font(CustomFont.font(.regular))
+                                    Spacer()
+                                }
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(12)
+                            }
+                            
+                            // Search Button with loading state
+                            PrimaryButton(
+                                title: isSearching ? "Searching..." : "Update Search",
+                                font: CustomFont.font(.medium),
+                                fontWeight: .bold,
+                                textColor: .white,
+                                verticalPadding: 20,
+                                cornerRadius: 16,
+                                action: handleSearchFlights
+                            )
+                            .opacity(isSearching ? 0.6 : 1.0)
+                            .disabled(isSearching)
+                            .overlay(
+                                Group {
+                                    if isSearching {
+                                        HStack {
+                                            ProgressView()
+                                                .scaleEffect(0.8)
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            Text("Searching...")
+                                                .font(CustomFont.font(.medium))
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                                }
                             )
                         }
                     }
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
-                    
-                    // Passenger Section
-                    Button(action: {
-                        showPassengerSheet = true
-                    }) {
-                        HStack {
-                            Image("PassengerIcon")
-                                .foregroundColor(.gray)
-                                .frame(width: 22)
-                            Text(travelersCount)
-                                .foregroundColor(.gray)
-                                .fontWeight(.medium)
-                                .font(CustomFont.font(.regular))
-                            Spacer()
-                        }
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(12)
-                    }
-                    
-                    // Search Button with loading state
-                    PrimaryButton(
-                        title: isSearching ? "Searching..." : "Update Search",
-                        font: CustomFont.font(.medium),
-                        fontWeight: .bold,
-                        textColor: .white,
-                        verticalPadding: 20,
-                        cornerRadius: 16,
-                        action: handleSearchFlights
-                    )
-                    .opacity(isSearching ? 0.6 : 1.0)
-                    .disabled(isSearching)
-                    .overlay(
-                        Group {
-                            if isSearching {
-                                HStack {
-                                    ProgressView()
-                                        .scaleEffect(0.8)
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    Text("Searching...")
-                                        .font(CustomFont.font(.medium))
-                                        .foregroundColor(.white)
-                                }
-                            }
-                        }
-                    )
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
                 }
+                .background(GradientColor.Primary)
             }
-            .padding(20)
-            .background(GradientColor.Primary)
-            .cornerRadius(20)
-            .padding(.horizontal, 16)
-            
-//            Spacer()
-//        }
-//        .background(Color.white)
+//            .frame(height: UIScreen.main.bounds.height * 0.5) // Exactly half screen
+            .cornerRadius(20, corners: [.bottomLeft, .bottomRight])
+//            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+        }
+        .frame(maxWidth: .infinity)
         .onReceive(flightSearchVM.$searchId) { newSearchId in
             if let searchId = newSearchId {
                 // Create updated search parameters
@@ -519,6 +487,27 @@ struct EditSearchSheet: View {
             infants: infants,
             selectedClass: selectedClass
         )
+    }
+}
+
+// MARK: - Corner Radius Extension
+extension View {
+    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+        clipShape(RoundedCorner(radius: radius, corners: corners))
+    }
+}
+
+struct RoundedCorner: Shape {
+    var radius: CGFloat = .infinity
+    var corners: UIRectCorner = .allCorners
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
     }
 }
 
