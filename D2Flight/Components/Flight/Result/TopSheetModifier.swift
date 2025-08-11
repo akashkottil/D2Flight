@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Improved Top Sheet Presentation Modifier
+// MARK: - Enhanced Top Sheet Presentation Modifier with Dynamic Height
 struct TopSheetModifier<SheetContent: View>: ViewModifier {
     @Binding var isPresented: Bool
     let sheetContent: () -> SheetContent
@@ -20,13 +20,22 @@ struct TopSheetModifier<SheetContent: View>: ViewModifier {
                         }
                     }
                 
-                // Sheet content - positioned at top half of screen
+                // Sheet content with dynamic height
                 VStack(spacing: 0) {
+                    // Content with dynamic sizing
                     sheetContent()
+                        .background(
+                            GeometryReader { geometry in
+                                Color.clear.preference(
+                                    key: ContentHeightPreferenceKey.self,
+                                    value: geometry.size.height
+                                )
+                            }
+                        )
                         .background(Color.clear)
                         .transition(.move(edge: .top).combined(with: .opacity))
                     
-                    // Invisible spacer that also dismisses when tapped
+                    // Spacer that captures taps to dismiss
                     Color.clear
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -39,6 +48,15 @@ struct TopSheetModifier<SheetContent: View>: ViewModifier {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: isPresented)
+    }
+}
+
+// MARK: - Preference Key for Content Height
+struct ContentHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
