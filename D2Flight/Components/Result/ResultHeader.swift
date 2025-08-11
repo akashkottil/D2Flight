@@ -8,6 +8,10 @@ struct ResultHeader: View {
     @State private var showUnifiedFilterSheet = false
     @State private var selectedFilterType: FilterType = .sort
     
+    // ✅ NEW: Edit search sheet state
+    @State private var showEditSearchSheet = false
+    @State private var editableSearchParameters: SearchParameters
+    
     // Dynamic trip and result data
     let originCode: String
     let destinationCode: String
@@ -15,16 +19,22 @@ struct ResultHeader: View {
     let travelDate: String
     let travelerInfo: String
     
+    // ✅ NEW: Callback for edit search
+    var onEditSearchCompleted: (String, SearchParameters) -> Void
+    
     // Callback for applying filters
     var onFiltersChanged: (PollRequest) -> Void
     
+    // ✅ UPDATED: Initialize with edit callback
     init(
         originCode: String,
         destinationCode: String,
         isRoundTrip: Bool,
         travelDate: String,
         travelerInfo: String,
-        onFiltersChanged: @escaping (PollRequest) -> Void
+        searchParameters: SearchParameters,
+        onFiltersChanged: @escaping (PollRequest) -> Void,
+        onEditSearchCompleted: @escaping (String, SearchParameters) -> Void
     ) {
         self.originCode = originCode
         self.destinationCode = destinationCode
@@ -32,6 +42,8 @@ struct ResultHeader: View {
         self.travelDate = travelDate
         self.travelerInfo = travelerInfo
         self.onFiltersChanged = onFiltersChanged
+        self.onEditSearchCompleted = onEditSearchCompleted
+        self._editableSearchParameters = State(initialValue: searchParameters)
     }
     
     var body: some View {
@@ -56,18 +68,24 @@ struct ResultHeader: View {
                         .foregroundColor(.gray)
                 }
                 Spacer()
-                VStack(alignment: .trailing) {
-                    Image("EditIcon")
-                        .frame(width: 14, height: 14)
-                    Text("Edit")
-                        .font(CustomFont.font(.small))
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
+                
+                // ✅ UPDATED: Edit button with sheet trigger
+                Button(action: {
+                    showEditSearchSheet = true
+                }) {
+                    VStack(alignment: .trailing) {
+                        Image("EditIcon")
+                            .frame(width: 14, height: 14)
+                        Text("Edit")
+                            .font(CustomFont.font(.small))
+                            .fontWeight(.semibold)
+                            .foregroundColor(.black)
+                    }
                 }
             }
             .padding(.bottom, 16)
             
-            // Filter Buttons
+            // Filter Buttons (unchanged)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     // Sort Button
@@ -167,7 +185,26 @@ struct ResultHeader: View {
             print("   Date: \(travelDate)")
             print("   Travelers: \(travelerInfo)")
         }
-        // Single Unified Sheet
+        
+        // ✅ NEW: Edit Search Top Sheet
+        .topSheet(isPresented: $showEditSearchSheet) {
+            EditSearchSheet(
+                isPresented: $showEditSearchSheet,
+                searchParameters: $editableSearchParameters,
+                onNewSearchCompleted: { newSearchId, updatedParams in
+                    // Update local parameters for UI
+                    editableSearchParameters = updatedParams
+                    
+                    // Call the parent callback
+                    onEditSearchCompleted(newSearchId, updatedParams)
+                    
+                    print("✅ Edit search completed in ResultHeader")
+                }
+            )
+            .frame(maxHeight: UIScreen.main.bounds.height * 0.8)
+        }
+        
+        // Single Unified Filter Sheet (unchanged)
         .sheet(isPresented: $showUnifiedFilterSheet) {
             UnifiedFilterSheet(
                 isPresented: $showUnifiedFilterSheet,
@@ -186,7 +223,7 @@ struct ResultHeader: View {
         }
     }
     
-    // Helper to determine presentation detent - all sheets open to half screen
+    // Helper to determine presentation detent - all filter sheets open to half screen
     private func getPresentationDetents() -> Set<PresentationDetent> {
         return [.medium]
     }
@@ -210,17 +247,42 @@ struct ResultHeader: View {
         filterViewModel.updateAvailableAirlines(airlines)
         print("✈️ Updated available airlines in ResultHeader: \(airlines.count) airlines")
     }
+    
+    // ✅ NEW: Method to update search parameters (called from parent when edit is completed)
+    func updateSearchParameters(_ newParams: SearchParameters) {
+        editableSearchParameters = newParams
+        print("📝 Updated search parameters in ResultHeader")
+    }
 }
 
 // MARK: - Preview with Sample Data
 #Preview {
+    let sampleParams = SearchParameters(
+        originCode: "KCH",
+        destinationCode: "LON",
+        originName: "Kochi",
+        destinationName: "London",
+        isRoundTrip: true,
+        departureDate: Date(),
+        returnDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()),
+        adults: 2,
+        children: 0,
+        infants: 0,
+        selectedClass: .business
+    )
+    
     ResultHeader(
         originCode: "KCH",
         destinationCode: "LON",
         isRoundTrip: true,
         travelDate: "Wed 17 Oct - Mon 24 Oct",
-        travelerInfo: "2 Travelers, Business"
-    ) { _ in
-        print("Filter applied")
-    }
+        travelerInfo: "2 Travelers, Business",
+        searchParameters: sampleParams,
+        onFiltersChanged: { _ in
+            print("Filter applied")
+        },
+        onEditSearchCompleted: { searchId, params in
+            print("Edit completed: \(searchId)")
+        }
+    )
 }
