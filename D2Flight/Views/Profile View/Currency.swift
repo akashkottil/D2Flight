@@ -3,7 +3,6 @@ import SwiftUI
 struct Currency: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var currencyManager = CurrencyManager.shared
-    @State private var selectedCurrency: CurrencyInfo?
     @State private var searchText: String = ""
     
     // Filtered currencies based on search
@@ -128,9 +127,9 @@ struct Currency: View {
                         VStack(spacing: 16) {
                             ForEach(filteredCurrencies) { currency in
                                 HStack(spacing: 20) {
-                                    // Selection Radio Button (using same design as original)
+                                    // Selection Radio Button
                                     ZStack {
-                                        if selectedCurrency?.code == currency.code {
+                                        if currencyManager.selectedCurrency?.code == currency.code {
                                             Circle()
                                                 .stroke(Color("Violet"), lineWidth: 6)
                                                 .frame(width: 20, height: 20)
@@ -159,8 +158,7 @@ struct Currency: View {
                                 .padding()
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    selectedCurrency = currency
-                                    print("💰 Selected currency: \(currency.displayName) (\(currency.code))")
+                                    currencyManager.selectCurrency(currency)
                                 }
                             }
                         }
@@ -171,17 +169,5 @@ struct Currency: View {
             .navigationBarTitle("")
             .navigationBarHidden(true)
         }
-        .onAppear {
-            // Set default selection to USD if available
-            if selectedCurrency == nil {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    selectedCurrency = currencyManager.currencies.first { $0.code == "USD" }
-                }
-            }
-        }
     }
-}
-
-#Preview {
-    Currency()
 }

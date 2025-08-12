@@ -3,7 +3,6 @@ import SwiftUI
 struct Country: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var countryManager = CountryManager.shared
-    @State private var selectedCountry: CountryInfo?
     @State private var searchText: String = ""
     
     // Filtered countries based on search
@@ -123,14 +122,14 @@ struct Country: View {
                     .padding()
                     
                 } else {
-                    // Country List (same design as Currency.swift)
+                    // Country List
                     ScrollView {
                         VStack(spacing: 16) {
                             ForEach(filteredCountries) { country in
                                 HStack(spacing: 20) {
-                                    // Selection Radio Button (same as Currency)
+                                    // Selection Radio Button
                                     ZStack {
-                                        if selectedCountry?.countryCode == country.countryCode {
+                                        if countryManager.selectedCountry?.countryCode == country.countryCode {
                                             Circle()
                                                 .stroke(Color("Violet"), lineWidth: 6)
                                                 .frame(width: 20, height: 20)
@@ -159,8 +158,7 @@ struct Country: View {
                                 .padding()
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    selectedCountry = country
-                                    print("🌍 Selected country: \(country.countryName) (\(country.countryCode))")
+                                    countryManager.selectCountry(country)
                                 }
                             }
                         }
@@ -171,17 +169,5 @@ struct Country: View {
             .navigationBarTitle("")
             .navigationBarHidden(true)
         }
-        .onAppear {
-            // Set default selection to United States if available
-            if selectedCountry == nil {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    selectedCountry = countryManager.countries.first { $0.countryCode.lowercased() == "us" }
-                }
-            }
-        }
     }
-}
-
-#Preview {
-    Country()
 }

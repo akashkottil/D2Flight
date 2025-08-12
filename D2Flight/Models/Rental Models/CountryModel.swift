@@ -1,6 +1,6 @@
 import Foundation
 
-// MARK: - Country Model
+// MARK: - Country Model (Updated with Codable)
 struct CountryInfo: Codable, Identifiable {
     var id = UUID()
     let countryName: String
@@ -17,6 +17,49 @@ struct CountryInfo: Codable, Identifiable {
         case countryName, countryCode, fullDomainName, currencyCode, supportedLanguages, defaultDomain, currency, abbreviation, symbol
     }
     
+    // Custom init to ensure UUID is generated
+    init(countryName: String, countryCode: String, fullDomainName: String, currencyCode: String, supportedLanguages: [String], defaultDomain: String?, currency: String, abbreviation: String, symbol: String) {
+        self.id = UUID()
+        self.countryName = countryName
+        self.countryCode = countryCode
+        self.fullDomainName = fullDomainName
+        self.currencyCode = currencyCode
+        self.supportedLanguages = supportedLanguages
+        self.defaultDomain = defaultDomain
+        self.currency = currency
+        self.abbreviation = abbreviation
+        self.symbol = symbol
+    }
+    
+    // Custom decoder to generate UUID if not present
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID()
+        self.countryName = try container.decode(String.self, forKey: .countryName)
+        self.countryCode = try container.decode(String.self, forKey: .countryCode)
+        self.fullDomainName = try container.decode(String.self, forKey: .fullDomainName)
+        self.currencyCode = try container.decode(String.self, forKey: .currencyCode)
+        self.supportedLanguages = try container.decode([String].self, forKey: .supportedLanguages)
+        self.defaultDomain = try container.decodeIfPresent(String.self, forKey: .defaultDomain)
+        self.currency = try container.decode(String.self, forKey: .currency)
+        self.abbreviation = try container.decode(String.self, forKey: .abbreviation)
+        self.symbol = try container.decode(String.self, forKey: .symbol)
+    }
+    
+    // Custom encoder to exclude UUID from encoding
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(countryName, forKey: .countryName)
+        try container.encode(countryCode, forKey: .countryCode)
+        try container.encode(fullDomainName, forKey: .fullDomainName)
+        try container.encode(currencyCode, forKey: .currencyCode)
+        try container.encode(supportedLanguages, forKey: .supportedLanguages)
+        try container.encodeIfPresent(defaultDomain, forKey: .defaultDomain)
+        try container.encode(currency, forKey: .currency)
+        try container.encode(abbreviation, forKey: .abbreviation)
+        try container.encode(symbol, forKey: .symbol)
+    }
+    
     // Display name for UI (using countryName directly)
     var displayName: String {
         return countryName
@@ -30,77 +73,5 @@ struct CountryInfo: Codable, Identifiable {
     // Currency display with symbol
     var currencyDisplay: String {
         return "\(currency) (\(abbreviation))"
-    }
-}
-
-// MARK: - Country Manager
-class CountryManager: ObservableObject {
-    @Published var countries: [CountryInfo] = []
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String? = nil
-    
-    static let shared = CountryManager()
-    
-    private init() {
-        loadCountries()
-    }
-    
-    func loadCountries() {
-        isLoading = true
-        errorMessage = nil
-        
-        guard let url = Bundle.main.url(forResource: "kayak_countries", withExtension: "json") else {
-            errorMessage = "Country data file not found"
-            isLoading = false
-            return
-        }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            let decodedCountries = try JSONDecoder().decode([CountryInfo].self, from: data)
-            
-            DispatchQueue.main.async {
-                self.countries = decodedCountries.sorted { $0.countryName < $1.countryName }
-                self.isLoading = false
-                print("🌍 Loaded \(self.countries.count) countries")
-            }
-        } catch {
-            DispatchQueue.main.async {
-                self.errorMessage = "Failed to load countries: \(error.localizedDescription)"
-                self.isLoading = false
-                print("❌ Failed to load countries: \(error)")
-            }
-        }
-    }
-    
-    func searchCountries(query: String) -> [CountryInfo] {
-        guard !query.isEmpty else { return countries }
-        
-        let lowercasedQuery = query.lowercased()
-        return countries.filter { country in
-            country.countryName.lowercased().contains(lowercasedQuery) ||
-            country.countryCode.lowercased().contains(lowercasedQuery) ||
-            country.currency.lowercased().contains(lowercasedQuery) ||
-            country.abbreviation.lowercased().contains(lowercasedQuery) ||
-            country.supportedLanguages.joined(separator: " ").lowercased().contains(lowercasedQuery)
-        }
-    }
-    
-    // Get country by country code
-    func getCountry(by countryCode: String) -> CountryInfo? {
-        return countries.first { $0.countryCode.lowercased() == countryCode.lowercased() }
-    }
-    
-    // Get countries by currency
-    func getCountries(byCurrency currencyCode: String) -> [CountryInfo] {
-        return countries.filter { $0.currencyCode.lowercased() == currencyCode.lowercased() }
-    }
-    
-    // Get popular countries (you can customize this based on your needs)
-    func getPopularCountries() -> [CountryInfo] {
-        let popularCodes = ["us", "gb", "ca", "au", "de", "fr", "jp", "in", "br", "mx"]
-        return popularCodes.compactMap { code in
-            countries.first { $0.countryCode.lowercased() == code }
-        }
     }
 }
