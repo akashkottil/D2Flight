@@ -8,22 +8,22 @@ struct ResultHeader: View {
     @State private var showUnifiedFilterSheet = false
     @State private var selectedFilterType: FilterType = .sort
     
-    // ✅ UPDATED: Edit search sheet state - changed to top sheet
-    @State private var showEditSearchTopSheet = false
-    @State private var editableSearchParameters: SearchParameters
-    
     // Dynamic trip and result data
     let originCode: String
     let destinationCode: String
     let isRoundTrip: Bool
     let travelDate: String
     let travelerInfo: String
-    
-    // ✅ NEW: Callback for edit search
-    var onEditSearchCompleted: (String, SearchParameters) -> Void
+    let searchParameters: SearchParameters
     
     // Callback for applying filters
     var onFiltersChanged: (PollRequest) -> Void
+    
+    // ✅ NEW: Callback for edit search completion
+    var onEditSearchCompleted: (String, SearchParameters) -> Void
+    
+    // ✅ NEW: Callback for edit button tap
+    var onEditButtonTapped: () -> Void
     
     // ✅ UPDATED: Initialize with edit callback
     init(
@@ -34,16 +34,18 @@ struct ResultHeader: View {
         travelerInfo: String,
         searchParameters: SearchParameters,
         onFiltersChanged: @escaping (PollRequest) -> Void,
-        onEditSearchCompleted: @escaping (String, SearchParameters) -> Void
+        onEditSearchCompleted: @escaping (String, SearchParameters) -> Void,
+        onEditButtonTapped: @escaping () -> Void
     ) {
         self.originCode = originCode
         self.destinationCode = destinationCode
         self.isRoundTrip = isRoundTrip
         self.travelDate = travelDate
         self.travelerInfo = travelerInfo
+        self.searchParameters = searchParameters
         self.onFiltersChanged = onFiltersChanged
         self.onEditSearchCompleted = onEditSearchCompleted
-        self._editableSearchParameters = State(initialValue: searchParameters)
+        self.onEditButtonTapped = onEditButtonTapped
     }
     
     var body: some View {
@@ -69,9 +71,9 @@ struct ResultHeader: View {
                 }
                 Spacer()
                 
-                // ✅ UPDATED: Edit button triggers top sheet
+                // ✅ UPDATED: Edit button now triggers callback instead of top sheet
                 Button(action: {
-                    showEditSearchTopSheet = true
+                    onEditButtonTapped()
                 }) {
                     VStack(alignment: .trailing) {
                         Image("EditIcon")
@@ -178,7 +180,6 @@ struct ResultHeader: View {
             }
         }
         .padding()
-        .animation(.easeInOut(duration: 0.3), value: showEditSearchTopSheet)
         .onAppear {
             filterViewModel.isRoundTrip = isRoundTrip
             print("🎛️ ResultHeader configured with:")
@@ -186,23 +187,6 @@ struct ResultHeader: View {
             print("   Trip Type: \(isRoundTrip ? "Round Trip" : "One Way")")
             print("   Date: \(travelDate)")
             print("   Travelers: \(travelerInfo)")
-        }
-        
-        // ✅ UPDATED: Edit Search Top Sheet (replaces fullScreenCover)
-        .topSheet(isPresented: $showEditSearchTopSheet) {
-            EditSearchSheet(
-                isPresented: $showEditSearchTopSheet,
-                searchParameters: $editableSearchParameters,
-                onNewSearchCompleted: { newSearchId, updatedParams in
-                    // Update local parameters for UI
-                    editableSearchParameters = updatedParams
-                    
-                    // Call the parent callback
-                    onEditSearchCompleted(newSearchId, updatedParams)
-                    
-                    print("✅ Edit search completed in ResultHeader")
-                }
-            )
         }
         
         // Single Unified Filter Sheet (unchanged)
@@ -248,12 +232,6 @@ struct ResultHeader: View {
         filterViewModel.updateAvailableAirlines(airlines)
         print("✈️ Updated available airlines in ResultHeader: \(airlines.count) airlines")
     }
-    
-    // ✅ NEW: Method to update search parameters (called from parent when edit is completed)
-    func updateSearchParameters(_ newParams: SearchParameters) {
-        editableSearchParameters = newParams
-        print("📝 Updated search parameters in ResultHeader")
-    }
 }
 
 // MARK: - Preview with Sample Data
@@ -284,6 +262,9 @@ struct ResultHeader: View {
         },
         onEditSearchCompleted: { searchId, params in
             print("Edit completed: \(searchId)")
+        },
+        onEditButtonTapped: {
+            print("Edit button tapped")
         }
     )
 }

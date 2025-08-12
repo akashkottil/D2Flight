@@ -23,6 +23,9 @@ struct ResultView: View {
     // ✅ NEW: Current search and parameters state
     @State private var currentSearchId: String?
     @State private var currentSearchParameters: SearchParameters
+    
+    // ✅ NEW: Edit search sheet state
+    @State private var showEditSearchSheet = false
 
     var body: some View {
         ZStack {
@@ -42,9 +45,12 @@ struct ResultView: View {
                     onEditSearchCompleted: { newSearchId, updatedParams in
                         print("🔄 Edit search completed - New searchId: \(newSearchId)")
                         handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
+                    },
+                    onEditButtonTapped: {
+                        // ✅ NEW: Trigger edit sheet from ResultView
+                        showEditSearchSheet = true
                     }
                 )
-//                .padding()
                 .background(Color.white)
                 .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                 .zIndex(1)
@@ -248,6 +254,40 @@ struct ResultView: View {
                     // When initial loading completes, mark it as no longer initial load
                     isInitialLoad = false
                 }
+            }
+            
+            // ✅ NEW: Half-screen Edit Search Sheet with dismiss overlay
+            if showEditSearchSheet {
+                ZStack {
+                    // Dismiss overlay for the remaining screen space
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea(.all)
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                showEditSearchSheet = false
+                            }
+                        }
+                    
+                    // Edit Search Sheet positioned at top half
+                    VStack(spacing: 0) {
+                        EditSearchSheet(
+                            isPresented: $showEditSearchSheet,
+                            searchParameters: $currentSearchParameters,
+                            onNewSearchCompleted: { newSearchId, updatedParams in
+                                handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
+                            }
+                        )
+                        .frame(maxHeight: UIScreen.main.bounds.height * 0.6) // Take 60% of screen height
+                        
+                        Spacer(minLength: 0)
+                    }
+                    .ignoresSafeArea(.all)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea(.all)
+                .zIndex(2)
+                .animation(.easeInOut(duration: 0.3), value: showEditSearchSheet)
             }
         }
         // Full‐screen loader cover

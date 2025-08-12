@@ -64,28 +64,19 @@ struct EditSearchSheet: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // ✅ UPDATED: Compact Header for Top Sheet
+            // ✅ UPDATED: Compact Header for Top Sheet - Remove top padding and extend to safe area
             VStack(spacing: 0) {
-                // Header with close button
-                HStack {
-                    Text("Edit Search")
-                        .font(CustomFont.font(.large, weight: .bold))
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isPresented = false
-                        }
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(CustomFont.font(.large, weight: .medium))
-                            .foregroundColor(.white)
-                    }
+                // ✅ NEW: Add safe area compensation
+                GeometryReader { geometry in
+                    Color.clear
+                        .frame(height: geometry.safeAreaInsets.top)
                 }
+                .frame(height: 0)
+                
+                // Header
+                HStack {}
                 .padding(.horizontal, 24)
-                .padding(.top, 20)
+                .padding(.top, 44) // ✅ FIXED: Use fixed top padding instead of safe area
                 .padding(.bottom, 16)
                 
                 // ✅ UPDATED: Compact Tabs
@@ -135,6 +126,7 @@ struct EditSearchSheet: View {
                             )
                             .cornerRadius(100)
                     }
+                    Spacer()
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20)
@@ -237,6 +229,7 @@ struct EditSearchSheet: View {
             .cornerRadius(20, corners: [.bottomLeft, .bottomRight])
         }
         .frame(maxWidth: .infinity)
+        .edgesIgnoringSafeArea(.top) // ✅ NEW: Ignore top safe area
         .onReceive(flightSearchVM.$searchId) { newSearchId in
             if let searchId = newSearchId {
                 // Create updated search parameters
@@ -519,6 +512,8 @@ struct RoundedCorner: Shape {
         return Path(path.cgPath)
     }
 }
+
+
 
 #Preview {
     EditSearchSheet(
