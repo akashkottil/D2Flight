@@ -5,12 +5,29 @@ struct Currency: View {
     @StateObject private var currencyManager = CurrencyManager.shared
     @State private var searchText: String = ""
     
-    // Filtered currencies based on search
+    // Filtered currencies based on search with selected currency on top
     private var filteredCurrencies: [CurrencyInfo] {
+        let baseCurrencies: [CurrencyInfo]
+        
         if searchText.isEmpty {
-            return currencyManager.currencies
+            baseCurrencies = currencyManager.currencies
         } else {
-            return currencyManager.searchCurrencies(query: searchText)
+            baseCurrencies = currencyManager.searchCurrencies(query: searchText)
+        }
+        
+        // Move selected currency to top of the list
+        guard let selectedCurrency = currencyManager.selectedCurrency else {
+            return baseCurrencies
+        }
+        
+        // Remove selected currency from the list and add it at the beginning
+        let otherCurrencies = baseCurrencies.filter { $0.code != selectedCurrency.code }
+        
+        // Check if selected currency exists in filtered results
+        if baseCurrencies.contains(where: { $0.code == selectedCurrency.code }) {
+            return [selectedCurrency] + otherCurrencies
+        } else {
+            return baseCurrencies
         }
     }
     
@@ -159,6 +176,8 @@ struct Currency: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     currencyManager.selectCurrency(currency)
+                                    // Auto-dismiss the screen after selection
+                                    presentationMode.wrappedValue.dismiss()
                                 }
                             }
                         }

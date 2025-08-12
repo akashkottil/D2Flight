@@ -5,12 +5,29 @@ struct Country: View {
     @StateObject private var countryManager = CountryManager.shared
     @State private var searchText: String = ""
     
-    // Filtered countries based on search
+    // Filtered countries based on search with selected country on top
     private var filteredCountries: [CountryInfo] {
+        let baseCountries: [CountryInfo]
+        
         if searchText.isEmpty {
-            return countryManager.countries
+            baseCountries = countryManager.countries
         } else {
-            return countryManager.searchCountries(query: searchText)
+            baseCountries = countryManager.searchCountries(query: searchText)
+        }
+        
+        // Move selected country to top of the list
+        guard let selectedCountry = countryManager.selectedCountry else {
+            return baseCountries
+        }
+        
+        // Remove selected country from the list and add it at the beginning
+        let otherCountries = baseCountries.filter { $0.countryCode != selectedCountry.countryCode }
+        
+        // Check if selected country exists in filtered results
+        if baseCountries.contains(where: { $0.countryCode == selectedCountry.countryCode }) {
+            return [selectedCountry] + otherCountries
+        } else {
+            return baseCountries
         }
     }
     
@@ -159,6 +176,8 @@ struct Country: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     countryManager.selectCountry(country)
+                                    // Auto-dismiss the screen after selection
+                                    presentationMode.wrappedValue.dismiss()
                                 }
                             }
                         }
