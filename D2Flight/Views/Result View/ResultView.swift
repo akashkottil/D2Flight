@@ -47,8 +47,10 @@ struct ResultView: View {
                         handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
                     },
                     onEditButtonTapped: {
-                        // ✅ NEW: Trigger edit sheet from ResultView
-                        showEditSearchSheet = true
+                        // ✅ NEW: Trigger edit sheet with smooth animation
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            showEditSearchSheet = true
+                        }
                     }
                 )
                 .background(Color.white)
@@ -256,17 +258,18 @@ struct ResultView: View {
                 }
             }
             
-            // ✅ NEW: Half-screen Edit Search Sheet with dismiss overlay
             if showEditSearchSheet {
                 ZStack {
                     // Dismiss overlay for the remaining screen space
                     Color.black.opacity(0.4)
                         .ignoresSafeArea(.all)
                         .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.3)) {
+                            withAnimation(.easeInOut(duration: 0.6)) { // Increased duration for smoother close
                                 showEditSearchSheet = false
                             }
                         }
+                        .opacity(showEditSearchSheet ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.5), value: showEditSearchSheet) // Smooth fade in/out
                     
                     // Edit Search Sheet positioned at top half
                     VStack(spacing: 0) {
@@ -282,12 +285,12 @@ struct ResultView: View {
                         Spacer(minLength: 0)
                     }
                     .ignoresSafeArea(.all)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .offset(y: showEditSearchSheet ? 0 : -UIScreen.main.bounds.height * 0.6)
+                    .animation(.easeInOut(duration: 0.4).delay(showEditSearchSheet ? 0.1 : 0), value: showEditSearchSheet) // Slower, smoother dropdown
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea(.all)
                 .zIndex(2)
-                .animation(.easeInOut(duration: 0.3), value: showEditSearchSheet)
             }
         }
         // Full‐screen loader cover
