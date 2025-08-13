@@ -4,6 +4,7 @@ struct Country: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var countryManager = CountryManager.shared
     @StateObject private var settingsManager = SettingsManager.shared
+    @StateObject private var localizationManager = LocalizationManager.shared
     @State private var searchText: String = ""
     
     // Filtered countries based on search
@@ -30,7 +31,8 @@ struct Country: View {
                     
                     Spacer()
                     
-                    Text("Select country")
+                    // ✅ LOCALIZED: Using localized text
+                    Text("select.country".localized)
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.trailing, 44) // To balance the left button spacing
@@ -47,7 +49,8 @@ struct Country: View {
                     Image("search")
                         .frame(width: 14,height: 14)
                     
-                    TextField("Search country", text: $searchText)
+                    // ✅ LOCALIZED: Using localized placeholder
+                    TextField("search.country".localized, text: $searchText)
                         .font(CustomFont.font(.medium))
                         .foregroundColor(.primary)
                     
@@ -75,7 +78,8 @@ struct Country: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.2)
-                        Text("Loading countries...")
+                        // ✅ LOCALIZED: Loading text
+                        Text("loading.countries".localized)
                             .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                     }
@@ -88,7 +92,8 @@ struct Country: View {
                             .font(.system(size: 40))
                             .foregroundColor(.gray)
                         
-                        Text("Error loading countries")
+                        // ✅ LOCALIZED: Error text
+                        Text("error.loading.countries".localized)
                             .font(CustomFont.font(.medium, weight: .semibold))
                         
                         Text(errorMessage)
@@ -96,7 +101,8 @@ struct Country: View {
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                         
-                        Button("Retry") {
+                        // ✅ LOCALIZED: Try again button
+                        Button("try.again".localized) {
                             countryManager.loadCountries()
                         }
                         .foregroundColor(.blue)
@@ -111,10 +117,11 @@ struct Country: View {
                             .font(.system(size: 40))
                             .foregroundColor(.gray)
                         
-                        Text("No countries found")
+                        // ✅ LOCALIZED: Empty state text
+                        Text("no.countries.found".localized)
                             .font(CustomFont.font(.medium, weight: .semibold))
                         
-                        Text("Try searching with a different keyword")
+                        Text("try.searching.with.a.different.keyword".localized)
                             .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
@@ -123,12 +130,12 @@ struct Country: View {
                     .padding()
                     
                 } else {
-                    // Country List (same design as Currency.swift)
+                    // Country List
                     ScrollView {
                         VStack(spacing: 16) {
                             ForEach(filteredCountries) { country in
                                 HStack(spacing: 20) {
-                                    // Selection Radio Button (same as Currency)
+                                    // Selection Radio Button
                                     ZStack {
                                         if settingsManager.selectedCountry?.countryCode == country.countryCode {
                                             Circle()
@@ -159,8 +166,8 @@ struct Country: View {
                                 .padding()
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    // ✅ UPDATED: Save selection to SettingsManager
-                                    settingsManager.setSelectedCountry(country)
+                                    // ✅ UPDATED: Use the new method that updates language
+                                    settingsManager.setSelectedCountryWithLanguage(country)
                                     print("🌍 Selected country: \(country.countryName) (\(country.countryCode))")
                                     
                                     // Auto-dismiss after selection
@@ -178,11 +185,11 @@ struct Country: View {
             .navigationBarHidden(true)
         }
         .onAppear {
-            // ✅ UPDATED: Set default selection if none exists
+            // Set default selection if none exists
             if settingsManager.selectedCountry == nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     if let defaultCountry = countryManager.countries.first(where: { $0.countryCode.lowercased() == "in" }) {
-                        settingsManager.setSelectedCountry(defaultCountry)
+                        settingsManager.setSelectedCountryWithLanguage(defaultCountry)
                     }
                 }
             }
