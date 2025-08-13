@@ -1,11 +1,3 @@
-//
-//  CurrencyApi.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 12/08/25.
-//
-
-
 import Foundation
 import Alamofire
 
@@ -13,14 +5,14 @@ class CurrencyApi {
     static let shared = CurrencyApi()
     private init() {}
     
-    private let baseURL = "https://staging.plane.lascade.com/api"
+    private let baseURL = APIConstants.flightBaseURL
     
     func fetchCurrencies(
         page: Int = 1,
         limit: Int = 100, // Fetch all currencies at once
         completion: @escaping (Result<CurrencyApiResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/currencies/"
+        let url = "\(baseURL)\(APIConstants.Endpoints.currencies)"
         
         let parameters: [String: Any] = [
             "page": page,
@@ -28,8 +20,8 @@ class CurrencyApi {
         ]
         
         let headers: HTTPHeaders = [
-            "accept": "application/json",
-            "X-CSRFTOKEN": "g3X72prcldulQHlvGDpC4QS50jGaDZfFIfdAqOHBOn4d553ig2GKRabT46i33LcB"
+            "accept": APIConstants.Headers.accept,
+            "X-CSRFTOKEN": APIConstants.CSRFTokens.profile
         ]
         
         print("💰 Fetching currencies from API:")

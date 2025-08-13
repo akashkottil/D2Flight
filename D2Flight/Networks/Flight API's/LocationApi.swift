@@ -8,26 +8,33 @@ class LocationApi {
     
     func searchLocations(
         query: String,
-        country: String = "IN",
-        language: String = "en-GB",
         completion: @escaping (Result<LocationResponse, Error>) -> Void
     ) {
         guard !query.isEmpty else {
-            completion(.success(LocationResponse(data: [], language: language)))
+            // Get dynamic language for empty response
+            let apiParams = APIConstants.getAPIParameters()
+            completion(.success(LocationResponse(data: [], language: apiParams.language)))
             return
         }
         
-        let url = APIEndpoints.baseURL + APIEndpoints.autocomplete
+        // Get dynamic values from settings
+        let apiParams = APIConstants.getAPIParameters()
+        
+        let url = APIConstants.flightBaseURL + APIConstants.Endpoints.autocomplete
         
         let parameters: [String: Any] = [
             "search": query,
-            "country": country,
-            "language": language
+            "country": apiParams.country,
+            "language": apiParams.language
         ]
         
         let headers: HTTPHeaders = [
-            "accept": "application/json"
+            "accept": APIConstants.Headers.accept
         ]
+        
+        print("🔧 LocationApi using dynamic parameters:")
+        print("   Country: \(apiParams.country)")
+        print("   Language: \(apiParams.language)")
         
         AF.request(
             url,

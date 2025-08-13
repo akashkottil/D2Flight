@@ -1,11 +1,3 @@
-//
-//  CountryApi.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 12/08/25.
-//
-
-
 import Foundation
 import Alamofire
 
@@ -13,14 +5,14 @@ class CountryApi {
     static let shared = CountryApi()
     private init() {}
     
-    private let baseURL = "https://staging.plane.lascade.com/api"
+    private let baseURL = APIConstants.flightBaseURL
     
     func fetchCountries(
         page: Int = 1,
         limit: Int = 100, // Fetch all countries at once
         completion: @escaping (Result<CountryApiResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/countries/"
+        let url = "\(baseURL)\(APIConstants.Endpoints.countries)"
         
         let parameters: [String: Any] = [
             "page": page,
@@ -28,8 +20,8 @@ class CountryApi {
         ]
         
         let headers: HTTPHeaders = [
-            "accept": "application/json",
-            "X-CSRFTOKEN": "g3X72prcldulQHlvGDpC4QS50jGaDZfFIfdAqOHBOn4d553ig2GKRabT46i33LcB"
+            "accept": APIConstants.Headers.accept,
+            "X-CSRFTOKEN": APIConstants.CSRFTokens.profile
         ]
         
         print("🌍 Fetching countries from API:")

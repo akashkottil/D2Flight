@@ -1,11 +1,3 @@
-//
-//  HotelApi.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 28/07/25.
-//
-
-
 import Foundation
 import Alamofire
 
@@ -13,13 +5,13 @@ class HotelApi {
     static let shared = HotelApi()
     private init() {}
     
-    private let baseURL = "https://staging.hotel.lascade.com"
+    private let baseURL = APIConstants.hotelBaseURL
     
     func searchHotel(
         request: HotelRequest,
         completion: @escaping (Result<HotelResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/deeplink/\(request.id)/"
+        let url = "\(baseURL)\(APIConstants.Endpoints.hotelDeeplink)\(request.id)/"
         
         var parameters: [String: Any] = [
             "country": request.country,
@@ -38,8 +30,8 @@ class HotelApi {
         }
         
         let headers: HTTPHeaders = [
-            "accept": "application/json",
-            "X-CSRFTOKEN": "090QuftLMGgFvDzcpACrLkDlcjuaXJnSeMPG0fi752drUyjrgHR36YDpCXVlCJXJ"
+            "accept": APIConstants.Headers.accept,
+            "X-CSRFTOKEN": APIConstants.CSRFTokens.hotel
         ]
         
         print("🏨 Hotel API Request:")

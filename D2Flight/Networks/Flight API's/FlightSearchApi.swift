@@ -5,26 +5,27 @@ class FlightSearchApi {
     static let shared = FlightSearchApi()
     private init() {}
 
-    private let baseURL = "https://staging.plane.lascade.com/api"
+    private let baseURL = APIConstants.flightBaseURL
 
     func startSearch(
         request: SearchRequest,
-        userId: String = "-0",
-        currency: String = "INR",
-        language: String = "en-GB",
-        appCode: String = "D1WF",
-        country: String = "IN",
-//        csrfToken: String = "5T0SlYIxaKlAkRtdYep2mWPQ6m59AltKEM7TnzXhacX1W7gz1CeI0gqBbXEg8m7z",
+        userId: String = APIConstants.DefaultParams.userId,
         completion: @escaping (Result<SearchResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/search/?user_id=\(userId)&currency=\(currency)&language=\(language)&app_code=\(appCode)"
+        // Get dynamic values from settings
+        let apiParams = APIConstants.getAPIParameters()
+        
+        let url = "\(baseURL)\(APIConstants.Endpoints.search)?user_id=\(userId)&currency=\(apiParams.currency)&language=\(apiParams.language)&app_code=\(APIConstants.DefaultParams.appCode)"
 
-        print(currency)
+        print("🔧 Using dynamic API parameters:")
+        print("   Country: \(apiParams.country)")
+        print("   Currency: \(apiParams.currency)")
+        print("   Language: \(apiParams.language)")
+
         let headers: HTTPHeaders = [
-            "accept": "application/json",
-            "country": country,
-            "Content-Type": "application/json",
-//            "X-CSRFTOKEN": csrfToken
+            "accept": APIConstants.Headers.accept,
+            "country": apiParams.country,
+            "Content-Type": APIConstants.Headers.contentType,
         ]
 
         AF.request(
