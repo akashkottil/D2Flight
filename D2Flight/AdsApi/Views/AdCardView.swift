@@ -1,23 +1,8 @@
 import SwiftUI
 
-// MARK: - Ad Response Model (should match your actual API response)
-struct AdResponse: Codable, Identifiable {
-    let id: String
-    let headline: String
-    let description: String
-    let companyName: String
-    let imageUrl: String?
-    let actionUrl: String
-    let buttonText: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case id, headline, description, companyName, imageUrl, actionUrl, buttonText
-    }
-}
-
-// MARK: - Ad Card View Component
+// MARK: - Ad Card View Component (Updated to use AdResponseModel)
 struct AdCardView: View {
-    let ad: AdResponse
+    let ad: AdResponseModel
     let onTap: () -> Void
     
     var body: some View {
@@ -41,13 +26,13 @@ struct AdCardView: View {
             Button(action: {
                 onTap()
                 // Open the ad URL
-                if let url = URL(string: ad.actionUrl) {
+                if let url = URL(string: ad.deepLink) {
                     UIApplication.shared.open(url)
                 }
             }) {
                 HStack(spacing: 16) {
                     // Ad image
-                    AsyncImage(url: URL(string: ad.imageUrl ?? "")) { image in
+                    AsyncImage(url: URL(string: ad.backgroundImageUrl)) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -82,7 +67,7 @@ struct AdCardView: View {
                             Spacer()
                             
                             // Action button
-                            Text(ad.buttonText ?? "Learn More")
+                            Text(ad.bookingButtonText)
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 12)
@@ -111,14 +96,19 @@ struct AdCardView: View {
 }
 
 #Preview {
-    let sampleAd = AdResponse(
-        id: "ad_1",
+    let sampleAd = AdResponseModel(
+        rank: 1,
+        backgroundImageUrl: "https://example.com/hotel-image.jpg",
+        impressionUrl: "https://example.com/impression",
+        bookingButtonText: "Book Now",
+        productType: "hotel",
         headline: "Book Hotels with 50% Off",
-        description: "Find the best deals on hotels worldwide. Limited time offer for new users.",
+        site: "TravelDeals.com",
         companyName: "TravelDeals.com",
-        imageUrl: "https://example.com/hotel-image.jpg",
-        actionUrl: "https://example.com/hotel-deals",
-        buttonText: "Book Now"
+        logoUrl: "https://example.com/logo.jpg",
+        trackUrl: "https://example.com/track",
+        deepLink: "https://example.com/hotel-deals",
+        description: "Find the best deals on hotels worldwide. Limited time offer for new users."
     )
     
     VStack(spacing: 16) {

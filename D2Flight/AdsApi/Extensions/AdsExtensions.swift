@@ -126,8 +126,8 @@ extension Binding {
     }
 }
 
-// MARK: - AdResponse Extensions
-extension AdResponse {
+// MARK: - AdResponseModel Extensions (Fixed reference)
+extension AdResponseModel {
     var isValidAd: Bool {
         return !headline.isEmpty &&
                !deepLink.isEmpty &&

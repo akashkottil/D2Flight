@@ -9,8 +9,8 @@ class HotelAdsAPIService: ObservableObject {
     private let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15"
     private let cookies = "Apache=j$SebA-AAABmHO7400-fc-EEvJRQ; cluster=4; kayak=KUOXMI8gRVz2CmcqxMp0; kayak.mc=AaiNcewfPXdXsDMrL7O2fE2X6Fh3qYbYdaFyuN3ziBNGPft-2kN9APMU7COMfiPtaEc-tYLqg4O72TvDuwJN3V1EUXsX_0s5XzZrW6c7KOSp; mst_ADIrkw=QQCEUOecQ09LmasgOvaaC_qkVOZ2u4T-QFEL4ObLMh-1plkJzAZ25sGULo6Rf-Ev0f21m2Dn51wh46-0mCqjLQ"
     
-    // MARK: - Published Properties
-    @Published var ads: [AdResponse] = []
+    // MARK: - Published Properties (Fixed type reference)
+    @Published var ads: [AdResponseModel] = []
     @Published var isLoadingAds = false
     @Published var adsErrorMessage: String?
     
@@ -65,7 +65,7 @@ class HotelAdsAPIService: ObservableObject {
         sid: String,
         countryCode: String = "us",
         searchRequest: FlightSearchRequestAds
-    ) async throws -> [AdResponse] {
+    ) async throws -> [AdResponseModel] {
         let urlString = "\(baseURL)/ads/flight/list?countryCode=\(countryCode)&_sid_=\(sid)"
         
         guard let url = URL(string: urlString) else {

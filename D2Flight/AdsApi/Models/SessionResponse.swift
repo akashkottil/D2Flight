@@ -7,11 +7,11 @@ struct SessionResponse: Codable {
 
 // MARK: - ✅ FIXED: Ads Response Wrapper Model
 struct AdsResponseWrapper: Codable {
-    let inlineItems: [AdResponse]
+    let inlineItems: [AdResponseModel]
 }
 
 // MARK: - ✅ UPDATED: Ad Response Model (matching actual API response)
-struct AdResponse: Codable, Identifiable {
+struct AdResponseModel: Codable, Identifiable {
     let id = UUID() // For SwiftUI ForEach
     let rank: Int
     let backgroundImageUrl: String

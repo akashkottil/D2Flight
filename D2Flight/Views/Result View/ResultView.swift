@@ -1,9 +1,9 @@
 import SwiftUI
 
-// ✅ Content type enum for mixing flights and ads
+// ✅ Content type enum for mixing flights and ads (Fixed type reference)
 enum ContentType {
     case flight(FlightResult)
-    case ad(AdResponse)
+    case ad(AdResponseModel)
 }
 
 struct ResultView: View {
@@ -39,8 +39,7 @@ struct ResultView: View {
         ZStack {
             VStack(spacing: 0) {
                 // MARK: 1) Fixed Top Filter Bar with Edit Functionality
-                ResultHeaderView(
-                    headerViewModel: headerViewModel,
+                ResultHeader(
                     originCode: searchParameters.originCode,
                     destinationCode: searchParameters.destinationCode,
                     isRoundTrip: searchParameters.isRoundTrip,
@@ -353,54 +352,6 @@ struct ResultView: View {
         print("🎯 Generated mixed content: \(flights.count) flights + \(adIndex) ads = \(mixedContent.count) total items")
         
         return mixedContent
-    }
-}
-
-// MARK: - Supporting View for ResultHeaderView (wrapper for the updated ResultHeader)
-struct ResultHeaderView: View {
-    @ObservedObject var headerViewModel: ResultHeaderViewModel
-    let originCode: String
-    let destinationCode: String
-    let isRoundTrip: Bool
-    let travelDate: String
-    let travelerInfo: String
-    let onFiltersChanged: (PollRequest) -> Void
-    let onSearchUpdated: ((SearchParameters) -> Void)?
-    let initialSearchParams: SearchParameters?
-    
-    init(
-        headerViewModel: ResultHeaderViewModel,
-        originCode: String,
-        destinationCode: String,
-        isRoundTrip: Bool,
-        travelDate: String,
-        travelerInfo: String,
-        onFiltersChanged: @escaping (PollRequest) -> Void,
-        onSearchUpdated: ((SearchParameters) -> Void)? = nil,
-        initialSearchParams: SearchParameters? = nil
-    ) {
-        self.headerViewModel = headerViewModel
-        self.originCode = originCode
-        self.destinationCode = destinationCode
-        self.isRoundTrip = isRoundTrip
-        self.travelDate = travelDate
-        self.travelerInfo = travelerInfo
-        self.onFiltersChanged = onFiltersChanged
-        self.onSearchUpdated = onSearchUpdated
-        self.initialSearchParams = initialSearchParams
-    }
-    
-    var body: some View {
-        ResultHeader(
-            originCode: originCode,
-            destinationCode: destinationCode,
-            isRoundTrip: isRoundTrip,
-            travelDate: travelDate,
-            travelerInfo: travelerInfo,
-            onFiltersChanged: onFiltersChanged,
-            onSearchUpdated: onSearchUpdated,
-            initialSearchParams: initialSearchParams
-        )
     }
 }
 

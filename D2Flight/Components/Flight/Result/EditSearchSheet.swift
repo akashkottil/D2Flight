@@ -1,11 +1,3 @@
-//
-//  EditSearchSheet.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 13/08/25.
-//
-
-
 import SwiftUI
 
 struct EditSearchSheet: View {
@@ -34,274 +26,295 @@ struct EditSearchSheet: View {
     let onSearchUpdated: () -> Void
     
     var body: some View {
-        VStack(spacing: 0) {
-            // MARK: - Top Handle and Header
-            VStack(spacing: 0) {
-                // Drag handle
-                RoundedRectangle(cornerRadius: 2.5)
-                    .fill(Color.gray.opacity(0.4))
-                    .frame(width: 40, height: 5)
-                    .padding(.top, 12)
-                
-                // Header
-                HStack {
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isPresented = false
-                        }
-                    }) {
-                        Image("BlackArrow")
-                            .padding(.horizontal)
+        ZStack {
+            // Background overlay - close on tap
+            Color.black.opacity(0.3)
+                .ignoresSafeArea(.all)
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isPresented = false
                     }
-                    
-                    Spacer()
-                    
-                    Text("Edit Search")
-                        .font(.system(size: 20, weight: .bold))
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    
-                    Spacer()
-                    
-                    // Invisible spacer to balance the layout
-                    Spacer()
-                        .frame(width: 44)
                 }
-                .padding(.top, 8)
-                .padding(.bottom, 16)
-            }
-            .background(Color.white)
             
-            Divider()
-            
-            // MARK: - Content
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+            // Sheet content
+            VStack(spacing: 0) {
+                // MARK: - Top Handle and Header
+                VStack(spacing: 0) {
+                    // Drag handle
+                    RoundedRectangle(cornerRadius: 2.5)
+                        .fill(Color.gray.opacity(0.4))
+                        .frame(width: 40, height: 5)
+                        .padding(.top, 12)
                     
-                    // MARK: - Trip Type Tabs
+                    // Header
                     HStack {
                         Button(action: {
-                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                isOneWay = true
-                            }
-                        }) {
-                            Text("One Way")
-                                .foregroundColor(isOneWay ? .white : .gray)
-                                .font(CustomFont.font(.small))
-                                .fontWeight(.semibold)
-                                .frame(width: 87, height: 31)
-                                .background(
-                                    Group {
-                                        if isOneWay {
-                                            Color("Violet")
-                                        } else {
-                                            Color("Violet").opacity(0.15)
-                                        }
-                                    }
-                                )
-                                .cornerRadius(100)
-                        }
-                        
-                        Button(action: {
-                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                isOneWay = false
-                            }
-                        }) {
-                            Text("Round Trip")
-                                .foregroundColor(!isOneWay ? .white : .gray)
-                                .font(CustomFont.font(.small))
-                                .fontWeight(.semibold)
-                                .frame(width: 87, height: 31)
-                                .background(
-                                    Group {
-                                        if !isOneWay {
-                                            Color("Violet")
-                                        } else {
-                                            Color("Violet").opacity(0.15)
-                                        }
-                                    }
-                                )
-                                .cornerRadius(100)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.top, 8)
-                    
-                    // MARK: - Location Section
-                    ZStack {
-                        Button(action: {
-                            showLocationPicker = true
-                        }) {
-                            VStack(spacing: 1) {
-                                HStack {
-                                    Image("DepartureIcon")
-                                        .frame(width: 20, height: 20)
-                                    Text(originLocation.isEmpty ? "Enter Departure" : originLocation)
-                                        .foregroundColor(originLocation.isEmpty ? .gray : .black)
-                                        .fontWeight(originLocation.isEmpty ? .medium : .bold)
-                                        .font(CustomFont.font(.regular))
-                                        .lineLimit(1)
-                                    Spacer()
-                                }
-                                .padding(.vertical, 18)
-                                .padding(.horizontal)
-                                .contentShape(Rectangle())
-                                .frame(maxWidth: .infinity)
-                                
-                                Divider()
-                                    .background(Color.gray.opacity(0.5))
-                                    .padding(.leading)
-                                    .padding(.trailing, 70)
-                                
-                                HStack {
-                                    Image("DestinationIcon")
-                                        .frame(width: 20, height: 20)
-                                    Text(destinationLocation.isEmpty ? "Enter Destination" : destinationLocation)
-                                        .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
-                                        .fontWeight(destinationLocation.isEmpty ? .medium : .bold)
-                                        .font(CustomFont.font(.regular))
-                                        .lineLimit(1)
-                                    Spacer()
-                                }
-                                .padding(.vertical, 18)
-                                .padding(.horizontal)
-                                .contentShape(Rectangle())
-                                .frame(maxWidth: .infinity)
-                            }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        
-                        // Swap Button
-                        Button(action: {
-                            let temp = originLocation
-                            originLocation = destinationLocation
-                            destinationLocation = temp
-                            
-                            let tempIATA = originIATACode
-                            originIATACode = destinationIATACode
-                            destinationIATACode = tempIATA
-                            
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                swapButtonRotationAngle -= 180
-                            }
-                        }) {
-                            Image("SwapIcon")
-                                .rotationEffect(.degrees(swapButtonRotationAngle))
-                        }
-                        .offset(x: 148)
-                        .shadow(color: .purple.opacity(0.3), radius: 5)
-                    }
-                    
-                    // MARK: - Date Section
-                    VStack(spacing: 0) {
-                        HStack(spacing: 10) {
-                            // Departure Date
-                            Button(action: {
-                                showDatePicker = true
-                            }) {
-                                HStack {
-                                    Image("CalenderIcon")
-                                        .frame(width: 20, height: 20)
-                                    Text(formatSelectedDate(for: .departure))
-                                        .foregroundColor(.gray)
-                                        .fontWeight(.medium)
-                                        .font(CustomFont.font(.regular))
-                                    Spacer()
-                                }
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(12)
-                            }
-                            
-                            // Return Date (conditional)
-                            Group {
-                                if !isOneWay {
-                                    Button(action: {
-                                        showDatePicker = true
-                                    }) {
-                                        HStack {
-                                            Image("CalenderIcon")
-                                                .frame(width: 20, height: 20)
-                                            Text(formatSelectedDate(for: .return))
-                                                .foregroundColor(.gray)
-                                                .fontWeight(.medium)
-                                                .font(CustomFont.font(.regular))
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                    }
-                                    .transition(
-                                        .asymmetric(
-                                            insertion: .scale(scale: 0.8)
-                                                .combined(with: .opacity)
-                                                .combined(with: .move(edge: .trailing)),
-                                            removal: .scale(scale: 0.8)
-                                                .combined(with: .opacity)
-                                                .combined(with: .move(edge: .trailing))
-                                        )
-                                    )
-                                }
-                            }
-                            .frame(maxWidth: !isOneWay ? .infinity : 0)
-                            .opacity(!isOneWay ? 1 : 0)
-                            .scaleEffect(!isOneWay ? 1 : 0.8)
-                            .animation(
-                                .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
-                                value: isOneWay
-                            )
-                        }
-                    }
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
-                    
-                    // MARK: - Passenger Section
-                    Button(action: {
-                        showPassengerSheet = true
-                    }) {
-                        HStack {
-                            Image("PassengerIcon")
-                                .foregroundColor(.gray)
-                                .frame(width: 22)
-                            Text(travelersCount)
-                                .foregroundColor(.gray)
-                                .fontWeight(.medium)
-                                .font(CustomFont.font(.regular))
-                            Spacer()
-                        }
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(12)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    
-                    // MARK: - Update Search Button
-                    PrimaryButton(
-                        title: "Update Search",
-                        font: CustomFont.font(.medium),
-                        fontWeight: .bold,
-                        textColor: .white,
-                        verticalPadding: 20,
-                        cornerRadius: 16,
-                        action: {
-                            // Call the update action
-                            onSearchUpdated()
-                            
-                            // Close the sheet with animation
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 isPresented = false
                             }
+                        }) {
+                            Image("BlackArrow")
+                                .padding(.horizontal)
                         }
-                    )
-                    .padding(.top, 20)
+                        
+                        Spacer()
+                        
+                        Text("Edit Search")
+                            .font(.system(size: 20, weight: .bold))
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        
+                        Spacer()
+                        
+                        // Invisible spacer to balance the layout
+                        Spacer()
+                            .frame(width: 44)
+                    }
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 40)
+                .background(Color.white)
+                
+                Divider()
+                
+                // MARK: - Content
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        
+                        // MARK: - Trip Type Tabs
+                        HStack {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                    isOneWay = true
+                                }
+                            }) {
+                                Text("One Way")
+                                    .foregroundColor(isOneWay ? .white : .gray)
+                                    .font(CustomFont.font(.small))
+                                    .fontWeight(.semibold)
+                                    .frame(width: 87, height: 31)
+                                    .background(
+                                        Group {
+                                            if isOneWay {
+                                                Color("Violet")
+                                            } else {
+                                                Color("Violet").opacity(0.15)
+                                            }
+                                        }
+                                    )
+                                    .cornerRadius(100)
+                            }
+                            
+                            Button(action: {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                    isOneWay = false
+                                }
+                            }) {
+                                Text("Round Trip")
+                                    .foregroundColor(!isOneWay ? .white : .gray)
+                                    .font(CustomFont.font(.small))
+                                    .fontWeight(.semibold)
+                                    .frame(width: 87, height: 31)
+                                    .background(
+                                        Group {
+                                            if !isOneWay {
+                                                Color("Violet")
+                                            } else {
+                                                Color("Violet").opacity(0.15)
+                                            }
+                                        }
+                                    )
+                                    .cornerRadius(100)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding(.top, 8)
+                        
+                        // MARK: - Location Section
+                        ZStack {
+                            Button(action: {
+                                showLocationPicker = true
+                            }) {
+                                VStack(spacing: 1) {
+                                    HStack {
+                                        Image("DepartureIcon")
+                                            .frame(width: 20, height: 20)
+                                        Text(originLocation.isEmpty ? "Enter Departure" : originLocation)
+                                            .foregroundColor(originLocation.isEmpty ? .gray : .black)
+                                            .fontWeight(originLocation.isEmpty ? .medium : .bold)
+                                            .font(CustomFont.font(.regular))
+                                            .lineLimit(1)
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 18)
+                                    .padding(.horizontal)
+                                    .contentShape(Rectangle())
+                                    .frame(maxWidth: .infinity)
+                                    
+                                    Divider()
+                                        .background(Color.gray.opacity(0.5))
+                                        .padding(.leading)
+                                        .padding(.trailing, 70)
+                                    
+                                    HStack {
+                                        Image("DestinationIcon")
+                                            .frame(width: 20, height: 20)
+                                        Text(destinationLocation.isEmpty ? "Enter Destination" : destinationLocation)
+                                            .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
+                                            .fontWeight(destinationLocation.isEmpty ? .medium : .bold)
+                                            .font(CustomFont.font(.regular))
+                                            .lineLimit(1)
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 18)
+                                    .padding(.horizontal)
+                                    .contentShape(Rectangle())
+                                    .frame(maxWidth: .infinity)
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            
+                            // Swap Button
+                            Button(action: {
+                                let temp = originLocation
+                                originLocation = destinationLocation
+                                destinationLocation = temp
+                                
+                                let tempIATA = originIATACode
+                                originIATACode = destinationIATACode
+                                destinationIATACode = tempIATA
+                                
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    swapButtonRotationAngle -= 180
+                                }
+                            }) {
+                                Image("SwapIcon")
+                                    .rotationEffect(.degrees(swapButtonRotationAngle))
+                            }
+                            .offset(x: 148)
+                            .shadow(color: .purple.opacity(0.3), radius: 5)
+                        }
+                        
+                        // MARK: - Date Section
+                        VStack(spacing: 0) {
+                            HStack(spacing: 10) {
+                                // Departure Date
+                                Button(action: {
+                                    showDatePicker = true
+                                }) {
+                                    HStack {
+                                        Image("CalenderIcon")
+                                            .frame(width: 20, height: 20)
+                                        Text(formatSelectedDate(for: .departure))
+                                            .foregroundColor(.gray)
+                                            .fontWeight(.medium)
+                                            .font(CustomFont.font(.regular))
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .background(Color.white)
+                                    .cornerRadius(12)
+                                }
+                                
+                                // Return Date (conditional)
+                                Group {
+                                    if !isOneWay {
+                                        Button(action: {
+                                            showDatePicker = true
+                                        }) {
+                                            HStack {
+                                                Image("CalenderIcon")
+                                                    .frame(width: 20, height: 20)
+                                                Text(formatSelectedDate(for: .return))
+                                                    .foregroundColor(.gray)
+                                                    .fontWeight(.medium)
+                                                    .font(CustomFont.font(.regular))
+                                                Spacer()
+                                            }
+                                            .padding()
+                                            .background(Color.white)
+                                            .cornerRadius(12)
+                                        }
+                                        .transition(
+                                            .asymmetric(
+                                                insertion: .scale(scale: 0.8)
+                                                    .combined(with: .opacity)
+                                                    .combined(with: .move(edge: .trailing)),
+                                                removal: .scale(scale: 0.8)
+                                                    .combined(with: .opacity)
+                                                    .combined(with: .move(edge: .trailing))
+                                            )
+                                        )
+                                    }
+                                }
+                                .frame(maxWidth: !isOneWay ? .infinity : 0)
+                                .opacity(!isOneWay ? 1 : 0)
+                                .scaleEffect(!isOneWay ? 1 : 0.8)
+                                .animation(
+                                    .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2),
+                                    value: isOneWay
+                                )
+                            }
+                        }
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
+                        
+                        // MARK: - Passenger Section
+                        Button(action: {
+                            showPassengerSheet = true
+                        }) {
+                            HStack {
+                                Image("PassengerIcon")
+                                    .foregroundColor(.gray)
+                                    .frame(width: 22)
+                                Text(travelersCount)
+                                    .foregroundColor(.gray)
+                                    .fontWeight(.medium)
+                                    .font(CustomFont.font(.regular))
+                                Spacer()
+                            }
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        // MARK: - Update Search Button
+                        PrimaryButton(
+                            title: "Update Search",
+                            font: CustomFont.font(.medium),
+                            fontWeight: .bold,
+                            textColor: .white,
+                            verticalPadding: 20,
+                            cornerRadius: 16,
+                            action: {
+                                // Call the update action
+                                onSearchUpdated()
+                                
+                                // Close the sheet with animation
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    isPresented = false
+                                }
+                            }
+                        )
+                        .padding(.top, 20)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
+                }
+                .background(Color.gray.opacity(0.05))
+                
+                Spacer()
+            }
+            .background(Color.white)
+            .cornerRadius(16)
+            .ignoresSafeArea(.all, edges: .bottom)
+            .padding(.top, 60) // Account for safe area
+            .onTapGesture {
+                // Prevent closing when tapping on the sheet content
             }
         }
-        .background(Color.gray.opacity(0.05))
         .sheet(isPresented: $showPassengerSheet) {
             PassengerSheet(
                 isPresented: $showPassengerSheet,
@@ -329,9 +342,11 @@ struct EditSearchSheet: View {
                 if isOrigin {
                     originLocation = selectedLocation
                     originIATACode = iataCode
+                    print("📍 Origin updated: \(selectedLocation) (\(iataCode))")
                 } else {
                     destinationLocation = selectedLocation
                     destinationIATACode = iataCode
+                    print("📍 Destination updated: \(selectedLocation) (\(iataCode))")
                 }
             }
         }
@@ -377,6 +392,26 @@ struct EditSearchSheet: View {
         let returnDate = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
         return formatter.string(from: returnDate)
     }
+}
+
+#Preview {
+    EditSearchSheet(
+        isPresented: .constant(true),
+        isOneWay: .constant(false),
+        originLocation: .constant("New York"),
+        destinationLocation: .constant("London"),
+        originIATACode: .constant("NYC"),
+        destinationIATACode: .constant("LHR"),
+        selectedDates: .constant([Date(), Calendar.current.date(byAdding: .day, value: 7, to: Date())!]),
+        travelersCount: .constant("2 Travelers, Economy"),
+        adults: .constant(2),
+        children: .constant(0),
+        infants: .constant(0),
+        selectedClass: .constant(.economy),
+        onSearchUpdated: {
+            print("Search updated")
+        }
+    )
 }
 
 // MARK: - Custom Transition for Top-to-Bottom Sheet
