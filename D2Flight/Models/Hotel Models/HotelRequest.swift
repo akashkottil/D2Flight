@@ -5,7 +5,6 @@
 //  Created by Akash Kottil on 28/07/25.
 //
 
-
 import Foundation
 
 // MARK: - Hotel Request Models
@@ -22,27 +21,36 @@ struct HotelRequest {
     let id: String // hotel provider ID
     
     init(
-        country: String = "IN",
-        userId: String = "123",
         cityName: String,
-        countryName: String = "IN",
         checkin: String,
         checkout: String,
         rooms: Int,
         adults: Int,
         children: Int? = nil,
-        id: String = "0"
+        // Dynamic parameters with fallback to API constants
+        country: String? = nil,
+        countryName: String? = nil,
+        userId: String? = nil, // ✅ UPDATED: Allow override but use dynamic by default
+        id: String = APIConstants.DefaultParams.hotelProviderId
     ) {
-        self.country = country
-        self.userId = userId
+        // Get dynamic values from settings if not provided
+        let apiParams = APIConstants.getAPIParameters()
+        
+        self.country = country ?? apiParams.country
+        self.countryName = countryName ?? apiParams.country
+        self.userId = userId ?? APIConstants.getCurrentUserId() // ✅ UPDATED: Use dynamic user ID
         self.cityName = cityName
-        self.countryName = countryName
         self.checkin = checkin
         self.checkout = checkout
         self.rooms = rooms
         self.adults = adults
         self.children = children
         self.id = id
+        
+        print("🏨 HotelRequest created with dynamic values:")
+        print("   Country: \(self.country)")
+        print("   Country Name: \(self.countryName)")
+        print("   🆔 User ID: \(self.userId)")
     }
 }
 

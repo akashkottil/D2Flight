@@ -5,9 +5,9 @@
 //  Created by Akash Kottil on 13/08/25.
 //
 
-
 import Foundation
 
+// MARK: - Main API Constants (for flight/hotel/rental APIs)
 struct APIConstants {
     // MARK: - Base URLs
     static let flightBaseURL = "https://staging.plane.lascade.com/api"
@@ -29,7 +29,7 @@ struct APIConstants {
     struct DefaultParams {
         static let language = "en-GB"
         static let appCode = "D1WF"
-        static let userId = "123"
+        static let fallbackUserId = "123" // Fallback if UserManager fails
         static let hotelProviderId = "0"
         static let rentalProviderId = "0"
         static let testAppCode = "TEST"
@@ -64,6 +64,28 @@ struct APIConstants {
             country: settingsParams.country,
             currency: settingsParams.currency,
             language: DefaultParams.language
+        )
+    }
+    
+    // MARK: - ✅ NEW: Dynamic User ID Helper
+    static func getCurrentUserId() -> String {
+        if let userId = UserManager.shared.userId {
+            print("🔧 Using dynamic user ID: \(userId)")
+            return String(userId)
+        } else {
+            print("⚠️ UserManager user ID not available, using fallback: \(DefaultParams.fallbackUserId)")
+            return DefaultParams.fallbackUserId
+        }
+    }
+    
+    // MARK: - ✅ NEW: Complete API Parameters with User ID
+    static func getCompleteAPIParameters() -> (country: String, currency: String, language: String, userId: String) {
+        let basicParams = getAPIParameters()
+        return (
+            country: basicParams.country,
+            currency: basicParams.currency,
+            language: basicParams.language,
+            userId: getCurrentUserId()
         )
     }
 }

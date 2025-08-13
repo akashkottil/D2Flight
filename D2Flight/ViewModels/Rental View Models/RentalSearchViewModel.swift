@@ -49,13 +49,13 @@ class RentalSearchViewModel: ObservableObject {
         let pickUpDateString = dateFormatter.string(from: combinedPickUpDateTime)
         let dropOffDateString = dateFormatter.string(from: combinedDropOffDateTime)
         
-        // ✅ UPDATED: Use dynamic parameters (country, currency, language will be auto-selected)
+        // ✅ UPDATED: Use dynamic parameters (country, currency, language, and user ID will be auto-selected)
         let request = RentalRequest(
             pickUp: pickUpIATACode,
             dropOff: isSameDropOff ? nil : dropOffIATACode,
             pickUpDate: pickUpDateString,
             dropOffDate: dropOffDateString
-            // Dynamic country, currency, and language will be automatically set from APIConstants
+            // Dynamic country, currency, language, and user ID will be automatically set from APIConstants
         )
         
         print("🚗 Starting rental search with request:")
@@ -69,6 +69,7 @@ class RentalSearchViewModel: ObservableObject {
         print("   🔧 Using dynamic country: \(request.countryCode)")
         print("   🔧 Using dynamic currency: \(request.currencyCode)")
         print("   🔧 Using dynamic language: \(request.languageCode)")
+        print("   🔧 Using dynamic user ID: \(request.userId)")
         
         RentalApi.shared.searchRental(request: request) { [weak self] result in
             DispatchQueue.main.async {
@@ -79,6 +80,9 @@ class RentalSearchViewModel: ObservableObject {
                     
                     print("✅ Rental search successful!")
                     print("   Deeplink: \(response.deeplink)")
+                    
+                    // ✅ ADDED: Track successful rental search
+                    UserManager.shared.trackRentalSearch()
                     
                 case .failure(let error):
                     self?.errorMessage = "Search failed: \(error.localizedDescription)"

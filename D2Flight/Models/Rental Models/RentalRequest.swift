@@ -23,7 +23,7 @@ struct RentalRequest {
         currencyCode: String? = nil,
         languageCode: String? = nil,
         appCode: String = APIConstants.DefaultParams.testAppCode,
-        userId: String = APIConstants.DefaultParams.userId,
+        userId: String? = nil, // ✅ UPDATED: Allow override but use dynamic by default
         id: String = APIConstants.DefaultParams.rentalProviderId
     ) {
         // Get dynamic values from settings if not provided
@@ -37,13 +37,14 @@ struct RentalRequest {
         self.dropOff = dropOff
         self.pickUpDate = pickUpDate
         self.dropOffDate = dropOffDate
-        self.userId = userId
+        self.userId = userId ?? APIConstants.getCurrentUserId() // ✅ UPDATED: Use dynamic user ID
         self.id = id
         
         print("🚗 RentalRequest created with dynamic values:")
         print("   Country Code: \(self.countryCode)")
         print("   Currency Code: \(self.currencyCode)")
         print("   Language Code: \(self.languageCode)")
+        print("   🆔 User ID: \(self.userId)")
     }
 }
 

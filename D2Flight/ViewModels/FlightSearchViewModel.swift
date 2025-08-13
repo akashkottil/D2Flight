@@ -59,8 +59,8 @@ class FlightSearchViewModel: ObservableObject {
             children_ages: childrenAges
         )
         
-        // Get dynamic API parameters
-        let apiParams = APIConstants.getAPIParameters()
+        // Get dynamic API parameters including user ID
+        let apiParams = APIConstants.getCompleteAPIParameters()
         
         // Print the search request for debugging
         print("🛫 Starting flight search with request:")
@@ -78,8 +78,9 @@ class FlightSearchViewModel: ObservableObject {
         print("   🔧 Using dynamic country: \(apiParams.country)")
         print("   🔧 Using dynamic currency: \(apiParams.currency)")
         print("   🔧 Using dynamic language: \(apiParams.language)")
+        print("   🔧 Using dynamic user ID: \(apiParams.userId)")
         
-        // ✅ UPDATED: API call now uses dynamic parameters automatically
+        // ✅ UPDATED: API call now uses dynamic user ID automatically
         FlightSearchApi.shared.startSearch(request: request) { [weak self] result in
             DispatchQueue.main.async {
                 self?.isLoading = false
@@ -93,6 +94,9 @@ class FlightSearchViewModel: ObservableObject {
                     print("   Language: \(response.language)")
                     print("   Currency: \(response.currency)")
                     print("   Mode: \(response.mode)")
+                    
+                    // ✅ ADDED: Track successful flight search
+                    UserManager.shared.trackFlightSearch()
                     
                 case .failure(let error):
                     self?.errorMessage = "Search failed: \(error.localizedDescription)"
