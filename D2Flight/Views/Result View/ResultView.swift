@@ -9,6 +9,7 @@ enum ContentType {
 struct ResultView: View {
     @StateObject private var viewModel = ResultViewModel()
     @StateObject private var headerViewModel = ResultHeaderViewModel()
+    @StateObject private var flightSearchVM = FlightSearchViewModel() // NEW: For new searches
     @State private var selectedFlight: FlightResult? = nil
     @State private var navigateToDetails = false
 
@@ -22,12 +23,22 @@ struct ResultView: View {
 
     // Passed in from FlightView
     let searchId: String?
-    let searchParameters: SearchParameters
+    @State private var searchParameters: SearchParameters // NEW: Make this mutable for updates
+    
+    // NEW: Navigation state for new searches
+    @State private var navigateToNewResults = false
+    @State private var newSearchId: String? = nil
+    @State private var newSearchParameters: SearchParameters? = nil
+
+    init(searchId: String?, searchParameters: SearchParameters) {
+        self.searchId = searchId
+        self._searchParameters = State(initialValue: searchParameters)
+    }
 
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // MARK: 1) Fixed Top Filter Bar
+                // MARK: 1) Fixed Top Filter Bar with Edit Functionality
                 ResultHeaderView(
                     headerViewModel: headerViewModel,
                     originCode: searchParameters.originCode,
@@ -38,7 +49,12 @@ struct ResultView: View {
                     onFiltersChanged: { pollRequest in
                         print("🔧 Applying filters from ResultHeader")
                         viewModel.applyFilters(request: pollRequest)
-                    }
+                    },
+                    // NEW: Handle search parameter updates
+                    onSearchUpdated: { updatedSearchParams in
+                        handleSearchParametersUpdate(updatedSearchParams)
+                    },
+                    initialSearchParams: searchParameters
                 )
                 .padding()
                 .background(Color.white)
@@ -169,6 +185,24 @@ struct ResultView: View {
                     ResultDetails(flight: flight)
                 }
             }
+            // NEW: Navigation for new search results
+            .navigationDestination(isPresented: Binding(
+                get: { newSearchId != nil && navigateToNewResults && newSearchParameters != nil },
+                set: { newValue in
+                    if !newValue {
+                        newSearchId = nil
+                        navigateToNewResults = false
+                        newSearchParameters = nil
+                    }
+                }
+            )) {
+                if let validNewSearchId = newSearchId,
+                   let newSearchParams = newSearchParameters {
+                    ResultView(searchId: validNewSearchId, searchParameters: newSearchParams)
+                } else {
+                    Text("Invalid Search Parameters")
+                }
+            }
             .onAppear {
                 // Only start polling (and loader) once, on first appear
                 guard !hasInitialized else { return }
@@ -181,6 +215,14 @@ struct ResultView: View {
                     
                     // ✅ Load ads in parallel
                     viewModel.loadAdsForSearch(searchParameters: searchParameters)
+                }
+            }
+            // NEW: Handle new search results from FlightSearchViewModel
+            .onReceive(flightSearchVM.$searchId) { newSearchIdFromVM in
+                if let searchId = newSearchIdFromVM {
+                    newSearchId = searchId
+                    navigateToNewResults = true
+                    print("🔍 ResultView: New search initiated, navigating to new results with searchId: \(searchId)")
                 }
             }
             // ✅ Handle poll response updates
@@ -249,8 +291,37 @@ struct ResultView: View {
         .fullScreenCover(isPresented: $showAnimatedLoader) {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
-        // Add debug info for development
-//        .debugPagination(viewModel: viewModel)
+    }
+    
+    // NEW: Handle search parameter updates from edit sheet
+    private func handleSearchParametersUpdate(_ updatedParams: SearchParameters) {
+        print("🔄 ResultView: Handling search parameter update")
+        
+        // Update local search parameters
+        searchParameters = updatedParams
+        newSearchParameters = updatedParams
+        
+        // Configure FlightSearchViewModel with new parameters
+        flightSearchVM.departureIATACode = updatedParams.originCode
+        flightSearchVM.destinationIATACode = updatedParams.destinationCode
+        flightSearchVM.isRoundTrip = updatedParams.isRoundTrip
+        flightSearchVM.travelDate = updatedParams.departureDate
+        
+        if updatedParams.isRoundTrip, let returnDate = updatedParams.returnDate {
+            flightSearchVM.returnDate = returnDate
+        } else if updatedParams.isRoundTrip {
+            // Default return date if not specified
+            flightSearchVM.returnDate = Calendar.current.date(byAdding: .day, value: 2, to: updatedParams.departureDate) ?? updatedParams.departureDate.addingTimeInterval(86400 * 2)
+        }
+        
+        flightSearchVM.adults = updatedParams.adults
+        flightSearchVM.childrenAges = Array(repeating: 2, count: updatedParams.children)
+        flightSearchVM.cabinClass = updatedParams.selectedClass.rawValue
+        
+        print("🚀 Starting new flight search with updated parameters")
+        
+        // Start the new search
+        flightSearchVM.searchFlights()
     }
     
     // ✅ Generate mixed content with flights and ads
@@ -282,6 +353,54 @@ struct ResultView: View {
         print("🎯 Generated mixed content: \(flights.count) flights + \(adIndex) ads = \(mixedContent.count) total items")
         
         return mixedContent
+    }
+}
+
+// MARK: - Supporting View for ResultHeaderView (wrapper for the updated ResultHeader)
+struct ResultHeaderView: View {
+    @ObservedObject var headerViewModel: ResultHeaderViewModel
+    let originCode: String
+    let destinationCode: String
+    let isRoundTrip: Bool
+    let travelDate: String
+    let travelerInfo: String
+    let onFiltersChanged: (PollRequest) -> Void
+    let onSearchUpdated: ((SearchParameters) -> Void)?
+    let initialSearchParams: SearchParameters?
+    
+    init(
+        headerViewModel: ResultHeaderViewModel,
+        originCode: String,
+        destinationCode: String,
+        isRoundTrip: Bool,
+        travelDate: String,
+        travelerInfo: String,
+        onFiltersChanged: @escaping (PollRequest) -> Void,
+        onSearchUpdated: ((SearchParameters) -> Void)? = nil,
+        initialSearchParams: SearchParameters? = nil
+    ) {
+        self.headerViewModel = headerViewModel
+        self.originCode = originCode
+        self.destinationCode = destinationCode
+        self.isRoundTrip = isRoundTrip
+        self.travelDate = travelDate
+        self.travelerInfo = travelerInfo
+        self.onFiltersChanged = onFiltersChanged
+        self.onSearchUpdated = onSearchUpdated
+        self.initialSearchParams = initialSearchParams
+    }
+    
+    var body: some View {
+        ResultHeader(
+            originCode: originCode,
+            destinationCode: destinationCode,
+            isRoundTrip: isRoundTrip,
+            travelDate: travelDate,
+            travelerInfo: travelerInfo,
+            onFiltersChanged: onFiltersChanged,
+            onSearchUpdated: onSearchUpdated,
+            initialSearchParams: initialSearchParams
+        )
     }
 }
 

@@ -1,29 +1,29 @@
 import SwiftUI
 
-struct FilterNoFlights : View {
+struct FilterNoFlights: View {
     var body: some View {
-        VStack(spacing:20){
-            Image("FilterErrorImg")
-            Text("Edit filter")
-                .font(CustomFont.font(.large))
-                .fontWeight(.bold)
-            Text(" Edit your filter to see more results or clear all filters.")
-                .font(CustomFont.font(.large))
-                .fontWeight(.medium)
-                .foregroundColor(.gray)
-                .padding(.horizontal,40)
-                .multilineTextAlignment(.center)
-            PrimaryButton(
-                title: "clear all filter",
-                font: CustomFont.font(.large),
-                fontWeight: .semibold,
-                width: 150,
-                height: 44,
-                cornerRadius: 8
-            ) {
-                print("filter error")
+        VStack(spacing: 20) {
+            Image("NoFlightsImg") // You can replace with your no flights image
+                .resizable()
+                .scaledToFit()
+                .frame(width: 200, height: 150)
+            
+            VStack(spacing: 8) {
+                Text("No flights found")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(.black)
+                
+                Text("Try adjusting your filters or search criteria to find more flights.")
+                    .font(CustomFont.font(.regular))
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
+            
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, 60)
     }
 }
 

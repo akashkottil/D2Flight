@@ -1,221 +1,137 @@
 import SwiftUI
 
+// MARK: - Ad Response Model (should match your actual API response)
+struct AdResponse: Codable, Identifiable {
+    let id: String
+    let headline: String
+    let description: String
+    let companyName: String
+    let imageUrl: String?
+    let actionUrl: String
+    let buttonText: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, headline, description, companyName, imageUrl, actionUrl, buttonText
+    }
+}
+
+// MARK: - Ad Card View Component
 struct AdCardView: View {
     let ad: AdResponse
-    let onAdTapped: (() -> Void)?
-    
-    init(ad: AdResponse, onAdTapped: (() -> Void)? = nil) {
-        self.ad = ad
-        self.onAdTapped = onAdTapped
-    }
+    let onTap: () -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header with logo and company info
-            headerSection
-            
-            // Background image
-            backgroundImageSection
-            
-            // Content section
-            contentSection
-            
-            // Action button
-            actionButton
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(16) // Match your app's corner radius
-        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2) // Match your card shadow
-    }
-    
-    // MARK: - Header Section
-    private var headerSection: some View {
-        HStack {
-            // Company logo
-            AsyncImage(url: URL(string: fullLogoUrl)) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                logoPlaceholder
-            }
-            .frame(width: 32, height: 32)
-            .cornerRadius(6)
-            
-            // Company info
-            VStack(alignment: .leading, spacing: 2) {
-                Text(ad.companyName)
-                    .font(CustomFont.font(.medium, weight: .semibold))
-                    .foregroundColor(.black)
-                    .lineLimit(1)
-                
-                Text("Sponsored")
-                    .font(CustomFont.font(.small))
-                    .foregroundColor(.gray)
-                    .lineLimit(1)
-            }
-            
-            Spacer()
-            
-            // Ad badge
-            Text("Ad")
-                .font(CustomFont.font(.tiny, weight: .medium))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.blue.opacity(0.1))
-                .foregroundColor(.blue)
-                .cornerRadius(12)
-        }
-    }
-    
-    // MARK: - Background Image Section
-    private var backgroundImageSection: some View {
-        AsyncImage(url: URL(string: fullBackgroundImageUrl)) { image in
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        } placeholder: {
-            imagePlaceholder
-        }
-        .frame(height: 100)
-        .clipped()
-        .cornerRadius(12)
-    }
-    
-    // MARK: - Content Section
-    private var contentSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(ad.headline)
-                .font(CustomFont.font(.medium, weight: .semibold))
-                .foregroundColor(.black)
-                .lineLimit(2)
-            
-            Text(ad.description)
-                .font(CustomFont.font(.regular))
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.leading)
-                .lineLimit(3)
-        }
-    }
-    
-    // MARK: - Action Button
-    private var actionButton: some View {
-        Button(action: handleAdTap) {
+        VStack(spacing: 0) {
+            // Ad indicator
             HStack {
-                Text(ad.bookingButtonText)
-                    .font(CustomFont.font(.medium, weight: .medium))
-                    .foregroundColor(.white)
+                Text("Sponsored")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(4)
+                
                 Spacer()
-                Image(systemName: "arrow.right")
-                    .foregroundColor(.white)
-                    .font(CustomFont.font(.small))
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
-            .background(Color("Violet")) // Use your app's primary color
-            .cornerRadius(12)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-    
-    // MARK: - Supporting Views
-    private var logoPlaceholder: some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(Color.gray.opacity(0.3))
-            .overlay(
-                Image(systemName: "building.2")
-                    .foregroundColor(.gray)
-                    .font(CustomFont.font(.small))
-            )
-    }
-    
-    private var imagePlaceholder: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.gray.opacity(0.3))
-            .overlay(
-                Image(systemName: "photo")
-                    .foregroundColor(.gray)
-                    .font(CustomFont.font(.large))
-            )
-    }
-    
-    // MARK: - ✅ FIXED: URL Helpers for relative paths
-    private var fullLogoUrl: String {
-        if ad.logoUrl.starts(with: "/") {
-            return "https://www.kayak.com\(ad.logoUrl)"
-        }
-        return ad.logoUrl
-    }
-    
-    private var fullBackgroundImageUrl: String {
-        if ad.backgroundImageUrl.starts(with: "/") {
-            return "https://www.kayak.com\(ad.backgroundImageUrl)"
-        }
-        return ad.backgroundImageUrl
-    }
-    
-    private var fullDeepLink: String {
-        if ad.deepLink.starts(with: "/") {
-            return "https://www.kayak.com\(ad.deepLink)"
-        }
-        return ad.deepLink
-    }
-    
-    // MARK: - Actions
-    private func handleAdTap() {
-        // Track impression
-        if !ad.impressionUrl.isEmpty {
-            trackImpression()
-        }
-        
-        // Open deep link
-        openDeepLink()
-        
-        // Call custom handler if provided
-        onAdTapped?()
-    }
-    
-    private func trackImpression() {
-        let fullImpressionUrl: String
-        if ad.impressionUrl.starts(with: "/") {
-            fullImpressionUrl = "https://www.kayak.com\(ad.impressionUrl)"
-        } else {
-            fullImpressionUrl = ad.impressionUrl
-        }
-        
-        guard let url = URL(string: fullImpressionUrl) else {
-            print("🎯 Invalid impression URL: \(fullImpressionUrl)")
-            return
-        }
-        
-        Task {
-            do {
-                let _ = try await URLSession.shared.data(from: url)
-                print("🎯 Impression tracked for ad: \(ad.headline)")
-            } catch {
-                print("🎯 Failed to track impression: \(error)")
-            }
-        }
-    }
-    
-    private func openDeepLink() {
-        guard let url = URL(string: fullDeepLink) else {
-            print("🎯 Invalid deep link URL: \(fullDeepLink)")
-            return
-        }
-        
-        if UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url) { success in
-                if success {
-                    print("🎯 Successfully opened deep link: \(fullDeepLink)")
-                } else {
-                    print("🎯 Failed to open deep link: \(fullDeepLink)")
+            .padding(.horizontal)
+            .padding(.top, 12)
+            
+            // Ad content
+            Button(action: {
+                onTap()
+                // Open the ad URL
+                if let url = URL(string: ad.actionUrl) {
+                    UIApplication.shared.open(url)
                 }
+            }) {
+                HStack(spacing: 16) {
+                    // Ad image
+                    AsyncImage(url: URL(string: ad.imageUrl ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(.gray)
+                            )
+                    }
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    
+                    // Ad text content
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(ad.headline)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.black)
+                            .lineLimit(2)
+                        
+                        Text(ad.description)
+                            .font(.system(size: 14))
+                            .foregroundColor(.gray)
+                            .lineLimit(3)
+                        
+                        HStack {
+                            Text(ad.companyName)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(Color("Violet"))
+                            
+                            Spacer()
+                            
+                            // Action button
+                            Text(ad.buttonText ?? "Learn More")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color("Violet"))
+                                .cornerRadius(16)
+                        }
+                        .padding(.top, 4)
+                    }
+                    
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 12)
             }
-        } else {
-            print("🎯 Cannot open URL: \(fullDeepLink)")
+            .buttonStyle(PlainButtonStyle())
         }
+        .background(Color.white)
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color("Violet").opacity(0.2), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
+}
+
+#Preview {
+    let sampleAd = AdResponse(
+        id: "ad_1",
+        headline: "Book Hotels with 50% Off",
+        description: "Find the best deals on hotels worldwide. Limited time offer for new users.",
+        companyName: "TravelDeals.com",
+        imageUrl: "https://example.com/hotel-image.jpg",
+        actionUrl: "https://example.com/hotel-deals",
+        buttonText: "Book Now"
+    )
+    
+    VStack(spacing: 16) {
+        AdCardView(ad: sampleAd) {
+            print("Ad tapped")
+        }
+        
+        // Show next to a flight card for comparison
+        Text("Flight results would appear here")
+            .padding()
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(16)
+    }
+    .padding()
+    .background(Color.gray.opacity(0.1))
 }
