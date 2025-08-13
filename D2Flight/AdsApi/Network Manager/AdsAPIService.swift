@@ -3,11 +3,11 @@ import SwiftUI
 
 class HotelAdsAPIService: ObservableObject {
     
-    // MARK: - Constants
-    private let baseURL = "https://devconnect.hoteldisc.com/api"
-    private let bearerToken = "MuZgbVTZ6aYlhbb7jOPH"
-    private let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15"
-    private let cookies = "Apache=j$SebA-AAABmHO7400-fc-EEvJRQ; cluster=4; kayak=KUOXMI8gRVz2CmcqxMp0; kayak.mc=AaiNcewfPXdXsDMrL7O2fE2X6Fh3qYbYdaFyuN3ziBNGPft-2kN9APMU7COMfiPtaEc-tYLqg4O72TvDuwJN3V1EUXsX_0s5XzZrW6c7KOSp; mst_ADIrkw=QQCEUOecQ09LmasgOvaaC_qkVOZ2u4T-QFEL4ObLMh-1plkJzAZ25sGULo6Rf-Ev0f21m2Dn51wh46-0mCqjLQ"
+    // MARK: - Constants (using AdsAPIConstants to avoid conflicts)
+    private let baseURL = AdsAPIConstants.baseURL
+    private let bearerToken = AdsAPIConstants.bearerToken
+    private let userAgent = AdsAPIConstants.Headers.userAgent
+    private let cookies = AdsAPIConstants.Headers.cookies
     
     // MARK: - Published Properties
     @Published var ads: [AdResponse] = []
@@ -15,7 +15,7 @@ class HotelAdsAPIService: ObservableObject {
     @Published var adsErrorMessage: String?
     
     // MARK: - Session Creation
-    func createSession(countryCode: String = "us", label: String = "flight.dev") async throws -> String {
+    func createSession(countryCode: String = AdsAPIConstants.defaultCountryCode, label: String = AdsAPIConstants.defaultLabel) async throws -> String {
         let urlString = "\(baseURL)/ads/session?countryCode=\(countryCode)&label=\(label)"
         
         guard let url = URL(string: urlString) else {
@@ -25,10 +25,10 @@ class HotelAdsAPIService: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
-        // Set headers
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        // Set headers using AdsAPIConstants
+        request.setValue(AdsAPIConstants.Headers.accept, forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(AdsAPIConstants.Headers.contentType, forHTTPHeaderField: "Content-Type")
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         request.setValue(cookies, forHTTPHeaderField: "Cookie")
         
@@ -63,7 +63,7 @@ class HotelAdsAPIService: ObservableObject {
     // MARK: - ✅ FIXED: Fetch Ads with proper response parsing
     func fetchAds(
         sid: String,
-        countryCode: String = "us",
+        countryCode: String = AdsAPIConstants.defaultCountryCode,
         searchRequest: FlightSearchRequestAds
     ) async throws -> [AdResponse] {
         let urlString = "\(baseURL)/ads/flight/list?countryCode=\(countryCode)&_sid_=\(sid)"
@@ -75,11 +75,11 @@ class HotelAdsAPIService: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
-        // Set headers exactly as in the working curl
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        // Set headers exactly as in the working curl using AdsAPIConstants
+        request.setValue(AdsAPIConstants.Headers.accept, forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
-        request.setValue("application/json", forHTTPHeaderField: "content-type") // lowercase as in curl
+        request.setValue(AdsAPIConstants.Headers.contentType, forHTTPHeaderField: "content-type") // lowercase as in curl
         request.setValue(cookies, forHTTPHeaderField: "Cookie")
         
         // Encode request body
@@ -140,7 +140,7 @@ class HotelAdsAPIService: ObservableObject {
         date: String,
         cabinClass: String = "economy",
         passengers: [String] = ["adult"],
-        countryCode: String = "us"
+        countryCode: String = AdsAPIConstants.defaultCountryCode
     ) async {
         isLoadingAds = true
         adsErrorMessage = nil

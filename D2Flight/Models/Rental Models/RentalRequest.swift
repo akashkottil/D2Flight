@@ -14,27 +14,37 @@ struct RentalRequest {
     let id: String // rental provider ID
     
     init(
-        countryCode: String = "IN",
-        appCode: String = "TEST",
         pickUp: String,
         dropOff: String? = nil,
         pickUpDate: String,
         dropOffDate: String,
-        currencyCode: String = "INR",
-        languageCode: String = "en-GB",
-        userId: String = "123",
-        id: String = "0"
+        // Dynamic parameters with fallback to API constants
+        countryCode: String? = nil,
+        currencyCode: String? = nil,
+        languageCode: String? = nil,
+        appCode: String = APIConstants.DefaultParams.testAppCode,
+        userId: String? = nil, // ✅ UPDATED: Allow override but use dynamic by default
+        id: String = APIConstants.DefaultParams.rentalProviderId
     ) {
-        self.countryCode = countryCode
+        // Get dynamic values from settings if not provided
+        let apiParams = APIConstants.getAPIParameters()
+        
+        self.countryCode = countryCode ?? apiParams.country
+        self.currencyCode = currencyCode ?? apiParams.currency
+        self.languageCode = languageCode ?? apiParams.language
         self.appCode = appCode
         self.pickUp = pickUp
         self.dropOff = dropOff
         self.pickUpDate = pickUpDate
         self.dropOffDate = dropOffDate
-        self.currencyCode = currencyCode
-        self.languageCode = languageCode
-        self.userId = userId
+        self.userId = userId ?? APIConstants.getCurrentUserId() // ✅ UPDATED: Use dynamic user ID
         self.id = id
+        
+        print("🚗 RentalRequest created with dynamic values:")
+        print("   Country Code: \(self.countryCode)")
+        print("   Currency Code: \(self.currencyCode)")
+        print("   Language Code: \(self.languageCode)")
+        print("   🆔 User ID: \(self.userId)")
     }
 }
 

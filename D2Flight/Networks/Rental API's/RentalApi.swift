@@ -5,13 +5,13 @@ class RentalApi {
     static let shared = RentalApi()
     private init() {}
     
-    private let baseURL = "https://staging.car.lascade.com"
+    private let baseURL = APIConstants.rentalBaseURL
     
     func searchRental(
         request: RentalRequest,
         completion: @escaping (Result<RentalResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/deeplink/\(request.id)/"
+        let url = "\(baseURL)\(APIConstants.Endpoints.rentalDeeplink)\(request.id)/"
         
         var parameters: [String: Any] = [
             "country_code": request.countryCode,
@@ -30,8 +30,8 @@ class RentalApi {
         }
         
         let headers: HTTPHeaders = [
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "X-CSRFTOKEN": "zx744wOlRDblepgD7fnZ8w8pdmGDQRW5wE41KoUrxjujQIvSZe7acO7CBBLlWOEF"
+            "accept": APIConstants.Headers.htmlAccept,
+            "X-CSRFTOKEN": APIConstants.CSRFTokens.rental
         ]
         
         print("🚗 Rental API Request:")

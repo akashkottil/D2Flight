@@ -24,8 +24,8 @@ struct APIConfiguration {
     }
 }
 
-// MARK: - API Constants
-struct APIConstants {
+// MARK: - ✅ RENAMED: Ads API Constants (to avoid conflict with main APIConstants)
+struct AdsAPIConstants {
     // Base Configuration
     static let baseURL = "https://devconnect.hoteldisc.com/api"
     static let bearerToken = "MuZgbVTZ6aYlhbb7jOPH"

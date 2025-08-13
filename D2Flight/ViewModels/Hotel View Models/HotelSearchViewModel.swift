@@ -1,11 +1,3 @@
-//
-//  HotelSearchViewModel.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 28/07/25.
-//
-
-
 import Foundation
 import Combine
 
@@ -48,6 +40,7 @@ class HotelSearchViewModel: ObservableObject {
         let checkinString = apiDateFormatter.string(from: checkinDate)
         let checkoutString = apiDateFormatter.string(from: checkoutDate)
         
+        // ✅ UPDATED: Use dynamic parameters (country, currency, and user ID will be auto-selected)
         let request = HotelRequest(
             cityName: cityCode, // Using IATA code as city name for API
             checkin: checkinString,
@@ -55,6 +48,7 @@ class HotelSearchViewModel: ObservableObject {
             rooms: rooms,
             adults: adults,
             children: children > 0 ? children : nil
+            // Dynamic country, currency, and user ID will be automatically set from APIConstants
         )
         
         print("🏨 Starting hotel search with request:")
@@ -64,6 +58,8 @@ class HotelSearchViewModel: ObservableObject {
         print("   Rooms: \(rooms)")
         print("   Adults: \(adults)")
         print("   Children: \(children)")
+        print("   🔧 Using dynamic country: \(request.country)")
+        print("   🔧 Using dynamic user ID: \(request.userId)")
         
         HotelApi.shared.searchHotel(request: request) { [weak self] result in
             DispatchQueue.main.async {
@@ -74,6 +70,9 @@ class HotelSearchViewModel: ObservableObject {
                     
                     print("✅ Hotel search successful!")
                     print("   Deeplink: \(response.deeplink)")
+                    
+                    // ✅ ADDED: Track successful hotel search
+                    UserManager.shared.trackHotelSearch()
                     
                 case .failure(let error):
                     self?.errorMessage = "Search failed: \(error.localizedDescription)"

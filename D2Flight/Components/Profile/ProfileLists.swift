@@ -14,13 +14,42 @@ struct ProfileItem: Identifiable {
 struct ProfileLists: View {
     
     @Binding var isLoggedIn: Bool
-    @EnvironmentObject var authManager: AuthenticationManager // ✅ Add this line
+    @EnvironmentObject var authManager: AuthenticationManager
+    @StateObject private var settingsManager = SettingsManager.shared
     
-    // Top Section Items
-    let topItems: [ProfileItem] = [
-        ProfileItem(icon: "RegionIcon", title: "Region", trailing: "India", destination: AnyView(Country()), showsArrow: true),
-        ProfileItem(icon: "CurrencyIcon", title: "Currency", trailing: "India", destination: AnyView(Currency()), showsArrow: true)
-    ]
+    // Observe the managers to get selected values
+    @StateObject private var countryManager = CountryManager.shared
+    @StateObject private var currencyManager = CurrencyManager.shared
+    
+    private var topItems: [ProfileItem] {
+            [
+                ProfileItem(
+                    icon: "RegionIcon",
+                    title: "Region",
+                    trailing: settingsManager.getSelectedCountryName(),
+                    destination: AnyView(Country()),
+                    showsArrow: true
+                ),
+                ProfileItem(
+                    icon: "CurrencyIcon",
+                    title: "Currency",
+                    trailing: settingsManager.getSelectedCurrencyCode(),
+                    destination: AnyView(Currency()),
+                    showsArrow: true
+                )
+            ]
+        }
+    
+//    // Top Section Items - now computed to show dynamic values
+//    var topItems: [ProfileItem] {
+//        let selectedCountryName = countryManager.selectedCountry?.countryName ?? "Loading..."
+//        let selectedCurrencyCode = currencyManager.selectedCurrency?.code ?? "Loading..."
+//        
+//        return [
+//            ProfileItem(icon: "RegionIcon", title: "Region", trailing: selectedCountryName, destination: AnyView(Country()), showsArrow: true),
+//            ProfileItem(icon: "CurrencyIcon", title: "Currency", trailing: selectedCurrencyCode, destination: AnyView(Currency()), showsArrow: true)
+//        ]
+//    }
     
     var bottomItems: [ProfileItem] {
         var items: [ProfileItem] = [
@@ -45,6 +74,12 @@ struct ProfileLists: View {
             profileCard(items: bottomItems)
         }
         .padding()
+        .onAppear {
+            // Ensure managers are loaded when view appears
+            print("📱 ProfileLists appeared - Current selections:")
+            print("   Country: \(countryManager.selectedCountry?.countryName ?? "None")")
+            print("   Currency: \(currencyManager.selectedCurrency?.code ?? "None")")
+        }
     }
     
     // MARK: - Profile Card Builder
@@ -68,7 +103,7 @@ struct ProfileLists: View {
                         Button {
                             if item.title == "Logout" {
                                 Task {
-                                    await authManager.signOut() // ✅ Now authManager is available
+                                    await authManager.signOut()
                                     withAnimation(.easeInOut(duration: 0.3)) {
                                         isLoggedIn = false
                                     }
@@ -136,11 +171,10 @@ struct DemoScreen: View {
     }
 }
 
-
 // MARK: - Preview
 #Preview {
     NavigationView {
         ProfileLists(isLoggedIn: .constant(true))
-            .environmentObject(AuthenticationManager.shared) // ✅ Add this for preview
+            .environmentObject(AuthenticationManager.shared)
     }
 }

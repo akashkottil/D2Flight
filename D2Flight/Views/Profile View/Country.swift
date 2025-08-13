@@ -3,7 +3,7 @@ import SwiftUI
 struct Country: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var countryManager = CountryManager.shared
-    @State private var selectedCountry: CountryInfo?
+    @StateObject private var settingsManager = SettingsManager.shared
     @State private var searchText: String = ""
     
     // Filtered countries based on search
@@ -130,7 +130,7 @@ struct Country: View {
                                 HStack(spacing: 20) {
                                     // Selection Radio Button (same as Currency)
                                     ZStack {
-                                        if selectedCountry?.countryCode == country.countryCode {
+                                        if settingsManager.selectedCountry?.countryCode == country.countryCode {
                                             Circle()
                                                 .stroke(Color("Violet"), lineWidth: 6)
                                                 .frame(width: 20, height: 20)
@@ -159,8 +159,14 @@ struct Country: View {
                                 .padding()
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    selectedCountry = country
+                                    // ✅ UPDATED: Save selection to SettingsManager
+                                    settingsManager.setSelectedCountry(country)
                                     print("🌍 Selected country: \(country.countryName) (\(country.countryCode))")
+                                    
+                                    // Auto-dismiss after selection
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        presentationMode.wrappedValue.dismiss()
+                                    }
                                 }
                             }
                         }
@@ -172,10 +178,12 @@ struct Country: View {
             .navigationBarHidden(true)
         }
         .onAppear {
-            // Set default selection to United States if available
-            if selectedCountry == nil {
+            // ✅ UPDATED: Set default selection if none exists
+            if settingsManager.selectedCountry == nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    selectedCountry = countryManager.countries.first { $0.countryCode.lowercased() == "us" }
+                    if let defaultCountry = countryManager.countries.first(where: { $0.countryCode.lowercased() == "in" }) {
+                        settingsManager.setSelectedCountry(defaultCountry)
+                    }
                 }
             }
         }
