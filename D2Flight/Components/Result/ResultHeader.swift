@@ -14,29 +14,43 @@ struct ResultHeader: View {
     let isRoundTrip: Bool
     let travelDate: String
     let travelerInfo: String
+    let searchParameters: SearchParameters
     
     // Callback for applying filters
     var onFiltersChanged: (PollRequest) -> Void
     
+    // ✅ NEW: Callback for edit search completion
+    var onEditSearchCompleted: (String, SearchParameters) -> Void
+    
+    // ✅ NEW: Callback for edit button tap
+    var onEditButtonTapped: () -> Void
+    
+    // ✅ UPDATED: Initialize with edit callback
     init(
         originCode: String,
         destinationCode: String,
         isRoundTrip: Bool,
         travelDate: String,
         travelerInfo: String,
-        onFiltersChanged: @escaping (PollRequest) -> Void
+        searchParameters: SearchParameters,
+        onFiltersChanged: @escaping (PollRequest) -> Void,
+        onEditSearchCompleted: @escaping (String, SearchParameters) -> Void,
+        onEditButtonTapped: @escaping () -> Void
     ) {
         self.originCode = originCode
         self.destinationCode = destinationCode
         self.isRoundTrip = isRoundTrip
         self.travelDate = travelDate
         self.travelerInfo = travelerInfo
+        self.searchParameters = searchParameters
         self.onFiltersChanged = onFiltersChanged
+        self.onEditSearchCompleted = onEditSearchCompleted
+        self.onEditButtonTapped = onEditButtonTapped
     }
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header Section with dynamic content
+            // Header Section
             HStack {
                 Button(action: {
                     dismiss() // Navigate back to previous screen
@@ -56,13 +70,19 @@ struct ResultHeader: View {
                         .foregroundColor(.gray)
                 }
                 Spacer()
-                VStack(alignment: .trailing) {
-                    Image("EditIcon")
-                        .frame(width: 14, height: 14)
-                    Text("Edit")
-                        .font(CustomFont.font(.small))
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
+                
+                // ✅ UPDATED: Edit button now triggers callback instead of top sheet
+                Button(action: {
+                    onEditButtonTapped()
+                }) {
+                    VStack(alignment: .trailing) {
+                        Image("EditIcon")
+                            .frame(width: 14, height: 14)
+                        Text("Edit")
+                            .font(CustomFont.font(.small))
+                            .fontWeight(.semibold)
+                            .foregroundColor(.black)
+                    }
                 }
             }
             .padding(.bottom, 16)
@@ -159,6 +179,7 @@ struct ResultHeader: View {
                 .padding(.horizontal, 16)
             }
         }
+        .padding()
         .onAppear {
             filterViewModel.isRoundTrip = isRoundTrip
             print("🎛️ ResultHeader configured with:")
@@ -167,7 +188,8 @@ struct ResultHeader: View {
             print("   Date: \(travelDate)")
             print("   Travelers: \(travelerInfo)")
         }
-        // Single Unified Sheet
+        
+        // Single Unified Filter Sheet (unchanged)
         .sheet(isPresented: $showUnifiedFilterSheet) {
             UnifiedFilterSheet(
                 isPresented: $showUnifiedFilterSheet,
@@ -186,7 +208,7 @@ struct ResultHeader: View {
         }
     }
     
-    // Helper to determine presentation detent - all sheets open to half screen
+    // Helper to determine presentation detent - all filter sheets open to half screen
     private func getPresentationDetents() -> Set<PresentationDetent> {
         return [.medium]
     }
@@ -214,13 +236,35 @@ struct ResultHeader: View {
 
 // MARK: - Preview with Sample Data
 #Preview {
+    let sampleParams = SearchParameters(
+        originCode: "KCH",
+        destinationCode: "LON",
+        originName: "Kochi",
+        destinationName: "London",
+        isRoundTrip: true,
+        departureDate: Date(),
+        returnDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()),
+        adults: 2,
+        children: 0,
+        infants: 0,
+        selectedClass: .business
+    )
+    
     ResultHeader(
         originCode: "KCH",
         destinationCode: "LON",
         isRoundTrip: true,
         travelDate: "Wed 17 Oct - Mon 24 Oct",
-        travelerInfo: "2 Travelers, Business"
-    ) { _ in
-        print("Filter applied")
-    }
+        travelerInfo: "2 Travelers, Business",
+        searchParameters: sampleParams,
+        onFiltersChanged: { _ in
+            print("Filter applied")
+        },
+        onEditSearchCompleted: { searchId, params in
+            print("Edit completed: \(searchId)")
+        },
+        onEditButtonTapped: {
+            print("Edit button tapped")
+        }
+    )
 }
