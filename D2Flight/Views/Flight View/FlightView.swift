@@ -63,7 +63,7 @@ struct FlightView: View {
                         HStack {
                             Image("HomeLogo")
                                 .frame(width: 32, height: 32)
-                            Text("Last Minute Flights")
+                            Text(String(localized: "Last Minute Flights", defaultValue: "app_name"))
                                 .font(CustomFont.font(.large, weight: .bold))
                                 .foregroundColor(Color.white)
                         }
