@@ -3,31 +3,15 @@ import SwiftUI
 struct Country: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var countryManager = CountryManager.shared
+    @StateObject private var settingsManager = SettingsManager.shared
     @State private var searchText: String = ""
     
-    // Filtered countries based on search with selected country on top
+    // Filtered countries based on search
     private var filteredCountries: [CountryInfo] {
-        let baseCountries: [CountryInfo]
-        
         if searchText.isEmpty {
-            baseCountries = countryManager.countries
+            return countryManager.countries
         } else {
-            baseCountries = countryManager.searchCountries(query: searchText)
-        }
-        
-        // Move selected country to top of the list
-        guard let selectedCountry = countryManager.selectedCountry else {
-            return baseCountries
-        }
-        
-        // Remove selected country from the list and add it at the beginning
-        let otherCountries = baseCountries.filter { $0.countryCode != selectedCountry.countryCode }
-        
-        // Check if selected country exists in filtered results
-        if baseCountries.contains(where: { $0.countryCode == selectedCountry.countryCode }) {
-            return [selectedCountry] + otherCountries
-        } else {
-            return baseCountries
+            return countryManager.searchCountries(query: searchText)
         }
     }
     
@@ -139,14 +123,14 @@ struct Country: View {
                     .padding()
                     
                 } else {
-                    // Country List
+                    // Country List (same design as Currency.swift)
                     ScrollView {
                         VStack(spacing: 16) {
                             ForEach(filteredCountries) { country in
                                 HStack(spacing: 20) {
-                                    // Selection Radio Button
+                                    // Selection Radio Button (same as Currency)
                                     ZStack {
-                                        if countryManager.selectedCountry?.countryCode == country.countryCode {
+                                        if settingsManager.selectedCountry?.countryCode == country.countryCode {
                                             Circle()
                                                 .stroke(Color("Violet"), lineWidth: 6)
                                                 .frame(width: 20, height: 20)
@@ -175,9 +159,14 @@ struct Country: View {
                                 .padding()
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    countryManager.selectCountry(country)
-                                    // Auto-dismiss the screen after selection
-                                    presentationMode.wrappedValue.dismiss()
+                                    // ✅ UPDATED: Save selection to SettingsManager
+                                    settingsManager.setSelectedCountry(country)
+                                    print("🌍 Selected country: \(country.countryName) (\(country.countryCode))")
+                                    
+                                    // Auto-dismiss after selection
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        presentationMode.wrappedValue.dismiss()
+                                    }
                                 }
                             }
                         }
@@ -188,5 +177,19 @@ struct Country: View {
             .navigationBarTitle("")
             .navigationBarHidden(true)
         }
+        .onAppear {
+            // ✅ UPDATED: Set default selection if none exists
+            if settingsManager.selectedCountry == nil {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    if let defaultCountry = countryManager.countries.first(where: { $0.countryCode.lowercased() == "in" }) {
+                        settingsManager.setSelectedCountry(defaultCountry)
+                    }
+                }
+            }
+        }
     }
+}
+
+#Preview {
+    Country()
 }

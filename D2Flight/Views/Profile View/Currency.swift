@@ -3,31 +3,15 @@ import SwiftUI
 struct Currency: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var currencyManager = CurrencyManager.shared
+    @StateObject private var settingsManager = SettingsManager.shared
     @State private var searchText: String = ""
     
-    // Filtered currencies based on search with selected currency on top
+    // Filtered currencies based on search
     private var filteredCurrencies: [CurrencyInfo] {
-        let baseCurrencies: [CurrencyInfo]
-        
         if searchText.isEmpty {
-            baseCurrencies = currencyManager.currencies
+            return currencyManager.currencies
         } else {
-            baseCurrencies = currencyManager.searchCurrencies(query: searchText)
-        }
-        
-        // Move selected currency to top of the list
-        guard let selectedCurrency = currencyManager.selectedCurrency else {
-            return baseCurrencies
-        }
-        
-        // Remove selected currency from the list and add it at the beginning
-        let otherCurrencies = baseCurrencies.filter { $0.code != selectedCurrency.code }
-        
-        // Check if selected currency exists in filtered results
-        if baseCurrencies.contains(where: { $0.code == selectedCurrency.code }) {
-            return [selectedCurrency] + otherCurrencies
-        } else {
-            return baseCurrencies
+            return currencyManager.searchCurrencies(query: searchText)
         }
     }
     
@@ -144,9 +128,9 @@ struct Currency: View {
                         VStack(spacing: 16) {
                             ForEach(filteredCurrencies) { currency in
                                 HStack(spacing: 20) {
-                                    // Selection Radio Button
+                                    // Selection Radio Button (using same design as original)
                                     ZStack {
-                                        if currencyManager.selectedCurrency?.code == currency.code {
+                                        if settingsManager.selectedCurrency?.code == currency.code {
                                             Circle()
                                                 .stroke(Color("Violet"), lineWidth: 6)
                                                 .frame(width: 20, height: 20)
@@ -175,9 +159,14 @@ struct Currency: View {
                                 .padding()
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    currencyManager.selectCurrency(currency)
-                                    // Auto-dismiss the screen after selection
-                                    presentationMode.wrappedValue.dismiss()
+                                    // ✅ UPDATED: Save selection to SettingsManager
+                                    settingsManager.setSelectedCurrency(currency)
+                                    print("💰 Selected currency: \(currency.displayName) (\(currency.code))")
+                                    
+                                    // Auto-dismiss after selection
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        presentationMode.wrappedValue.dismiss()
+                                    }
                                 }
                             }
                         }
@@ -188,5 +177,19 @@ struct Currency: View {
             .navigationBarTitle("")
             .navigationBarHidden(true)
         }
+        .onAppear {
+            // ✅ UPDATED: Set default selection if none exists
+            if settingsManager.selectedCurrency == nil {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    if let defaultCurrency = currencyManager.currencies.first(where: { $0.code == "INR" }) {
+                        settingsManager.setSelectedCurrency(defaultCurrency)
+                    }
+                }
+            }
+        }
     }
+}
+
+#Preview {
+    Currency()
 }

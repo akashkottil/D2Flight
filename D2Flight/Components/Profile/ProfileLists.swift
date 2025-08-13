@@ -15,21 +15,41 @@ struct ProfileLists: View {
     
     @Binding var isLoggedIn: Bool
     @EnvironmentObject var authManager: AuthenticationManager
+    @StateObject private var settingsManager = SettingsManager.shared
     
     // Observe the managers to get selected values
     @StateObject private var countryManager = CountryManager.shared
     @StateObject private var currencyManager = CurrencyManager.shared
     
-    // Top Section Items - now computed to show dynamic values
-    var topItems: [ProfileItem] {
-        let selectedCountryName = countryManager.selectedCountry?.countryName ?? "Loading..."
-        let selectedCurrencyCode = currencyManager.selectedCurrency?.code ?? "Loading..."
-        
-        return [
-            ProfileItem(icon: "RegionIcon", title: "Region", trailing: selectedCountryName, destination: AnyView(Country()), showsArrow: true),
-            ProfileItem(icon: "CurrencyIcon", title: "Currency", trailing: selectedCurrencyCode, destination: AnyView(Currency()), showsArrow: true)
-        ]
-    }
+    private var topItems: [ProfileItem] {
+            [
+                ProfileItem(
+                    icon: "RegionIcon",
+                    title: "Region",
+                    trailing: settingsManager.getSelectedCountryName(),
+                    destination: AnyView(Country()),
+                    showsArrow: true
+                ),
+                ProfileItem(
+                    icon: "CurrencyIcon",
+                    title: "Currency",
+                    trailing: settingsManager.getSelectedCurrencyCode(),
+                    destination: AnyView(Currency()),
+                    showsArrow: true
+                )
+            ]
+        }
+    
+//    // Top Section Items - now computed to show dynamic values
+//    var topItems: [ProfileItem] {
+//        let selectedCountryName = countryManager.selectedCountry?.countryName ?? "Loading..."
+//        let selectedCurrencyCode = currencyManager.selectedCurrency?.code ?? "Loading..."
+//        
+//        return [
+//            ProfileItem(icon: "RegionIcon", title: "Region", trailing: selectedCountryName, destination: AnyView(Country()), showsArrow: true),
+//            ProfileItem(icon: "CurrencyIcon", title: "Currency", trailing: selectedCurrencyCode, destination: AnyView(Currency()), showsArrow: true)
+//        ]
+//    }
     
     var bottomItems: [ProfileItem] {
         var items: [ProfileItem] = [
