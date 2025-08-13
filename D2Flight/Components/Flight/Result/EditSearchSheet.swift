@@ -207,20 +207,6 @@ struct EditSearchSheet: View {
                     )
                     .opacity(isSearching ? 0.6 : 1.0)
                     .disabled(isSearching)
-                    .overlay(
-                        Group {
-                            if isSearching {
-                                HStack {
-                                    ProgressView()
-                                        .scaleEffect(0.8)
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    Text("Searching...")
-                                        .font(CustomFont.font(.medium))
-                                        .foregroundColor(.white)
-                                }
-                            }
-                        }
-                    )
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)

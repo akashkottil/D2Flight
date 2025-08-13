@@ -258,41 +258,18 @@ struct ResultView: View {
                 }
             }
             
-            if showEditSearchSheet {
-                ZStack {
-                    // Dismiss overlay for the remaining screen space
-                    Color.black.opacity(0.4)
-                        .ignoresSafeArea(.all)
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.6)) { // Increased duration for smoother close
-                                showEditSearchSheet = false
-                            }
-                        }
-                        .opacity(showEditSearchSheet ? 1 : 0)
-                        .animation(.easeInOut(duration: 0.5), value: showEditSearchSheet) // Smooth fade in/out
-                    
-                    // Edit Search Sheet positioned at top half
-                    VStack(spacing: 0) {
-                        EditSearchSheet(
-                            isPresented: $showEditSearchSheet,
-                            searchParameters: $currentSearchParameters,
-                            onNewSearchCompleted: { newSearchId, updatedParams in
-                                handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
-                            }
-                        )
-                        .frame(maxHeight: UIScreen.main.bounds.height * 0.6) // Take 60% of screen height
-                        
-                        Spacer(minLength: 0)
-                    }
-                    .ignoresSafeArea(.all)
-                    .offset(y: showEditSearchSheet ? 0 : -UIScreen.main.bounds.height * 0.6)
-                    .animation(.easeInOut(duration: 0.4).delay(showEditSearchSheet ? 0.1 : 0), value: showEditSearchSheet) // Slower, smoother dropdown
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ignoresSafeArea(.all)
-                .zIndex(2)
+            
+        }
+        .topSheet(isPresented: $showEditSearchSheet, maxHeightRatio: 0.6) {
+            EditSearchSheet(
+                isPresented: $showEditSearchSheet,
+                searchParameters: $currentSearchParameters
+            ) { newSearchId, updatedParams in
+                handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
             }
         }
+
+
         // Full‐screen loader cover
         .fullScreenCover(isPresented: $showAnimatedLoader) {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
