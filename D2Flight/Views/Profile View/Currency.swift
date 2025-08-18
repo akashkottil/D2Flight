@@ -6,13 +6,30 @@ struct Currency: View {
     @StateObject private var settingsManager = SettingsManager.shared
     @State private var searchText: String = ""
     
-    // Filtered currencies based on search
+    // Filtered currencies based on search with selected currency at top
     private var filteredCurrencies: [CurrencyInfo] {
+        let baseCurrencies: [CurrencyInfo]
+        
         if searchText.isEmpty {
-            return currencyManager.currencies
+            baseCurrencies = currencyManager.currencies
         } else {
-            return currencyManager.searchCurrencies(query: searchText)
+            baseCurrencies = currencyManager.searchCurrencies(query: searchText)
         }
+        
+        // If no search text, order with selected currency at top
+        if searchText.isEmpty, let selectedCurrency = settingsManager.selectedCurrency {
+            // Remove selected currency from the list first
+            let otherCurrencies = baseCurrencies.filter { $0.code != selectedCurrency.code }
+            
+            // Find the selected currency in the list
+            if let selectedCurrencyInList = baseCurrencies.first(where: { $0.code == selectedCurrency.code }) {
+                // Put selected currency first, then other currencies
+                return [selectedCurrencyInList] + otherCurrencies
+            }
+        }
+        
+        // For search results or when no selected currency, return as is
+        return baseCurrencies
     }
     
     var body: some View {
@@ -126,7 +143,7 @@ struct Currency: View {
                     // Currency List
                     ScrollView {
                         VStack(spacing: 16) {
-                            ForEach(filteredCurrencies) { currency in
+                            ForEach(Array(filteredCurrencies.enumerated()), id: \.element.id) { index, currency in
                                 HStack(spacing: 20) {
                                     // Selection Radio Button (using same design as original)
                                     ZStack {
@@ -145,9 +162,15 @@ struct Currency: View {
                                         }
                                     }
                                     
-                                    Text(currency.displayName)
-                                        .foregroundColor(.primary)
-                                        .font(CustomFont.font(.medium))
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack {
+                                            Text(currency.displayName)
+                                                .foregroundColor(.primary)
+                                                .font(CustomFont.font(.medium))
+                                            
+                                            
+                                        }
+                                    }
                                     
                                     Spacer()
                                     

@@ -7,13 +7,30 @@ struct Country: View {
     @StateObject private var localizationManager = LocalizationManager.shared
     @State private var searchText: String = ""
     
-    // Filtered countries based on search
+    // Filtered countries based on search with selected country at top
     private var filteredCountries: [CountryInfo] {
+        let baseCountries: [CountryInfo]
+        
         if searchText.isEmpty {
-            return countryManager.countries
+            baseCountries = countryManager.countries
         } else {
-            return countryManager.searchCountries(query: searchText)
+            baseCountries = countryManager.searchCountries(query: searchText)
         }
+        
+        // If no search text, order with selected country at top
+        if searchText.isEmpty, let selectedCountry = settingsManager.selectedCountry {
+            // Remove selected country from the list first
+            let otherCountries = baseCountries.filter { $0.countryCode != selectedCountry.countryCode }
+            
+            // Find the selected country in the list
+            if let selectedCountryInList = baseCountries.first(where: { $0.countryCode == selectedCountry.countryCode }) {
+                // Put selected country first, then other countries
+                return [selectedCountryInList] + otherCountries
+            }
+        }
+        
+        // For search results or when no selected country, return as is
+        return baseCountries
     }
     
     var body: some View {
@@ -133,7 +150,7 @@ struct Country: View {
                     // Country List
                     ScrollView {
                         VStack(spacing: 16) {
-                            ForEach(filteredCountries) { country in
+                            ForEach(Array(filteredCountries.enumerated()), id: \.element.id) { index, country in
                                 HStack(spacing: 20) {
                                     // Selection Radio Button
                                     ZStack {
@@ -152,9 +169,13 @@ struct Country: View {
                                         }
                                     }
                                     
-                                    Text(country.countryName)
-                                        .foregroundColor(.primary)
-                                        .font(CustomFont.font(.medium))
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack {
+                                            Text(country.countryName)
+                                                .foregroundColor(.primary)
+                                                .font(CustomFont.font(.medium))
+                                        }
+                                    }
                                     
                                     Spacer()
                                     
