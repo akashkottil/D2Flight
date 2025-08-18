@@ -16,7 +16,7 @@ struct AccountSettings: View {
 
                     Spacer()
                     
-                    Text("account.settings.2".localized)
+                    Text("account.settings".localized)
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.trailing, 44) // To balance the left button spacing

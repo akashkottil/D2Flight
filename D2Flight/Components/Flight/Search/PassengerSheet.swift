@@ -59,7 +59,7 @@ struct PassengerSheet: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text(isFromHotel ? "Guests and Rooms" : "Traveler and Class")
+                Text(isFromHotel ? "guests.and.rooms".localized : "traveler.and.class".localized)
                     .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
@@ -86,17 +86,17 @@ struct PassengerSheet: View {
                         // Select Class Section
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Text("select.class".localized)
+                                Text("select class")
                                     .font(CustomFont.font(.regular, weight: .semibold))
                                     .foregroundColor(.gray)
                                 Spacer()
                             }
                             
                             VStack(spacing: 20) {
-                                classSelectionRow(title: "Economy", class: .economy)
-                                classSelectionRow(title: "Premium Economy", class: .premiumEconomy)
-                                classSelectionRow(title: "Business", class: .business)
-                                classSelectionRow(title: "First Class", class: .firstClass)
+                                classSelectionRow(title: "economy".localized, class: .economy)
+                                classSelectionRow(title: "premium.economy".localized, class: .premiumEconomy)
+                                classSelectionRow(title: "business".localized, class: .business)
+                                classSelectionRow(title: "first.class".localized, class: .firstClass)
                             }
                         }
                     }
@@ -114,21 +114,21 @@ struct PassengerSheet: View {
                             if isFromHotel {
                                 // Hotel order: Rooms, Adults, Children
                                 passengerCountRow(
-                                    title: "Rooms",
-                                    subtitle: "Hotel rooms",
+                                    title: "rooms".localized,
+                                    subtitle: "hotel.rooms".localized,
                                     count: $rooms, // Use dedicated rooms binding
                                     minCount: 1
                                 )
                                 
                                 passengerCountRow(
-                                    title: "Adults",
-                                    subtitle: "Over 11",
+                                    title: "adults".localized,
+                                    subtitle: "over.11".localized,
                                     count: $adults,
                                     minCount: 1
                                 )
                                 
                                 passengerCountRow(
-                                    title: "Children",
+                                    title: "children".localized,
                                     subtitle: "2-11",
                                     count: $children,
                                     minCount: 0
@@ -136,22 +136,22 @@ struct PassengerSheet: View {
                             } else {
                                 // Flight/Rental order: Adults, Children, Infants
                                 passengerCountRow(
-                                    title: "Adults",
-                                    subtitle: "Over 11",
+                                    title: "adults".localized,
+                                    subtitle: "over.11".localized,
                                     count: $adults,
                                     minCount: 1
                                 )
                                 
                                 passengerCountRow(
-                                    title: "Children",
+                                    title: "children".localized,
                                     subtitle: "2-11",
                                     count: $children,
                                     minCount: 0
                                 )
                                 
                                 passengerCountRow(
-                                    title: "Infants",
-                                    subtitle: "Under 2",
+                                    title: "infants".localized,
+                                    subtitle: "under.2".localized,
                                     count: $infants,
                                     minCount: 0
                                 )

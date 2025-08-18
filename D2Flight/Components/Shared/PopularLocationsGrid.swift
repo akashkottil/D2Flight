@@ -29,6 +29,7 @@ struct PopularLocationsGrid: View {
         .init(imageName: "cairoImg", height: 220, isRemote: false, title: "cairo".localized, subtitle: "land.of.pyramids".localized, iataCode: "CAI"),
     ]
 
+
     
     var body: some View {
         VStack(alignment: .leading) {

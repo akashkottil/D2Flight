@@ -121,9 +121,9 @@ struct DateTimeSelectionView: View {
     // UPDATED: Dynamic titles based on context
     private var headerTitle: String {
         if isFromHotel {
-            return "Select dates"
+            return "select.dates".localized
         } else {
-            return "Select dates"
+            return "select.dates".localized
         }
     }
     

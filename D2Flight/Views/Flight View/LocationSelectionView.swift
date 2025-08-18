@@ -253,7 +253,7 @@ struct LocationSelectionView: View {
                 return viewModel.isSelectingOrigin ? "Select pick-up location" : "Select drop-off location"
             }
         } else {
-            return viewModel.isSelectingOrigin ? "Select departure location" : "Select destination location"
+            return viewModel.isSelectingOrigin ? "select.departure.location".localized : "select.destination.location".localized
         }
     }
 }

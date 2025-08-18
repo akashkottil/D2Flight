@@ -171,7 +171,7 @@ struct SearchCard: View {
                     HStack {
                         Image("DepartureIcon")
                             .frame(width: 20, height: 20)
-                        Text(originLocation.isEmpty ? "Enter Departure" : originLocation)
+                        Text(originLocation.isEmpty ? "enter.departure".localized : originLocation)
                             .foregroundColor(originLocation.isEmpty ? .gray : .black)
                             .fontWeight(originLocation.isEmpty ? .medium : .bold)
                             .font(CustomFont.font(.regular))
@@ -190,7 +190,7 @@ struct SearchCard: View {
                     HStack {
                         Image("DestinationIcon")
                             .frame(width: 20, height: 20)
-                        Text(destinationLocation.isEmpty ? "Enter Destination" : destinationLocation)
+                        Text(destinationLocation.isEmpty ? "enter.destination".localized : destinationLocation)
                             .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
                             .fontWeight(destinationLocation.isEmpty ? .medium : .bold)
                             .font(CustomFont.font(.regular))
