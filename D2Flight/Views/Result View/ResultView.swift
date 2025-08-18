@@ -62,7 +62,7 @@ struct ResultView: View {
                     // B) Error State
                     VStack(spacing: 20) {
                         Image("SomethingErrorImg")
-                        Text("Something went wrong!")
+                        Text("something.went.wrong".localized)
                             .font(.system(size: 24, weight: .semibold))
 
                         Text(error)
@@ -130,7 +130,7 @@ struct ResultView: View {
                                     VStack(spacing: 8) {
                                         ProgressView()
                                             .scaleEffect(0.8)
-                                        Text("Loading more flights...")
+                                        Text("loading.more.flights".localized)
                                             .font(CustomFont.font(.small))
                                             .foregroundColor(.gray)
                                     }

@@ -15,7 +15,7 @@ struct UserDebugPanel: View {
     var body: some View {
         if showDebugInfo {
             VStack(alignment: .leading, spacing: 8) {
-                Text("User Debug Info")
+                Text("user.debug.info".localized)
                     .font(.headline)
                     .foregroundColor(.white)
                 

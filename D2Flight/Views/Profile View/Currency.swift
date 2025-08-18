@@ -30,7 +30,7 @@ struct Currency: View {
                     
                     Spacer()
                     
-                    Text("Select currency")
+                    Text("select.currency".localized)
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.trailing, 44) // To balance the left button spacing
@@ -75,7 +75,7 @@ struct Currency: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.2)
-                        Text("Loading currencies...")
+                        Text("loading.currencies".localized)
                             .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                     }
@@ -88,7 +88,7 @@ struct Currency: View {
                             .font(.system(size: 40))
                             .foregroundColor(.gray)
                         
-                        Text("Error loading currencies")
+                        Text("error.loading.currencies".localized)
                             .font(CustomFont.font(.medium, weight: .semibold))
                         
                         Text(errorMessage)
@@ -111,10 +111,10 @@ struct Currency: View {
                             .font(.system(size: 40))
                             .foregroundColor(.gray)
                         
-                        Text("No currencies found")
+                        Text("no.currencies.found".localized)
                             .font(CustomFont.font(.medium, weight: .semibold))
                         
-                        Text("Try searching with a different keyword")
+                        Text("try.searching.with.a.different.keyword".localized)
                             .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)

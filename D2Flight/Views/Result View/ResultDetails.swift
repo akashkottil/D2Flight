@@ -55,7 +55,7 @@ struct ResultDetails: View {
                         HStack {
                             if let firstLeg = flight.legs.first {
                                 Text(firstLeg.origin)
-                                Text("to")
+                                Text("to".localized)
                                 Text(firstLeg.destination)
                             }
                             Spacer()
@@ -78,7 +78,7 @@ struct ResultDetails: View {
                     VStack(spacing: 0) {
                         // Header
                         HStack {
-                            Text("Booking Options")
+                            Text("booking.options".localized)
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
@@ -117,7 +117,7 @@ struct ResultDetails: View {
                                 HStack {
                                     Spacer()
                                     if showAllDeals {
-                                        Text("Show less")
+                                        Text("show.less".localized)
                                             .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(.red)
                                         Image(systemName: "chevron.up")
@@ -145,7 +145,7 @@ struct ResultDetails: View {
                     // Price note
                     HStack {
                         Spacer()
-                        Text("₹ (INR) per ticket, including taxes & fees")
+                        Text("a.1.inr.per.ticket.including.taxes.fees".localized)
                             .font(.system(size: 12))
                             .foregroundColor(.gray)
                         Spacer()

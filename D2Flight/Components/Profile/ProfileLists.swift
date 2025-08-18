@@ -218,7 +218,7 @@ struct ProfileListItem: View {
 struct DemoScreen: View {
     var body: some View {
         // ✅ LOCALIZED: Using localized text
-        Text("Demo Screen")
+        Text("demo.screen".localized)
             .navigationTitle("Demo")
     }
 }

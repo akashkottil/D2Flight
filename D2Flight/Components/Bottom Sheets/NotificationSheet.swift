@@ -8,14 +8,14 @@ struct NotificationSheet: View {
                 .frame(width: 106, height: 106)
                 .padding(.top, 40)
 
-            Text("Let’s make sure you get the best!")
+            Text("leta.s.make.sure.you.get.the.best".localized)
                 .font(.system(size: 24))
                 .fontWeight(.semibold)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.black)
                 .padding(.horizontal)
 
-            Text("Allow push notifications so that we can ensure you don’t miss out on the best deals.")
+            Text("allow.push.notifications.so.that.we.can.ensure.you.dona.t.mi".localized)
                 .font(CustomFont.font(.regular))
                 .fontWeight(.light)
                 .multilineTextAlignment(.center)

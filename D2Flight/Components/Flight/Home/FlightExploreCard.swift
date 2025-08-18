@@ -5,13 +5,13 @@ struct FlightExploreCard: View {
         VStack {
             HStack {
                 VStack(alignment: .leading) {
-                    Text("Login to get some")
+                    Text("login.to.get.some".localized)
                         .font(CustomFont.font(.medium, weight: .medium))
-                    Text("Exclusive deals")
+                    Text("exclusive.deals".localized)
                         .font(CustomFont.font(.large, weight: .bold))
                    
                     PrimaryButton(
-                        title: "Explore",
+                        title: "explore".localized,
                         font: CustomFont.font(.regular),
                         fontWeight: .semibold,
                         textColor: .white,

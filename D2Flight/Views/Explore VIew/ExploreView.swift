@@ -3,6 +3,6 @@ import SwiftUI
 
 struct ExploreView: View {
     var body: some View {
-        Text("Explore")
+        Text("explore.2".localized)
     }
 }

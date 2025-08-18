@@ -51,7 +51,7 @@ struct DateSelectionView: View {
 
                 
                 
-                Text("Select dates")
+                Text("select.dates".localized)
                     .font(.system(size: 20, weight: .bold))
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.trailing, 44)

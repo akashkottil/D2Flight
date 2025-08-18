@@ -86,7 +86,7 @@ struct PassengerSheet: View {
                         // Select Class Section
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Text("Select Class")
+                                Text("select.class".localized)
                                     .font(CustomFont.font(.regular, weight: .semibold))
                                     .foregroundColor(.gray)
                                 Spacer()
@@ -163,7 +163,7 @@ struct PassengerSheet: View {
                     if children > 0 {
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Text("Select Children Age")
+                                Text("select.children.age".localized)
                                     .font(CustomFont.font(.regular, weight: .semibold))
                                     .foregroundColor(.gray)
                                 Spacer()

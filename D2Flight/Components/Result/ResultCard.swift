@@ -26,7 +26,7 @@ struct ResultCard: View {
                         .font(CustomFont.font(.medium))
                         .fontWeight(.bold)
                         .foregroundColor(Color("PriceGreen"))
-                    Text("per Adult")
+                    Text("per.adult".localized)
                         .font(CustomFont.font(.small))
                         .fontWeight(.light)
                 }
@@ -52,7 +52,7 @@ struct ResultCard: View {
                     Image("AirlinesImg")
                         .resizable()
                         .frame(width: 21, height: 21)
-                    Text("Unknown Airline")
+                    Text("unknown.airline".localized)
                         .font(CustomFont.font(.small))
                         .foregroundColor(.black.opacity(0.8))
                         .fontWeight(.light)

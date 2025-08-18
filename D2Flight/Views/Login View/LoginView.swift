@@ -28,12 +28,12 @@ struct LoginView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             VStack(alignment: .leading) {
-                Text("Let's find great deals for you!")
+                Text("let.s.find.great.deals.for.you".localized)
                     .font(.system(size: 32))
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                 
-                Text("Sign in to save up to 50% when you book a flight last minute and anytime 😊.")
+                Text("sign.in.to.save.up.to.50.when.you.book.a.flight.last.minute".localized)
                     .font(CustomFont.font(.medium))
                     .fontWeight(.medium)
                     .foregroundColor(.white)
@@ -69,7 +69,7 @@ struct LoginView: View {
                     HStack {
                         ProgressView()
                             .scaleEffect(0.8)
-                        Text("Signing in...")
+                        Text("signing.in".localized)
                             .font(CustomFont.font(.medium))
                             .foregroundColor(.white)
                     }
@@ -108,7 +108,7 @@ struct LoginView: View {
                 }
                 .buttonStyle(PlainButtonStyle())
                 
-                Text("Yes, keep me informed with the latest updates, alerts, and offers through email and push notifications")
+                Text("yes.keep.me.informed.with.the.latest.updates.alerts.and.offe".localized)
                     .font(CustomFont.font(.small))
                     .foregroundColor(Color.white)
                     .padding(.leading, 8)
@@ -116,7 +116,7 @@ struct LoginView: View {
             .padding(.horizontal, 30)
             .padding(.vertical)
             
-            Text("By creating or logging into an account you're agreeing with our **Terms and conditions** and **Privacy policy**")
+            Text("by.creating.or.logging.into.an.account.you.re.agreeing.with".localized)
                 .foregroundColor(.gray)
                 .padding(.vertical)
                 .padding(.horizontal)

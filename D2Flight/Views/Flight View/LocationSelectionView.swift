@@ -174,7 +174,7 @@ struct LocationSelectionView: View {
                         VStack(spacing: 16) {
                             ProgressView()
                                 .scaleEffect(1.2)
-                            Text("Searching locations...")
+                            Text("searching.locations".localized)
                                 .font(CustomFont.font(.regular))
                                 .foregroundColor(.gray)
                         }

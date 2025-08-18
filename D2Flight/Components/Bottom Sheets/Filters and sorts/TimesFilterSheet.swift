@@ -20,7 +20,7 @@ struct TimesFilterSheet: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Times")
+                Text("times".localized)
                     .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()

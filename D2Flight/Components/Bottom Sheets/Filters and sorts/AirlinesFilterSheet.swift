@@ -17,7 +17,7 @@
 //        VStack(spacing: 0) {
 //            // Header
 //            HStack {
-//                Text("Airlines")
+//                Text("airlines".localized)
 //                    .font(CustomFont.font(.large, weight: .bold))
 //                    .foregroundColor(.black)
 //                Spacer()

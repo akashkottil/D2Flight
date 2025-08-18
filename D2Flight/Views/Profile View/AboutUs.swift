@@ -16,7 +16,7 @@ struct AboutUs : View {
 
                     Spacer()
                     
-                    Text("About Us")
+                    Text("about.us".localized)
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.trailing, 44)
@@ -28,23 +28,23 @@ struct AboutUs : View {
                     VStack(){
                         Image("AboutLogo")
                             .frame(width: 60, height: 60)
-                        Text("Last Minute Flights")
+                        Text("last.minute.flights".localized)
                             .font(CustomFont.font(.large, weight: .bold))
-                        Text("Version: 1.02")
+                        Text("version.1.02".localized)
                             .font(.system(size: 15))
                             .fontWeight(.light)
                             .foregroundColor(Color.black.opacity(0.5))
                     }
                     VStack(spacing:16){
-                        Text("Welcome to our flight price comparison app! We know that planning a trip can be stressful, especially when it comes to finding the best deals on flights. That's where we come in. Our app makes it easy for you to compare prices from multiple airlines, so you can find the best option for your budget and schedule.")
+                        Text("welcome.to.our.flight.price.comparison.app.we.know.that.plan".localized)
                             .multilineTextAlignment(.center)
                             .font(CustomFont.font(.large))
                             .fontWeight(.light)
-                        Text("Our team is passionate about helping travelers save money and have a great trip. We are constantly updating our app with the latest deals and features to make your search even easier. With our user-friendly interface and reliable price comparisons, you can book your next flight with confidence.")
+                        Text("our.team.is.passionate.about.helping.travelers.save.money.an".localized)
                             .multilineTextAlignment(.center)
                             .font(CustomFont.font(.large))
                             .fontWeight(.light)
-                        Text("Thank you for choosing our app. We hope you have a wonderful journey!")
+                        Text("thank.you.for.choosing.our.app.we.hope.you.have.a.wonderful".localized)
                             .multilineTextAlignment(.center)
                             .font(CustomFont.font(.large))
                             .fontWeight(.light)

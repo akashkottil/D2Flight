@@ -129,7 +129,7 @@ struct FlightDetailCard: View {
                         Image(systemName: "wifi")
                             .font(.system(size: 12))
                             .foregroundColor(.blue)
-                        Text("WiFi")
+                        Text("wifi".localized)
                             .font(.system(size: 12))
                             .foregroundColor(.blue)
                     }

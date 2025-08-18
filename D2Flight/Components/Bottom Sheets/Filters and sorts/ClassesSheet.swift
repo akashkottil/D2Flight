@@ -15,7 +15,7 @@
 //    var body: some View {
 //        VStack(spacing: 0) {
 //            HStack {
-//                Text("Classes")
+//                Text("classes".localized)
 //                    .font(CustomFont.font(.large, weight: .bold))
 //                    .foregroundColor(.black)
 //                Spacer()

@@ -58,7 +58,7 @@ struct RentalView: View {
                         HStack {
                             Image("HomeLogo")
                                 .frame(width: 32, height: 32)
-                            Text("Last Minute Flights")
+                            Text("Last Minute Flights".localized)
                                 .font(CustomFont.font(.large, weight: .bold))
                                 .foregroundColor(Color.white)
                         }
@@ -80,7 +80,7 @@ struct RentalView: View {
                                     }
                                 }
                             }) {
-                                Text("Same drop-off")
+                                Text("same.drop-off".localized)
                                     .foregroundColor(isSameDropOff ? .white : .gray)
                                     .font(CustomFont.font(.regular))
                                     .fontWeight(.semibold)
@@ -110,7 +110,7 @@ struct RentalView: View {
                                     }
                                 }
                             }) {
-                                Text("Different drop-off")
+                                Text("different.drop-off".localized)
                                     .foregroundColor(!isSameDropOff ? .white : .gray)
                                     .font(CustomFont.font(.small))
                                     .fontWeight(.semibold)
@@ -143,7 +143,7 @@ struct RentalView: View {
                         
                         // Search Rentals Button with validation
                         PrimaryButton(
-                            title: "Search Rentals",
+                            title: "search.rentals".localized,
                             font: CustomFont.font(.medium),
                             fontWeight: .bold,
                             textColor: .white,

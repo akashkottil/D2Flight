@@ -63,7 +63,7 @@ struct FlightView: View {
                         HStack {
                             Image("HomeLogo")
                                 .frame(width: 32, height: 32)
-                            Text("Last Minute Flights")
+                            Text("Last Minute Flights".localized)
                                 .font(CustomFont.font(.large, weight: .bold))
                                 .foregroundColor(Color.white)
                         }
@@ -76,7 +76,7 @@ struct FlightView: View {
                                     isOneWay = true
                                 }
                             }) {
-                                Text("One Way")
+                                Text("one.way".localized)
                                     .foregroundColor(isOneWay ? .white : .gray)
                                     .font(CustomFont.font(.small))
                                     .fontWeight(.semibold)
@@ -99,7 +99,7 @@ struct FlightView: View {
                                     isOneWay = false
                                 }
                             }) {
-                                Text("Round Trip")
+                                Text("round.trip".localized)
                                     .foregroundColor(!isOneWay ? .white : .gray)
                                     .font(CustomFont.font(.small))
                                     .fontWeight(.semibold)
@@ -183,7 +183,7 @@ struct FlightView: View {
                        let searchParams = currentSearchParameters {
                         ResultView(searchId: validSearchId, searchParameters: searchParams)
                     } else {
-                        Text("Invalid Search Parameters")
+                        Text("invalid.search.parameters".localized)
                     }
                 }
             }

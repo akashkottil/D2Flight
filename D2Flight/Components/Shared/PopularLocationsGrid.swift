@@ -20,15 +20,15 @@ struct PopularLocationsGrid: View {
     
     @State private var numberOfColumns: Int = 2
     
-    // Updated images array with IATA codes
     private let images: [MasonryImage] = [
-        .init(imageName: "kochiImg", height: 250, isRemote: false, title: "Kochi", subtitle: "God's Own Country", iataCode: "COK"),
-        .init(imageName: "sydneyImg", height: 180, isRemote: false, title: "Sydney", subtitle: "Harbor City", iataCode: "SYD"),
-        .init(imageName: "milanImg", height: 210, isRemote: false, title: "Milan", subtitle: "Fashion Capital", iataCode: "MXP"),
-        .init(imageName: "berlinImg", height: 250, isRemote: false, title: "Berlin", subtitle: "Historic Germany", iataCode: "BER"),
-        .init(imageName: "riodeImg", height: 250, isRemote: false, title: "Rio de Janeiro", subtitle: "City of Samba", iataCode: "GIG"),
-        .init(imageName: "cairoImg", height: 220, isRemote: false, title: "Cairo", subtitle: "Land of Pyramids", iataCode: "CAI"),
+        .init(imageName: "kochiImg", height: 250, isRemote: false, title: "kochi".localized, subtitle: "gods.own.country".localized, iataCode: "COK"),
+        .init(imageName: "sydneyImg", height: 180, isRemote: false, title: "sydney".localized, subtitle: "harbor.city".localized, iataCode: "SYD"),
+        .init(imageName: "milanImg", height: 210, isRemote: false, title: "milan".localized, subtitle: "fashion.capital".localized, iataCode: "MXP"),
+        .init(imageName: "berlinImg", height: 250, isRemote: false, title: "berlin".localized, subtitle: "historic.germany".localized, iataCode: "BER"),
+        .init(imageName: "riodeImg", height: 250, isRemote: false, title: "rio.de.janeiro".localized, subtitle: "city.of.samba".localized, iataCode: "GIG"),
+        .init(imageName: "cairoImg", height: 220, isRemote: false, title: "cairo".localized, subtitle: "land.of.pyramids".localized, iataCode: "CAI"),
     ]
+
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -115,11 +115,11 @@ struct PopularLocationsGrid: View {
     private var sectionTitle: String {
         switch searchType {
         case .flight:
-            return "Popular Destinations"
+            return "popular.destinations".localized
         case .hotel:
-            return "Popular Hotels"
+            return "popular.hotels".localized
         case .rental:
-            return "Popular Car Rentals"
+            return "popular.car.rentals".localized
         }
     }
 }

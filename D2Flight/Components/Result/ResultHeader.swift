@@ -59,7 +59,7 @@ struct ResultHeader: View {
                 VStack(alignment: .trailing) {
                     Image("EditIcon")
                         .frame(width: 14, height: 14)
-                    Text("Edit")
+                    Text("edit.2".localized)
                         .font(CustomFont.font(.small))
                         .fontWeight(.semibold)
                         .foregroundColor(.black)

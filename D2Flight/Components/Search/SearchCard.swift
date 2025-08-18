@@ -144,7 +144,7 @@ struct SearchCard: View {
             }
             
             // Search Flights Button with matched geometry effect
-            PrimaryButton(title: "Search Flights",
+            PrimaryButton(title: "search.flights".localized,
                           font: CustomFont.font(.medium),
                           fontWeight: .bold,
                           textColor: .white,

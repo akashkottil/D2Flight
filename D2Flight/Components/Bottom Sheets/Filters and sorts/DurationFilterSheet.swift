@@ -22,7 +22,7 @@
 //        VStack(spacing: 0) {
 //            // Header
 //            HStack {
-//                Text("Duration")
+//                Text("duration".localized)
 //                    .font(CustomFont.font(.large, weight: .bold))
 //                    .foregroundColor(.black)
 //                Spacer()
@@ -52,7 +52,7 @@
 //                        VStack(spacing: 20) {
 //                            // Stopover Duration
 //                            VStack(alignment: .leading, spacing: 12) {
-//                                Text("Stopover")
+//                                Text("stopover".localized)
 //                                    .font(CustomFont.font(.regular, weight: .medium))
 //                                    .foregroundColor(.black)
 //                                
@@ -66,7 +66,7 @@
 //                            
 //                            // Flight Leg Duration
 //                            VStack(alignment: .leading, spacing: 12) {
-//                                Text("Flight leg")
+//                                Text("flight.leg".localized)
 //                                    .font(CustomFont.font(.regular, weight: .medium))
 //                                    .foregroundColor(.black)
 //                                
@@ -90,7 +90,7 @@
 //                            VStack(spacing: 20) {
 //                                // Stopover Duration
 //                                VStack(alignment: .leading, spacing: 12) {
-//                                    Text("Stopover")
+//                                    Text("stopover.2".localized)
 //                                        .font(CustomFont.font(.regular, weight: .medium))
 //                                        .foregroundColor(.black)
 //                                    
@@ -104,7 +104,7 @@
 //                                
 //                                // Flight Leg Duration
 //                                VStack(alignment: .leading, spacing: 12) {
-//                                    Text("Flight leg")
+//                                    Text("flight.leg.2".localized)
 //                                        .font(CustomFont.font(.regular, weight: .medium))
 //                                        .foregroundColor(.black)
 //                                    

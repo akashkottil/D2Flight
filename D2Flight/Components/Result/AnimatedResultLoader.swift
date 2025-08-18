@@ -66,7 +66,7 @@ struct AnimatedResultLoader: View {
                 .frame(height: 300)
                 
                 VStack(spacing: 12) {
-                    Text("Looking For Best Deals")
+                    Text("looking.for.best.deals".localized)
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundColor(.white)
                     

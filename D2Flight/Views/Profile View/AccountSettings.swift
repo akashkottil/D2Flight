@@ -16,7 +16,7 @@ struct AccountSettings: View {
 
                     Spacer()
                     
-                    Text("Account Settings")
+                    Text("account.settings.2".localized)
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.trailing, 44) // To balance the left button spacing
@@ -30,10 +30,10 @@ struct AccountSettings: View {
                         VStack {
                             // First Name
                             HStack {
-                                Text("First Name")
+                                Text("first.name".localized)
                                     .font(CustomFont.font(.medium))
                                 Spacer()
-                                Text("Akash")
+                                Text("akash".localized)
                                     .font(CustomFont.font(.medium))
                                     .foregroundColor(.black.opacity(0.5))
                             }
@@ -43,10 +43,10 @@ struct AccountSettings: View {
                             
                             // Last Name
                             HStack {
-                                Text("Last Name")
+                                Text("last.name".localized)
                                     .font(CustomFont.font(.medium))
                                 Spacer()
-                                Text("Kottil")
+                                Text("kottil".localized)
                                     .font(CustomFont.font(.medium))
                                     .foregroundColor(.black.opacity(0.5))
                             }
@@ -56,10 +56,10 @@ struct AccountSettings: View {
                             
                             // Email
                             HStack {
-                                Text("Email")
+                                Text("email".localized)
                                     .font(CustomFont.font(.medium))
                                 Spacer()
-                                Text("kottilakash@gmail.com")
+                                Text("kottilakash.gmail.com".localized)
                                     .font(CustomFont.font(.medium))
                                     .foregroundColor(.black.opacity(0.5))
                             }
@@ -71,7 +71,7 @@ struct AccountSettings: View {
                         // Delete Account Section
                         VStack(alignment: .leading) {
                             HStack{
-                                Text("Delete Account")
+                                Text("delete.account".localized)
                                     .foregroundColor(.red)
                                 Spacer()
                             }

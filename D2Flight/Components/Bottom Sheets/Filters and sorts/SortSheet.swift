@@ -16,7 +16,7 @@
 //        VStack(spacing: 0) {
 //            // Header
 //            HStack {
-//                Text("Sort")
+//                Text("sort".localized)
 //                    .font(CustomFont.font(.large, weight: .bold))
 //                    .foregroundColor(.black)
 //                Spacer()

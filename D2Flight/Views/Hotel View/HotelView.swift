@@ -60,7 +60,7 @@ struct HotelView: View {
                         HStack {
                             Image("HomeLogo")
                                 .frame(width: 32, height: 32)
-                            Text("Last Minute Flights")
+                            Text("Last Minute Flights".localized)
                                 .font(CustomFont.font(.large, weight: .bold))
                                 .foregroundColor(Color.white)
                         }
@@ -110,7 +110,7 @@ struct HotelView: View {
                         
                         // Search Hotels Button
                         PrimaryButton(
-                            title: "Search Hotels",
+                            title: "search.hotels".localized,
                             font: CustomFont.font(.medium),
                             fontWeight: .bold,
                             textColor: .white,
