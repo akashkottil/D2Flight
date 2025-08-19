@@ -23,15 +23,9 @@ extension SettingsManager {
             showLanguageAlert(country.countryName, currentLanguage, suggestedLanguage)
         } else {
             // Same language, update directly
-            setSelectedCountryDirectly(country)
+            setSelectedCountry(country)
             onDirectUpdate?()
         }
-    }
-    
-    // MARK: - Direct Country Update (without language check)
-    func setSelectedCountryDirectly(_ country: CountryInfo) {
-        setSelectedCountry(country)
-        print("🌍 Country updated directly to: \(country.countryName) (\(country.countryCode))")
     }
     
     // MARK: - Handle Language Selection from Alert

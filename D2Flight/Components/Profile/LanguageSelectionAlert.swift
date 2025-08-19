@@ -2,164 +2,13 @@
 //  LanguageSelectionAlert.swift
 //  D2Flight
 //
-//  Created by Akash Kottil on 19/08/25.
+//  Custom alert for language selection when changing countries
 //
-
 
 import SwiftUI
 
-// MARK: - Language Selection Alert
-struct LanguageSelectionAlert: View {
-    let countryName: String
-    let currentLanguage: String
-    let suggestedLanguage: String
-    let onLanguageSelected: (String) -> Void
-    let onCancel: () -> Void
-    
-    @State private var isVisible = false
-    
-    var body: some View {
-        ZStack {
-            // Background overlay
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    dismissAlert()
-                }
-            
-            // Alert card
-            VStack(spacing: 20) {
-                // Title
-                Text("which.language.do.you.prefer".localized)
-                    .font(CustomFont.font(.large, weight: .bold))
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 8)
-                
-                // Country context
-                Text("language.change.for.country".localized(with: countryName))
-                    .font(CustomFont.font(.medium))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                
-                // Language options
-                VStack(spacing: 12) {
-                    // Suggested language button
-                    Button(action: {
-                        selectLanguage(suggestedLanguage)
-                    }) {
-                        HStack {
-                            Text(getLanguageDisplayText(for: suggestedLanguage))
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.white)
-                            Spacer()
-                        }
-                        .padding()
-                        .background(Color("Violet"))
-                        .cornerRadius(12)
-                    }
-                    
-                    // Stay in current language
-                    Button(action: {
-                        selectLanguage(currentLanguage)
-                    }) {
-                        HStack {
-                            Text("stay.in.current.language".localized(with: getLanguageDisplayName(currentLanguage)))
-                                .font(CustomFont.font(.medium))
-                                .foregroundColor(.primary)
-                            Spacer()
-                        }
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
-                    }
-                    
-                    // Cancel button
-                    Button(action: {
-                        dismissAlert()
-                    }) {
-                        Text("cancel".localized)
-                            .font(CustomFont.font(.medium))
-                            .foregroundColor(.red)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    }
-                }
-            }
-            .padding(24)
-            .background(Color(.systemBackground))
-            .cornerRadius(16)
-            .shadow(radius: 20)
-            .padding(.horizontal, 40)
-            .scaleEffect(isVisible ? 1.0 : 0.8)
-            .opacity(isVisible ? 1.0 : 0.0)
-        }
-        .onAppear {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                isVisible = true
-            }
-        }
-    }
-    
-    private func selectLanguage(_ languageCode: String) {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            isVisible = false
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            onLanguageSelected(languageCode)
-        }
-    }
-    
-    private func dismissAlert() {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            isVisible = false
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            onCancel()
-        }
-    }
-    
-    private func getLanguageDisplayText(for languageCode: String) -> String {
-        switch languageCode {
-        case "ar": return "العربية (Arabic)"
-        case "es": return "Español (Spanish)"
-        case "fr": return "Français (French)"
-        case "de": return "Deutsch (German)"
-        case "it": return "Italiano (Italian)"
-        case "pt": return "Português (Portuguese)"
-        case "ru": return "Русский (Russian)"
-        case "zh-Hans": return "中文 (Chinese)"
-        case "ja": return "日本語 (Japanese)"
-        case "ko": return "한국어 (Korean)"
-        case "nl": return "Nederlands (Dutch)"
-        case "pl": return "Polski (Polish)"
-        case "cs": return "Čeština (Czech)"
-        case "he": return "עברית (Hebrew)"
-        case "tr": return "Türkçe (Turkish)"
-        case "th": return "ไทย (Thai)"
-        case "vi": return "Tiếng Việt (Vietnamese)"
-        case "id": return "Bahasa Indonesia (Indonesian)"
-        case "ms": return "Bahasa Melayu (Malay)"
-        case "nb": return "Norsk (Norwegian)"
-        case "sv": return "Svenska (Swedish)"
-        case "da": return "Dansk (Danish)"
-        case "fi": return "Suomi (Finnish)"
-        case "el": return "Ελληνικά (Greek)"
-        case "ro": return "Română (Romanian)"
-        case "uk": return "Українська (Ukrainian)"
-        default: return getLanguageDisplayName(languageCode)
-        }
-    }
-    
-    private func getLanguageDisplayName(_ languageCode: String) -> String {
-        let locale = Locale(identifier: languageCode)
-        return locale.localizedString(forLanguageCode: languageCode)?.capitalized ?? languageCode.uppercased()
-    }
-}
-
-// MARK: - Alert Modifier
-struct LanguageSelectionAlertModifier: ViewModifier {
+// MARK: - Language Selection Alert View Modifier
+struct LanguageSelectionAlert: ViewModifier {
     @Binding var isPresented: Bool
     let countryName: String
     let currentLanguage: String
@@ -168,28 +17,64 @@ struct LanguageSelectionAlertModifier: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .overlay(
-                Group {
-                    if isPresented {
-                        LanguageSelectionAlert(
-                            countryName: countryName,
-                            currentLanguage: currentLanguage,
-                            suggestedLanguage: suggestedLanguage,
-                            onLanguageSelected: { language in
-                                isPresented = false
-                                onLanguageSelected(language)
-                            },
-                            onCancel: {
-                                isPresented = false
-                            }
-                        )
-                        .zIndex(1000)
-                    }
+            .alert("Language Change", isPresented: $isPresented) {
+                Button("Keep \(getLanguageDisplayName(currentLanguage))") {
+                    onLanguageSelected(currentLanguage)
                 }
-            )
+                
+                Button("Switch to \(getLanguageDisplayName(suggestedLanguage))") {
+                    onLanguageSelected(suggestedLanguage)
+                }
+                
+                Button("Cancel", role: .cancel) {
+                    // Do nothing, just dismiss
+                }
+            } message: {
+                Text("You've selected \(countryName). Would you like to switch to \(getLanguageDisplayName(suggestedLanguage)) or keep \(getLanguageDisplayName(currentLanguage))?")
+            }
+    }
+    
+    private func getLanguageDisplayName(_ code: String) -> String {
+        switch code {
+        case "en": return "English"
+        case "ar": return "العربية"
+        case "de": return "Deutsch"
+        case "es": return "Español"
+        case "fr": return "Français"
+        case "hi": return "हिन्दी"
+        case "it": return "Italiano"
+        case "ja": return "日本語"
+        case "ko": return "한국어"
+        case "pt": return "Português"
+        case "ru": return "Русский"
+        case "zh": return "中文"
+        case "th": return "ไทย"
+        case "tr": return "Türkçe"
+        case "vi": return "Tiếng Việt"
+        case "id": return "Bahasa Indonesia"
+        case "ms": return "Bahasa Melayu"
+        case "nl": return "Nederlands"
+        case "sv": return "Svenska"
+        case "da": return "Dansk"
+        case "no": return "Norsk"
+        case "fi": return "Suomi"
+        case "pl": return "Polski"
+        case "cs": return "Čeština"
+        case "hu": return "Magyar"
+        case "ro": return "Română"
+        case "bg": return "Български"
+        case "hr": return "Hrvatski"
+        case "sk": return "Slovenčina"
+        case "sl": return "Slovenščina"
+        case "et": return "Eesti"
+        case "lv": return "Latviešu"
+        case "lt": return "Lietuvių"
+        default: return code.capitalized
+        }
     }
 }
 
+// MARK: - View Extension for Easy Usage
 extension View {
     func languageSelectionAlert(
         isPresented: Binding<Bool>,
@@ -198,7 +83,7 @@ extension View {
         suggestedLanguage: String,
         onLanguageSelected: @escaping (String) -> Void
     ) -> some View {
-        modifier(LanguageSelectionAlertModifier(
+        modifier(LanguageSelectionAlert(
             isPresented: isPresented,
             countryName: countryName,
             currentLanguage: currentLanguage,

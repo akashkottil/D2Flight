@@ -38,6 +38,8 @@ extension LocalizationManager {
             return "ru-RU"
         case "zh":
             return "zh-CN"
+        case "zh-Hans":
+            return "zh-CN"
         case "th":
             return "th-TH"
         case "tr":
@@ -54,7 +56,7 @@ extension LocalizationManager {
             return "sv-SE"
         case "da":
             return "da-DK"
-        case "no":
+        case "no", "nb":
             return "no-NO"
         case "fi":
             return "fi-FI"
@@ -80,6 +82,14 @@ extension LocalizationManager {
             return "lv-LV"
         case "lt":
             return "lt-LT"
+        case "el":
+            return "el-GR"
+        case "he":
+            return "he-IL"
+        case "uk":
+            return "uk-UA"
+        case "ca":
+            return "ca-ES"
         default:
             // For any unrecognized language, check if it already contains a region code
             if currentLanguage.contains("-") {
@@ -104,5 +114,10 @@ extension LocalizationManager {
         let apiCode = apiLanguageCode
         // Basic validation - should contain a hyphen and be at least 5 characters
         return apiCode.contains("-") && apiCode.count >= 5
+    }
+    
+    // MARK: - Static Helper Method (Alternative Access)
+    static func getAPILanguageCode() -> String {
+        return LocalizationManager.shared.apiLanguageCode
     }
 }

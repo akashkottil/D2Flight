@@ -13,6 +13,9 @@ class RentalApi {
     ) {
         let url = "\(baseURL)\(APIConstants.Endpoints.rentalDeeplink)\(request.id)/"
         
+        // ✅ FIXED: Get dynamic language for consistency check
+        let apiParams = APIConstants.getAPIParameters()
+        
         var parameters: [String: Any] = [
             "country_code": request.countryCode,
             "app_code": request.appCode,
@@ -20,7 +23,7 @@ class RentalApi {
             "pick_up_date": request.pickUpDate,
             "drop_off_date": request.dropOffDate,
             "currency_code": request.currencyCode,
-            "language_code": request.languageCode,
+            "language_code": request.languageCode,  // ✅ Already has language - verify it's dynamic
             "user_id": request.userId
         ]
         
@@ -31,12 +34,27 @@ class RentalApi {
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.htmlAccept,
+            // ✅ ADDED: Language header for consistency
+            "Accept-Language": request.languageCode,
+            // ✅ ADDED: Country header
+            "country": request.countryCode
         ]
         
-        print("🚗 Rental API Request:")
-        print("URL: \(url)")
-        print("Parameters: \(parameters)")
-        print("Headers: \(headers)")
+        print("🚗 Rental API Request with dynamic language:")
+        print("   URL: \(url)")
+        print("   🌐 Language Code: \(request.languageCode)")
+        print("   🌐 API Language: \(apiParams.language)")
+        print("   💰 Currency Code: \(request.currencyCode)")
+        print("   🌍 Country Code: \(request.countryCode)")
+        print("   Parameters: \(parameters)")
+        print("   Headers: \(headers)")
+        
+        // ✅ VERIFICATION: Check if request language matches current dynamic language
+        if request.languageCode != apiParams.language {
+            print("⚠️ WARNING: Request language (\(request.languageCode)) differs from current API language (\(apiParams.language))")
+        } else {
+            print("✅ Language consistency verified: \(request.languageCode)")
+        }
         
         AF.request(
             url,
@@ -84,10 +102,10 @@ class RentalApi {
                 let rentalResponse = RentalResponse(
                     deeplink: finalURL,
                     status: "success",
-                    message: "Rental search URL generated successfully"
+                    message: "Rental search URL generated successfully with language \(request.languageCode)"
                 )
                 
-                print("✅ Rental search successful!")
+                print("✅ Rental search successful with language \(request.languageCode)!")
                 print("   Final URL: \(finalURL)")
                 completion(.success(rentalResponse))
                 

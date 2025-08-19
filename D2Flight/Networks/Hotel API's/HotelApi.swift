@@ -13,6 +13,9 @@ class HotelApi {
     ) {
         let url = "\(baseURL)\(APIConstants.Endpoints.hotelDeeplink)\(request.id)/"
         
+        // ✅ FIXED: Get dynamic language from API parameters
+        let apiParams = APIConstants.getAPIParameters()
+        
         var parameters: [String: Any] = [
             "country": request.country,
             "user_id": request.userId,
@@ -21,7 +24,11 @@ class HotelApi {
             "checkin": request.checkin,
             "checkout": request.checkout,
             "rooms": request.rooms,
-            "adults": request.adults
+            "adults": request.adults,
+            // ✅ ADDED: Language parameter
+            "language": apiParams.language,
+            // ✅ ADDED: Currency parameter for consistency
+            "currency": apiParams.currency
         ]
         
         // Add children parameter only if it's provided and greater than 0
@@ -31,12 +38,19 @@ class HotelApi {
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept,
+            // ✅ ADDED: Language header
+            "Accept-Language": apiParams.language,
+            // ✅ ADDED: Country header for consistency
+            "country": apiParams.country
         ]
         
-        print("🏨 Hotel API Request:")
-        print("URL: \(url)")
-        print("Parameters: \(parameters)")
-        print("Headers: \(headers)")
+        print("🏨 Hotel API Request with dynamic language:")
+        print("   URL: \(url)")
+        print("   🌐 Language: \(apiParams.language)")
+        print("   💰 Currency: \(apiParams.currency)")
+        print("   🌍 Country: \(apiParams.country)")
+        print("   Parameters: \(parameters)")
+        print("   Headers: \(headers)")
         
         AF.request(
             url,
@@ -83,10 +97,10 @@ class HotelApi {
                 let hotelResponse = HotelResponse(
                     deeplink: finalURL,
                     status: "success",
-                    message: "Hotel search URL generated successfully"
+                    message: "Hotel search URL generated successfully with language \(apiParams.language)"
                 )
                 
-                print("✅ Hotel search successful!")
+                print("✅ Hotel search successful with language \(apiParams.language)!")
                 print("   Final URL: \(finalURL)")
                 completion(.success(hotelResponse))
                 

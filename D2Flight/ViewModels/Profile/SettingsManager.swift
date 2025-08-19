@@ -56,9 +56,98 @@ class SettingsManager: ObservableObject {
         return selectedCurrency?.symbol ?? "₹"
     }
     
-    // MARK: - ✅ NEW: Language Management
+    // MARK: - ✅ FIXED: Language Management
     func getCurrentLanguageCode() -> String {
-        return LocalizationManager.shared.apiLanguageCode
+        let localizationManager = LocalizationManager.shared
+        let currentLang = localizationManager.currentLanguage
+        return mapLanguageToAPIFormat(currentLang)
+    }
+    
+    // MARK: - ✅ SAFE: Manual Language Mapping (Same as APIConstants)
+    private func mapLanguageToAPIFormat(_ language: String) -> String {
+        switch language {
+        case "en":
+            return "en-GB"
+        case "ar":
+            return "ar-SA"
+        case "de":
+            return "de-DE"
+        case "es":
+            return "es-ES"
+        case "fr":
+            return "fr-FR"
+        case "hi":
+            return "hi-IN"
+        case "it":
+            return "it-IT"
+        case "ja":
+            return "ja-JP"
+        case "ko":
+            return "ko-KR"
+        case "pt":
+            return "pt-BR"
+        case "ru":
+            return "ru-RU"
+        case "zh", "zh-Hans":
+            return "zh-CN"
+        case "th":
+            return "th-TH"
+        case "tr":
+            return "tr-TR"
+        case "vi":
+            return "vi-VN"
+        case "id":
+            return "id-ID"
+        case "ms":
+            return "ms-MY"
+        case "nl":
+            return "nl-NL"
+        case "sv":
+            return "sv-SE"
+        case "da":
+            return "da-DK"
+        case "no", "nb":
+            return "no-NO"
+        case "fi":
+            return "fi-FI"
+        case "pl":
+            return "pl-PL"
+        case "cs":
+            return "cs-CZ"
+        case "hu":
+            return "hu-HU"
+        case "ro":
+            return "ro-RO"
+        case "bg":
+            return "bg-BG"
+        case "hr":
+            return "hr-HR"
+        case "sk":
+            return "sk-SK"
+        case "sl":
+            return "sl-SI"
+        case "et":
+            return "et-EE"
+        case "lv":
+            return "lv-LV"
+        case "lt":
+            return "lt-LT"
+        case "el":
+            return "el-GR"
+        case "he":
+            return "he-IL"
+        case "uk":
+            return "uk-UA"
+        case "ca":
+            return "ca-ES"
+        default:
+            if language.contains("-") {
+                return language
+            } else {
+                print("⚠️ Unknown language '\(language)', falling back to en-GB")
+                return "en-GB"
+            }
+        }
     }
     
     // MARK: - Load Stored Codes (not objects)
@@ -173,121 +262,6 @@ class SettingsManager: ObservableObject {
         print("   Language: \(params.language)")
         
         return params
-    }
-    
-    // MARK: - ✅ NEW: Language change notification method (for country selection)
-    func setSelectedCountryDirectly(_ country: CountryInfo) {
-        setSelectedCountry(country)
-    }
-    
-    func setSelectedCountryWithLanguageCheck(
-        _ country: CountryInfo,
-        onLanguageAlert: @escaping (String, String, String) -> Void,
-        onDirectUpdate: @escaping () -> Void
-    ) {
-        // Check if country has specific language preferences
-        let currentLanguage = LocalizationManager.shared.currentLanguage
-        let suggestedLanguages = country.supportedLanguages
-        
-        // If the country has supported languages and current language is not supported
-        if !suggestedLanguages.isEmpty,
-           !suggestedLanguages.contains(currentLanguage),
-           let firstSupportedLanguage = suggestedLanguages.first {
-            
-            // Show language selection alert
-            let currentLanguageName = getLanguageDisplayName(for: currentLanguage)
-            let suggestedLanguageName = getLanguageDisplayName(for: firstSupportedLanguage)
-            
-            onLanguageAlert(country.countryName, currentLanguageName, suggestedLanguageName)
-        } else {
-            // Direct update without language change
-            setSelectedCountry(country)
-            onDirectUpdate()
-        }
-    }
-    
-    func handleLanguageSelection(
-        _ selectedLanguage: String,
-        for country: CountryInfo,
-        completion: @escaping () -> Void
-    ) {
-        // Update country
-        setSelectedCountry(country)
-        
-        // Update language if needed
-        if selectedLanguage != LocalizationManager.shared.currentLanguage {
-            if let newLanguageCode = getLanguageCode(for: selectedLanguage) {
-                LocalizationManager.shared.changeLanguage(to: newLanguageCode)
-                print("🌐 Language changed to: \(selectedLanguage) (\(newLanguageCode))")
-            }
-        }
-        
-        completion()
-    }
-    
-    // MARK: - Helper methods for language display names
-    private func getLanguageDisplayName(for code: String) -> String {
-        switch code {
-        case "en": return "English"
-        case "ar": return "العربية"
-        case "de": return "Deutsch"
-        case "es": return "Español"
-        case "fr": return "Français"
-        case "hi": return "हिन्दी"
-        case "it": return "Italiano"
-        case "ja": return "日本語"
-        case "ko": return "한국어"
-        case "pt": return "Português"
-        case "ru": return "Русский"
-        case "zh": return "中文"
-        case "th": return "ไทย"
-        case "tr": return "Türkçe"
-        case "vi": return "Tiếng Việt"
-        case "id": return "Bahasa Indonesia"
-        case "ms": return "Bahasa Melayu"
-        case "nl": return "Nederlands"
-        case "sv": return "Svenska"
-        case "da": return "Dansk"
-        case "no": return "Norsk"
-        case "fi": return "Suomi"
-        case "pl": return "Polski"
-        case "cs": return "Čeština"
-        case "hu": return "Magyar"
-        case "ro": return "Română"
-        default: return code.capitalized
-        }
-    }
-    
-    private func getLanguageCode(for displayName: String) -> String? {
-        switch displayName {
-        case "English": return "en"
-        case "العربية": return "ar"
-        case "Deutsch": return "de"
-        case "Español": return "es"
-        case "Français": return "fr"
-        case "हिन्दी": return "hi"
-        case "Italiano": return "it"
-        case "日本語": return "ja"
-        case "한국어": return "ko"
-        case "Português": return "pt"
-        case "Русский": return "ru"
-        case "中文": return "zh"
-        case "ไทย": return "th"
-        case "Türkçe": return "tr"
-        case "Tiếng Việt": return "vi"
-        case "Bahasa Indonesia": return "id"
-        case "Bahasa Melayu": return "ms"
-        case "Nederlands": return "nl"
-        case "Svenska": return "sv"
-        case "Dansk": return "da"
-        case "Norsk": return "no"
-        case "Suomi": return "fi"
-        case "Polski": return "pl"
-        case "Čeština": return "cs"
-        case "Magyar": return "hu"
-        case "Română": return "ro"
-        default: return nil
-        }
     }
     
     deinit {

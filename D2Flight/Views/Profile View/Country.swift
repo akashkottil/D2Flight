@@ -203,12 +203,7 @@ struct Country: View {
             suggestedLanguage: alertSuggestedLanguage,
             onLanguageSelected: { selectedLanguage in
                 if let country = selectedCountryForAlert {
-                    settingsManager.handleLanguageSelection(selectedLanguage, for: country) {
-                        // Dismiss the view after selection
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            presentationMode.wrappedValue.dismiss()
-                        }
-                    }
+                    handleLanguageSelectionResult(selectedLanguage, for: country)
                 }
             }
         )
@@ -216,29 +211,183 @@ struct Country: View {
             // Set default selection if none exists
             if settingsManager.selectedCountry == nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    if let defaultCountry = countryManager.countries.first(where: { $0.countryCode.lowercased() == "in" }) {
-                        settingsManager.setSelectedCountryDirectly(defaultCountry)
-                    }
+                    setDefaultCountrySelection()
                 }
             }
         }
     }
     
-    // MARK: - Handle Country Selection
+    // MARK: - ✅ FIXED: Handle Country Selection
     private func handleCountrySelection(_ country: CountryInfo) {
         print("🌍 Country tapped: \(country.countryName) (\(country.countryCode))")
         
-        settingsManager.setSelectedCountryWithLanguageCheck(country) { countryName, currentLang, suggestedLang in
-            // Show language alert
+        // Check if language should change based on country
+        let currentLanguage = LocalizationManager.shared.currentLanguage
+        let suggestedLanguage = LocalizationManager.shared.getLanguageForCountry(country.countryCode)
+        
+        // Check if suggested language is different from current
+        if suggestedLanguage != currentLanguage {
+            print("🌐 Language difference detected:")
+            print("   Current: \(currentLanguage)")
+            print("   Suggested for \(country.countryName): \(suggestedLanguage)")
+            
+            // Show language selection alert
             selectedCountryForAlert = country
-            alertCurrentLanguage = currentLang
-            alertSuggestedLanguage = suggestedLang
+            alertCurrentLanguage = getLanguageDisplayName(currentLanguage)
+            alertSuggestedLanguage = getLanguageDisplayName(suggestedLanguage)
             showLanguageAlert = true
-        } onDirectUpdate: {
-            // No language change needed, dismiss immediately
+        } else {
+            // Same language, update directly
+            settingsManager.setSelectedCountry(country)
+            dismissView()
+        }
+    }
+    
+    // MARK: - ✅ NEW: Handle Language Selection Result
+    private func handleLanguageSelectionResult(_ selectedLanguageDisplayName: String, for country: CountryInfo) {
+        // Always update the country first
+        settingsManager.setSelectedCountry(country)
+        
+        let currentLanguage = LocalizationManager.shared.currentLanguage
+        let selectedLanguageCode = getLanguageCode(for: selectedLanguageDisplayName)
+        
+        // If user selected a different language, update it
+        if let newLanguageCode = selectedLanguageCode, newLanguageCode != currentLanguage {
+            print("🔄 Language change requested: \(currentLanguage) → \(newLanguageCode)")
+            
+            // Update language
+            LocalizationManager.shared.currentLanguage = newLanguageCode
+            
+            // Show reload notification and hot reload UI
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                presentationMode.wrappedValue.dismiss()
+                hotReloadApp {
+                    dismissView()
+                }
             }
+        } else {
+            print("🌐 Staying in current language: \(currentLanguage)")
+            dismissView()
+        }
+    }
+    
+    // MARK: - ✅ NEW: Hot Reload App
+    private func hotReloadApp(completion: @escaping () -> Void) {
+        print("🔄 Hot reloading app for language change...")
+        
+        // Post notification for UI reload
+        NotificationCenter.default.post(
+            name: NSNotification.Name("AppWillHotReloadForLanguageChange"),
+            object: nil
+        )
+        
+        // Allow time for the reload animation, then dismiss
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("AppDidHotReloadForLanguageChange"),
+                object: nil
+            )
+            completion()
+        }
+    }
+    
+    // MARK: - ✅ NEW: Set Default Country Selection
+    private func setDefaultCountrySelection() {
+        if let defaultCountry = countryManager.countries.first(where: { $0.countryCode.lowercased() == "in" }) {
+            settingsManager.setSelectedCountry(defaultCountry)
+        }
+    }
+    
+    // MARK: - ✅ NEW: Dismiss View Helper
+    private func dismissView() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            presentationMode.wrappedValue.dismiss()
+        }
+    }
+    
+    // MARK: - ✅ NEW: Helper methods for language display names
+    private func getLanguageDisplayName(_ code: String) -> String {
+        switch code {
+        case "en": return "English"
+        case "ar": return "العربية"
+        case "de": return "Deutsch"
+        case "es": return "Español"
+        case "fr": return "Français"
+        case "hi": return "हिन्दी"
+        case "it": return "Italiano"
+        case "ja": return "日本語"
+        case "ko": return "한국어"
+        case "pt": return "Português"
+        case "ru": return "Русский"
+        case "zh", "zh-Hans": return "中文"
+        case "th": return "ไทย"
+        case "tr": return "Türkçe"
+        case "vi": return "Tiếng Việt"
+        case "id": return "Bahasa Indonesia"
+        case "ms": return "Bahasa Melayu"
+        case "nl": return "Nederlands"
+        case "sv": return "Svenska"
+        case "da": return "Dansk"
+        case "no", "nb": return "Norsk"
+        case "fi": return "Suomi"
+        case "pl": return "Polski"
+        case "cs": return "Čeština"
+        case "hu": return "Magyar"
+        case "ro": return "Română"
+        case "bg": return "Български"
+        case "hr": return "Hrvatski"
+        case "sk": return "Slovenčina"
+        case "sl": return "Slovenščina"
+        case "et": return "Eesti"
+        case "lv": return "Latviešu"
+        case "lt": return "Lietuvių"
+        case "el": return "Ελληνικά"
+        case "he": return "עברית"
+        case "uk": return "Українська"
+        case "ca": return "Català"
+        default: return code.capitalized
+        }
+    }
+    
+    private func getLanguageCode(for displayName: String) -> String? {
+        switch displayName {
+        case "English": return "en"
+        case "العربية": return "ar"
+        case "Deutsch": return "de"
+        case "Español": return "es"
+        case "Français": return "fr"
+        case "हिन्दी": return "hi"
+        case "Italiano": return "it"
+        case "日本語": return "ja"
+        case "한국어": return "ko"
+        case "Português": return "pt"
+        case "Русский": return "ru"
+        case "中文": return "zh"
+        case "ไทย": return "th"
+        case "Türkçe": return "tr"
+        case "Tiếng Việt": return "vi"
+        case "Bahasa Indonesia": return "id"
+        case "Bahasa Melayu": return "ms"
+        case "Nederlands": return "nl"
+        case "Svenska": return "sv"
+        case "Dansk": return "da"
+        case "Norsk": return "no"
+        case "Suomi": return "fi"
+        case "Polski": return "pl"
+        case "Čeština": return "cs"
+        case "Magyar": return "hu"
+        case "Română": return "ro"
+        case "Български": return "bg"
+        case "Hrvatski": return "hr"
+        case "Slovenčina": return "sk"
+        case "Slovenščina": return "sl"
+        case "Eesti": return "et"
+        case "Latviešu": return "lv"
+        case "Lietuvių": return "lt"
+        case "Ελληνικά": return "el"
+        case "עברית": return "he"
+        case "Українська": return "uk"
+        case "Català": return "ca"
+        default: return nil
         }
     }
 }

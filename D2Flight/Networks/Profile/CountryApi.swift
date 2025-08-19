@@ -14,18 +14,29 @@ class CountryApi {
     ) {
         let url = "\(baseURL)\(APIConstants.Endpoints.countries)"
         
-        let parameters: [String: Any] = [
+        // ✅ FIXED: Get dynamic language parameters
+        let apiParams = APIConstants.getAPIParameters()
+        
+        var parameters: [String: Any] = [
             "page": page,
-            "limit": limit
+            "limit": limit,
+            // ✅ ADDED: Language parameter
+            "language": apiParams.language
         ]
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept,
+            // ✅ ADDED: Language and country headers
+            "Accept-Language": apiParams.language,
+            "country": apiParams.country
         ]
         
-        print("🌍 Fetching countries from API:")
-        print("URL: \(url)")
-        print("Parameters: \(parameters)")
+        print("🌍 Fetching countries from API with dynamic language:")
+        print("   URL: \(url)")
+        print("   🌐 Language: \(apiParams.language)")
+        print("   🌍 Country: \(apiParams.country)")
+        print("   Parameters: \(parameters)")
+        print("   Headers: \(headers)")
         
         AF.request(
             url,
@@ -37,7 +48,8 @@ class CountryApi {
         .responseDecodable(of: CountryApiResponse.self) { response in
             switch response.result {
             case .success(let countryResponse):
-                print("✅ Countries API success! Fetched \(countryResponse.results.count) countries")
+                print("✅ Countries API success with language \(apiParams.language)!")
+                print("   Fetched \(countryResponse.results.count) countries")
                 print("   Total count: \(countryResponse.count)")
                 print("   Next page: \(countryResponse.next != nil ? "Available" : "None")")
                 completion(.success(countryResponse))
@@ -66,7 +78,8 @@ class CountryApi {
                         fetchPage(page + 1)
                     } else {
                         // All data fetched
-                        print("🌍 Fetched all countries: \(allCountries.count) total")
+                        let apiParams = APIConstants.getAPIParameters()
+                        print("🌍 Fetched all countries with language \(apiParams.language): \(allCountries.count) total")
                         completion(.success(allCountries))
                     }
                 case .failure(let error):
