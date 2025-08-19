@@ -56,6 +56,11 @@ class SettingsManager: ObservableObject {
         return selectedCurrency?.symbol ?? "₹"
     }
     
+    // MARK: - ✅ NEW: Language Management
+    func getCurrentLanguageCode() -> String {
+        return LocalizationManager.shared.apiLanguageCode
+    }
+    
     // MARK: - Load Stored Codes (not objects)
     private func loadStoredCodes() {
         storedCountryCode = userDefaults.string(forKey: Keys.selectedCountryCode)
@@ -147,12 +152,142 @@ class SettingsManager: ObservableObject {
         }
     }
     
-    // MARK: - Helper Methods for API Calls
-    func getAPIParameters() -> (country: String, currency: String) {
+    // MARK: - ✅ UPDATED: Helper Methods for API Calls (Now includes language)
+    func getAPIParameters() -> (country: String, currency: String, language: String) {
+        let currentLanguage = getCurrentLanguageCode()
+        
         return (
             country: getSelectedCountryCode(),
-            currency: getSelectedCurrencyCode()
+            currency: getSelectedCurrencyCode(),
+            language: currentLanguage
         )
+    }
+    
+    // MARK: - ✅ NEW: Complete API Parameters with Language
+    func getCompleteAPIParameters() -> (country: String, currency: String, language: String) {
+        let params = getAPIParameters()
+        
+        print("🔧 SettingsManager API Parameters:")
+        print("   Country: \(params.country)")
+        print("   Currency: \(params.currency)")
+        print("   Language: \(params.language)")
+        
+        return params
+    }
+    
+    // MARK: - ✅ NEW: Language change notification method (for country selection)
+    func setSelectedCountryDirectly(_ country: CountryInfo) {
+        setSelectedCountry(country)
+    }
+    
+    func setSelectedCountryWithLanguageCheck(
+        _ country: CountryInfo,
+        onLanguageAlert: @escaping (String, String, String) -> Void,
+        onDirectUpdate: @escaping () -> Void
+    ) {
+        // Check if country has specific language preferences
+        let currentLanguage = LocalizationManager.shared.currentLanguage
+        let suggestedLanguages = country.supportedLanguages
+        
+        // If the country has supported languages and current language is not supported
+        if !suggestedLanguages.isEmpty,
+           !suggestedLanguages.contains(currentLanguage),
+           let firstSupportedLanguage = suggestedLanguages.first {
+            
+            // Show language selection alert
+            let currentLanguageName = getLanguageDisplayName(for: currentLanguage)
+            let suggestedLanguageName = getLanguageDisplayName(for: firstSupportedLanguage)
+            
+            onLanguageAlert(country.countryName, currentLanguageName, suggestedLanguageName)
+        } else {
+            // Direct update without language change
+            setSelectedCountry(country)
+            onDirectUpdate()
+        }
+    }
+    
+    func handleLanguageSelection(
+        _ selectedLanguage: String,
+        for country: CountryInfo,
+        completion: @escaping () -> Void
+    ) {
+        // Update country
+        setSelectedCountry(country)
+        
+        // Update language if needed
+        if selectedLanguage != LocalizationManager.shared.currentLanguage {
+            if let newLanguageCode = getLanguageCode(for: selectedLanguage) {
+                LocalizationManager.shared.changeLanguage(to: newLanguageCode)
+                print("🌐 Language changed to: \(selectedLanguage) (\(newLanguageCode))")
+            }
+        }
+        
+        completion()
+    }
+    
+    // MARK: - Helper methods for language display names
+    private func getLanguageDisplayName(for code: String) -> String {
+        switch code {
+        case "en": return "English"
+        case "ar": return "العربية"
+        case "de": return "Deutsch"
+        case "es": return "Español"
+        case "fr": return "Français"
+        case "hi": return "हिन्दी"
+        case "it": return "Italiano"
+        case "ja": return "日本語"
+        case "ko": return "한국어"
+        case "pt": return "Português"
+        case "ru": return "Русский"
+        case "zh": return "中文"
+        case "th": return "ไทย"
+        case "tr": return "Türkçe"
+        case "vi": return "Tiếng Việt"
+        case "id": return "Bahasa Indonesia"
+        case "ms": return "Bahasa Melayu"
+        case "nl": return "Nederlands"
+        case "sv": return "Svenska"
+        case "da": return "Dansk"
+        case "no": return "Norsk"
+        case "fi": return "Suomi"
+        case "pl": return "Polski"
+        case "cs": return "Čeština"
+        case "hu": return "Magyar"
+        case "ro": return "Română"
+        default: return code.capitalized
+        }
+    }
+    
+    private func getLanguageCode(for displayName: String) -> String? {
+        switch displayName {
+        case "English": return "en"
+        case "العربية": return "ar"
+        case "Deutsch": return "de"
+        case "Español": return "es"
+        case "Français": return "fr"
+        case "हिन्दी": return "hi"
+        case "Italiano": return "it"
+        case "日本語": return "ja"
+        case "한국어": return "ko"
+        case "Português": return "pt"
+        case "Русский": return "ru"
+        case "中文": return "zh"
+        case "ไทย": return "th"
+        case "Türkçe": return "tr"
+        case "Tiếng Việt": return "vi"
+        case "Bahasa Indonesia": return "id"
+        case "Bahasa Melayu": return "ms"
+        case "Nederlands": return "nl"
+        case "Svenska": return "sv"
+        case "Dansk": return "da"
+        case "Norsk": return "no"
+        case "Suomi": return "fi"
+        case "Polski": return "pl"
+        case "Čeština": return "cs"
+        case "Magyar": return "hu"
+        case "Română": return "ro"
+        default: return nil
+        }
     }
     
     deinit {
