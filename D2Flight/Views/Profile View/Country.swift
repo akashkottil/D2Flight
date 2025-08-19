@@ -7,6 +7,12 @@ struct Country: View {
     @StateObject private var localizationManager = LocalizationManager.shared
     @State private var searchText: String = ""
     
+    // Language alert state
+    @State private var showLanguageAlert = false
+    @State private var selectedCountryForAlert: CountryInfo?
+    @State private var alertCurrentLanguage = ""
+    @State private var alertSuggestedLanguage = ""
+    
     // Filtered countries based on search with selected country at top
     private var filteredCountries: [CountryInfo] {
         let baseCountries: [CountryInfo]
@@ -48,14 +54,11 @@ struct Country: View {
                     
                     Spacer()
                     
-                    // ✅ LOCALIZED: Using localized text
                     Text("select.country".localized)
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.trailing, 44) // To balance the left button spacing
+                        .padding(.trailing, 44)
                     Spacer()
-                    
-                    
                 }
                 .padding(.vertical)
                 
@@ -66,7 +69,6 @@ struct Country: View {
                     Image("search")
                         .frame(width: 14,height: 14)
                     
-                    // ✅ LOCALIZED: Using localized placeholder
                     TextField("search.country".localized, text: $searchText)
                         .font(CustomFont.font(.medium))
                         .foregroundColor(.primary)
@@ -95,7 +97,6 @@ struct Country: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.2)
-                        // ✅ LOCALIZED: Loading text
                         Text("loading.countries".localized)
                             .font(CustomFont.font(.regular))
                             .foregroundColor(.gray)
@@ -109,7 +110,6 @@ struct Country: View {
                             .font(.system(size: 40))
                             .foregroundColor(.gray)
                         
-                        // ✅ LOCALIZED: Error text
                         Text("error.loading.countries".localized)
                             .font(CustomFont.font(.medium, weight: .semibold))
                         
@@ -118,7 +118,6 @@ struct Country: View {
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                         
-                        // ✅ LOCALIZED: Try again button
                         Button("try.again".localized) {
                             countryManager.loadCountries()
                         }
@@ -134,7 +133,6 @@ struct Country: View {
                             .font(.system(size: 40))
                             .foregroundColor(.gray)
                         
-                        // ✅ LOCALIZED: Empty state text
                         Text("no.countries.found".localized)
                             .font(CustomFont.font(.medium, weight: .semibold))
                         
@@ -187,14 +185,7 @@ struct Country: View {
                                 .padding()
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    // ✅ UPDATED: Use the new method that updates language
-                                    settingsManager.setSelectedCountryWithLanguage(country)
-                                    print("🌍 Selected country: \(country.countryName) (\(country.countryCode))")
-                                    
-                                    // Auto-dismiss after selection
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        presentationMode.wrappedValue.dismiss()
-                                    }
+                                    handleCountrySelection(country)
                                 }
                             }
                         }
@@ -205,14 +196,48 @@ struct Country: View {
             .navigationBarTitle("")
             .navigationBarHidden(true)
         }
+        .languageSelectionAlert(
+            isPresented: $showLanguageAlert,
+            countryName: selectedCountryForAlert?.countryName ?? "",
+            currentLanguage: alertCurrentLanguage,
+            suggestedLanguage: alertSuggestedLanguage,
+            onLanguageSelected: { selectedLanguage in
+                if let country = selectedCountryForAlert {
+                    settingsManager.handleLanguageSelection(selectedLanguage, for: country) {
+                        // Dismiss the view after selection
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+                }
+            }
+        )
         .onAppear {
             // Set default selection if none exists
             if settingsManager.selectedCountry == nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     if let defaultCountry = countryManager.countries.first(where: { $0.countryCode.lowercased() == "in" }) {
-                        settingsManager.setSelectedCountryWithLanguage(defaultCountry)
+                        settingsManager.setSelectedCountryDirectly(defaultCountry)
                     }
                 }
+            }
+        }
+    }
+    
+    // MARK: - Handle Country Selection
+    private func handleCountrySelection(_ country: CountryInfo) {
+        print("🌍 Country tapped: \(country.countryName) (\(country.countryCode))")
+        
+        settingsManager.setSelectedCountryWithLanguageCheck(country) { countryName, currentLang, suggestedLang in
+            // Show language alert
+            selectedCountryForAlert = country
+            alertCurrentLanguage = currentLang
+            alertSuggestedLanguage = suggestedLang
+            showLanguageAlert = true
+        } onDirectUpdate: {
+            // No language change needed, dismiss immediately
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                presentationMode.wrappedValue.dismiss()
             }
         }
     }
