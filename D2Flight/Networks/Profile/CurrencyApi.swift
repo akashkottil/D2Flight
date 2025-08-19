@@ -24,6 +24,7 @@ class CurrencyApi {
             "language": apiParams.language
         ]
         
+        
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept,
             // ✅ ADDED: Language and country headers
