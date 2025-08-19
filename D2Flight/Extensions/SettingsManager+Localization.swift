@@ -1,5 +1,3 @@
-
-
 import Foundation
 import SwiftUI
 
@@ -8,8 +6,8 @@ extension SettingsManager {
     
     // MARK: - Country Management with Language Update
     func setSelectedCountryWithLanguage(_ country: CountryInfo) {
-        selectedCountry = country
-        UserDefaults.standard.set(country.countryCode, forKey: "D2Flight_SelectedCountryCode")
+        // Use the main setSelectedCountry method to ensure proper storage
+        setSelectedCountry(country)
         
         // 🌐 UPDATE LANGUAGE BASED ON COUNTRY
         LocalizationManager.shared.updateLanguageForCountry(country.countryCode)

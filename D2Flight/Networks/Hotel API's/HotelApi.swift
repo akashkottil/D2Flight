@@ -31,7 +31,6 @@ class HotelApi {
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept,
-            "X-CSRFTOKEN": APIConstants.CSRFTokens.hotel
         ]
         
         print("🏨 Hotel API Request:")

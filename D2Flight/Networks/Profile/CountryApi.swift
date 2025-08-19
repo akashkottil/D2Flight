@@ -21,7 +21,6 @@ class CountryApi {
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept,
-            "X-CSRFTOKEN": APIConstants.CSRFTokens.profile
         ]
         
         print("🌍 Fetching countries from API:")

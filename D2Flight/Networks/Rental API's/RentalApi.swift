@@ -31,7 +31,6 @@ class RentalApi {
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.htmlAccept,
-            "X-CSRFTOKEN": APIConstants.CSRFTokens.rental
         ]
         
         print("🚗 Rental API Request:")

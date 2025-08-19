@@ -21,7 +21,6 @@ class CurrencyApi {
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept,
-            "X-CSRFTOKEN": APIConstants.CSRFTokens.profile
         ]
         
         print("💰 Fetching currencies from API:")

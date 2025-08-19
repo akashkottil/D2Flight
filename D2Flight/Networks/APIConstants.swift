@@ -35,12 +35,7 @@ struct APIConstants {
         static let testAppCode = "TEST"
     }
     
-    // MARK: - CSRF Tokens (should be moved to secure storage in production)
-    struct CSRFTokens {
-        static let hotel = "090QuftLMGgFvDzcpACrLkDlcjuaXJnSeMPG0fi752drUyjrgHR36YDpCXVlCJXJ"
-        static let rental = "zx744wOlRDblepgD7fnZ8w8pdmGDQRW5wE41KoUrxjujQIvSZe7acO7CBBLlWOEF"
-        static let profile = "g3X72prcldulQHlvGDpC4QS50jGaDZfFIfdAqOHBOn4d553ig2GKRabT46i33LcB"
-    }
+    
     
     // MARK: - Headers
     struct Headers {
