@@ -60,7 +60,7 @@ struct HotelView: View {
                         
                         // Date & Time Views
                         VStack(spacing: 0) {
-                            HStack(spacing: 10) {
+                            HStack(spacing: 6) {
                                 dateTimeView(
                                     label: formatSelectedDateTime(for: .checkin),
                                     icon: "CalenderIcon",
@@ -217,7 +217,7 @@ struct HotelView: View {
         }) {
             VStack(spacing: 1) {
                 HStack {
-                    Image("HotelIcon")
+                    Image("DepartureIcon")
                         .frame(width: 20, height: 20)
                     Text(hotelLocation.isEmpty ? "enter.hotel.location".localized : hotelLocation)
                         .foregroundColor(hotelLocation.isEmpty ? .gray : .black)

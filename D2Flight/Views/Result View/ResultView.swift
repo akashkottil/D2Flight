@@ -15,32 +15,44 @@ struct ResultView: View {
     // ★ Only show loader on first entry ★
     @State private var showAnimatedLoader = false
     @State private var hasInitialized = false
-    @State private var isInitialLoad = false  // Track if this is the initial load
+    @State private var isInitialLoad = false
 
     // To cancel any pending hide task
     @State private var loaderHideWorkItem: DispatchWorkItem? = nil
 
-    // Passed in from FlightView
-    let searchId: String?
-    let searchParameters: SearchParameters
+    // ✅ NEW: Current search and parameters state
+    @State private var currentSearchId: String?
+    @State private var currentSearchParameters: SearchParameters
+    
+    // ✅ NEW: Edit search sheet state
+    @State private var showEditSearchSheet = false
 
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // MARK: 1) Fixed Top Filter Bar
-                ResultHeaderView(
-                    headerViewModel: headerViewModel,
-                    originCode: searchParameters.originCode,
-                    destinationCode: searchParameters.destinationCode,
-                    isRoundTrip: searchParameters.isRoundTrip,
-                    travelDate: searchParameters.formattedTravelDate,
-                    travelerInfo: searchParameters.formattedTravelerInfo,
+                // MARK: 1) Fixed Top Filter Bar with Edit Functionality
+                ResultHeader(
+                    originCode: currentSearchParameters.originCode,
+                    destinationCode: currentSearchParameters.destinationCode,
+                    isRoundTrip: currentSearchParameters.isRoundTrip,
+                    travelDate: currentSearchParameters.formattedTravelDate,
+                    travelerInfo: currentSearchParameters.formattedTravelerInfo,
+                    searchParameters: currentSearchParameters,
                     onFiltersChanged: { pollRequest in
                         print("🔧 Applying filters from ResultHeader")
                         viewModel.applyFilters(request: pollRequest)
+                    },
+                    onEditSearchCompleted: { newSearchId, updatedParams in
+                        print("🔄 Edit search completed - New searchId: \(newSearchId)")
+                        handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
+                    },
+                    onEditButtonTapped: {
+                        // ✅ NEW: Trigger edit sheet with smooth animation
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            showEditSearchSheet = true
+                        }
                     }
                 )
-                .padding()
                 .background(Color.white)
                 .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                 .zIndex(1)
@@ -51,7 +63,7 @@ struct ResultView: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             ForEach(0..<5, id: \.self) { _ in
-                                ShimmerResultCard(isRoundTrip: searchParameters.isRoundTrip)
+                                ShimmerResultCard(isRoundTrip: currentSearchParameters.isRoundTrip)
                             }
                         }
                         .padding()
@@ -79,7 +91,7 @@ struct ResultView: View {
                             height: 44,
                             cornerRadius: 8
                         ) {
-                            if let searchId = searchId {
+                            if let searchId = currentSearchId {
                                 viewModel.pollFlights(searchId: searchId)
                             }
                         }
@@ -104,7 +116,7 @@ struct ResultView: View {
                                     } label: {
                                         ResultCard(
                                             flight: flight,
-                                            isRoundTrip: searchParameters.isRoundTrip
+                                            isRoundTrip: currentSearchParameters.isRoundTrip
                                         )
                                     }
                                     .buttonStyle(PlainButtonStyle())
@@ -177,10 +189,11 @@ struct ResultView: View {
 
                 if let searchId = searchId {
                     print("🚀 Starting initial poll for searchId: \(searchId)")
+                    currentSearchId = searchId
                     viewModel.pollFlights(searchId: searchId)
                     
                     // ✅ Load ads in parallel
-                    viewModel.loadAdsForSearch(searchParameters: searchParameters)
+                    viewModel.loadAdsForSearch(searchParameters: currentSearchParameters)
                 }
             }
             // ✅ Handle poll response updates
@@ -218,7 +231,7 @@ struct ResultView: View {
             }
             // ✅ Handle initial loading state for animated loader
             .onReceive(viewModel.$isLoading) { isLoading in
-                // Only trigger loader‐logic for the initial load, not for filter changes
+                // Only trigger loader‐logic for the initial load, not for filter changes or edit searches
                 guard hasInitialized && isInitialLoad else { return }
 
                 if isLoading {
@@ -244,13 +257,53 @@ struct ResultView: View {
                     isInitialLoad = false
                 }
             }
+            
+            
         }
+        .topSheet(isPresented: $showEditSearchSheet, maxHeightRatio: 0.6) {
+            EditSearchSheet(
+                isPresented: $showEditSearchSheet,
+                searchParameters: $currentSearchParameters
+            ) { newSearchId, updatedParams in
+                handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
+            }
+        }
+
+
         // Full‐screen loader cover
         .fullScreenCover(isPresented: $showAnimatedLoader) {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
-        // Add debug info for development
-//        .debugPagination(viewModel: viewModel)
+    }
+    
+    // ✅ NEW: Handle edit search completion
+    private func handleEditSearchCompleted(newSearchId: String, updatedParams: SearchParameters) {
+        print("🔄 Handling edit search completion:")
+        print("   Previous searchId: \(currentSearchId ?? "nil")")
+        print("   New searchId: \(newSearchId)")
+        print("   Previous route: \(currentSearchParameters.originCode) → \(currentSearchParameters.destinationCode)")
+        print("   New route: \(updatedParams.originCode) → \(updatedParams.destinationCode)")
+        
+        // Update current state
+        currentSearchId = newSearchId
+        currentSearchParameters = updatedParams
+        
+        // Stop any ongoing polling
+        viewModel.stopPolling()
+        
+        // Reset ViewModel state for new search
+        viewModel.flightResults = []
+        viewModel.errorMessage = nil
+        viewModel.hasMoreResults = true
+        viewModel.totalResultsCount = 0
+        
+        // Start new poll with updated search ID
+        viewModel.pollFlights(searchId: newSearchId)
+        
+        // Load new ads for updated search parameters
+        viewModel.loadAdsForSearch(searchParameters: updatedParams)
+        
+        print("✅ Edit search workflow completed - polling started for new search")
     }
     
     // ✅ Generate mixed content with flights and ads
@@ -283,6 +336,16 @@ struct ResultView: View {
         
         return mixedContent
     }
+    
+    // ✅ UPDATED: Initialize with current parameters
+    init(searchId: String?, searchParameters: SearchParameters) {
+        self.searchId = searchId
+        self._currentSearchParameters = State(initialValue: searchParameters)
+        self._currentSearchId = State(initialValue: searchId)
+    }
+    
+    // Store the initial searchId as a property
+    private let searchId: String?
 }
 
 // MARK: - Preview
