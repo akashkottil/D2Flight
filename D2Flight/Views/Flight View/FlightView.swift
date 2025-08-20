@@ -15,7 +15,7 @@ struct FlightView: View {
     }()
     
     @State private var returnDate: String = ""
-    @State private var travelersCount = "2 Travellers, Economy"
+    @State private var travelersCount: String = ""
     
     // Passenger Sheet States
     @State private var showPassengerSheet = false
@@ -215,7 +215,8 @@ struct FlightView: View {
                     infants: $infants,
                     selectedClass: $selectedClass
                 ) { updatedTravelersText in
-                    travelersCount = updatedTravelersText
+                    // ✅ CHANGE: Use the helper function instead of raw text
+                    travelersCount = formatTravelersText(adults: adults, children: children, infants: infants, selectedClass: selectedClass)
                 }
             }
             
@@ -252,8 +253,13 @@ struct FlightView: View {
                 }
                 prefillRecentLocationsIfNeeded()
                 initializeReturnDate()
+                
+                if travelersCount.isEmpty {
+                                travelersCount = formatTravelersText(adults: adults, children: children, infants: infants, selectedClass: selectedClass)
+                            }
             }
         }
+        
     }
     
     // ✅ UPDATED: Search Handler with Universal Validation
@@ -488,6 +494,13 @@ struct FlightView: View {
         recentLocationsManager.addSearchPair(origin: originLocationObj, destination: destinationLocationObj)
         print("💾 Saved popular destination search pair: \(originIATA) → \(destinationLocation.title)")
     }
+    private func formatTravelersText(adults: Int, children: Int, infants: Int, selectedClass: TravelClass) -> String {
+            let totalTravelers = adults + children + infants
+            let travelersText = totalTravelers == 1 ?
+                "\(totalTravelers) \("traveller".localized)" :
+                "\(totalTravelers) \("travellers".localized)"
+            return "\(travelersText), \(selectedClass.displayName)"
+        }
 }
 
 

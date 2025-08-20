@@ -53,7 +53,7 @@
 //            // Apply Button
 //            VStack {
 //                PrimaryButton(
-//                    title: "Apply",
+//                    title: "apply",
 //                    font: CustomFont.font(.large),
 //                    fontWeight: .semibold,
 //                    textColor: .white,

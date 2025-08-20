@@ -267,7 +267,7 @@ struct DateTimeSelectionView: View {
                         
                         // Apply button
                         PrimaryButton(
-                            title: "Apply",
+                            title: "apply".localized,
                             font: CustomFont.font(.large),
                             fontWeight: .bold,
                             textColor: .white,
@@ -394,7 +394,7 @@ struct DateTimeSelectionView: View {
     
     private func formatFirstDate() -> String {
         guard let firstDate = selectedDates.first else {
-            return "Select date"
+            return "select.date".localized
         }
         return dateFormatter.string(from: firstDate)
     }
@@ -413,7 +413,7 @@ struct DateTimeSelectionView: View {
                 return dateFormatter.string(from: firstDate)
             }
         }
-        return "Select date"
+        return "select.date".localized
     }
     
     private func formatFirstTime() -> String {

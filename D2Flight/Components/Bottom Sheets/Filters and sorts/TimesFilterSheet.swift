@@ -105,7 +105,7 @@ struct TimesFilterSheet: View {
                     )
                     
                     PrimaryButton(
-                        title: "Apply",
+                        title: "apply".localized,
                         font: CustomFont.font(.medium),
                         fontWeight: .semibold,
                         textColor: .white,

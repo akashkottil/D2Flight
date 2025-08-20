@@ -57,9 +57,9 @@ struct ResultHeader: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing) {
-                    Image("EditIcon")
-                        .frame(width: 14, height: 14)
-                    Text("edit.2".localized)
+//                    Image("EditIcon")
+//                        .frame(width: 14, height: 14)
+                    Text("edit".localized)
                         .font(CustomFont.font(.small))
                         .fontWeight(.semibold)
                         .foregroundColor(.black)

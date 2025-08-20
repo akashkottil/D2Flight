@@ -20,7 +20,7 @@ struct HotelView: View {
         return formatter.string(from: defaultTime)
     }()
     
-    @State private var guestsCount = "2 Guests, 1 Room"
+    @State private var guestsCount: String = ""
     
     // Passenger Sheet States
     @State private var showPassengerSheet = false
@@ -175,7 +175,8 @@ struct HotelView: View {
                 selectedClass: $selectedClass,
                 isFromHotel: true
             ) { updatedGuestsText in
-                guestsCount = updatedGuestsText
+                // ✅ CHANGE: Use the helper function
+                guestsCount = formatGuestsText(adults: adults, children: children, rooms: rooms)
             }
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
@@ -213,6 +214,11 @@ struct HotelView: View {
             }
             prefillRecentLocationsIfNeeded()
             initializeDateTimes()
+            
+            if guestsCount.isEmpty {
+                            guestsCount = formatGuestsText(adults: adults, children: children, rooms: rooms)
+                        }
+
         }
     }
     
@@ -496,6 +502,17 @@ struct HotelView: View {
         recentLocationsManager.addSearchPair(origin: hotelLocationObj, destination: hotelLocationObj)
         print("💾 Saved popular hotel search: \(location.title)")
     }
+    private func formatGuestsText(adults: Int, children: Int, rooms: Int) -> String {
+            let totalGuests = adults + children
+            let guestsText = totalGuests == 1 ?
+                "\(totalGuests) \("guest".localized)" :
+                "\(totalGuests) \("guests".localized)"
+            let roomsText = rooms == 1 ?
+                "\(rooms) \("room".localized)" :
+                "\(rooms) \("rooms".localized)"
+            return "\(guestsText), \(roomsText)"
+        }
+    
 }
 
 #Preview {

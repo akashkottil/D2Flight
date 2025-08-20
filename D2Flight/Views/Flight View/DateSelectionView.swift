@@ -96,7 +96,7 @@ struct DateSelectionView: View {
                             // Round trip - show both cards
                             HStack(spacing: 12) {
                                 DateCard(
-                                    title: isFromHotel ? "Check-in" : "Departure",
+                                    title: isFromHotel ? "check-in".localized : "departure".localized,
                                     dateText: formatDepartureDate(),
                                     isSelected: !selectedDates.isEmpty
                                 )
@@ -105,7 +105,7 @@ struct DateSelectionView: View {
                                     .frame(width: 16, height: 16)
                                 
                                 DateCard(
-                                    title: isFromHotel ? "Check-out" : "Return",
+                                    title: isFromHotel ? "check-out".localized : "return".localized,
                                     dateText: formatReturnDate(),
                                     isSelected: selectedDates.count > 1
                                 )
@@ -114,7 +114,7 @@ struct DateSelectionView: View {
                         } else {
                             // One way - show only departure card
                             DateCard(
-                                title: "Departure",
+                                title: "departure".localized,
                                 dateText: formatDepartureDate(),
                                 isSelected: !selectedDates.isEmpty
                             )
@@ -123,7 +123,7 @@ struct DateSelectionView: View {
                         
                         // Apply button
                         PrimaryButton(
-                            title: "Apply",
+                            title: "apply".localized,
                             font: CustomFont.font(.large),
                             fontWeight: .bold,
                             textColor: .white,
@@ -153,7 +153,7 @@ struct DateSelectionView: View {
     
     private func formatDepartureDate() -> String {
         guard let firstDate = selectedDates.first else {
-            return "Select date"
+            return "select.date".localized
         }
         return dateFormatter.string(from: firstDate)
     }
@@ -165,9 +165,9 @@ struct DateSelectionView: View {
         
         // Return different placeholder based on context
         if isFromHotel {
-            return "Add Check-out"
+            return "add.check-out".localized
         } else {
-            return "Add Return"
+            return "add.return".localized
         }
     }
 }

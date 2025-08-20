@@ -68,7 +68,7 @@ struct UnifiedFilterSheet: View {
                 // Single Apply Button
                 VStack {
                     PrimaryButton(
-                        title: "Apply",
+                        title: "apply".localized,
                         font: CustomFont.font(.large),
                         fontWeight: .semibold,
                         textColor: .white,
