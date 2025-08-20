@@ -124,19 +124,19 @@ struct DateTimeSelectionView: View {
     
     private var firstCardTitle: String {
         if isFromHotel {
-            return "Check-in"
+            return "check-in".localized
         } else {
-            return "Pick-up"
+            return "pick-up".localized
         }
     }
     
     private var secondCardTitle: String {
         if isFromHotel {
-            return "Check-out"
+            return "check-out".localized
         } else if isSameDropOff {
-            return "Drop-off (Same location)"
+            return "drop-off.same.location".localized
         } else {
-            return "Drop-off"
+            return "drop-off".localized
         }
     }
     
@@ -145,9 +145,9 @@ struct DateTimeSelectionView: View {
         
         switch activeSelection {
         case .pickup:
-            return isFromHotel ? "Select Check-in Time" : "Select Pick-up Time"
+            return isFromHotel ? "select.check-in.time".localized : "select.pick-up.time".localized
         case .dropoff:
-            return isFromHotel ? "Select Check-out Time" : "Select Drop-off Time"
+            return isFromHotel ? "select.check-out.time".localized : "select.drop-off.time".localized
         }
     }
     
@@ -173,10 +173,10 @@ struct DateTimeSelectionView: View {
             
             Divider()
             
-            // Weekday Headers
+            // ✅ UPDATED: Localized Weekday Headers
             HStack(spacing: 8) {
-                ForEach(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"], id: \.self) { day in
-                    Text(day)
+                ForEach(0..<7, id: \.self) { index in
+                    Text(CalendarLocalization.getLocalizedWeekdayName(for: index))
                         .font(CustomFont.font(.regular, weight: .medium))
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity)
@@ -192,7 +192,8 @@ struct DateTimeSelectionView: View {
             
             // Calendar and Content
             ZStack {
-                SimplifiedCalendar(
+                // ✅ UPDATED: Use LocalizedSimplifiedCalendar instead of SimplifiedCalendar
+                LocalizedSimplifiedCalendar(
                     selectedDates: $selectedDates,
                     isRoundTrip: !isSameDropOff || isFromHotel // Hotel always shows two dates
                 )
@@ -389,13 +390,15 @@ struct DateTimeSelectionView: View {
     
     private func formatFirstDate() -> String {
         guard let firstDate = selectedDates.first else {
-            return "Select date"
+            return "select.date".localized
         }
+        // ✅ UPDATED: Use LocalizedDateFormatter
         return LocalizedDateFormatter.formatShortDateWithComma(firstDate)
     }
     
     private func formatSecondDate() -> String {
         if selectedDates.count > 1, let secondDate = selectedDates.last {
+            // ✅ UPDATED: Use LocalizedDateFormatter
             return LocalizedDateFormatter.formatShortDateWithComma(secondDate)
         } else if (isSameDropOff || isFromHotel), let firstDate = selectedDates.first {
             // For same drop-off or hotel, show appropriate date
@@ -408,7 +411,7 @@ struct DateTimeSelectionView: View {
                 return LocalizedDateFormatter.formatShortDateWithComma(firstDate)
             }
         }
-        return "Select date"
+        return "select.date".localized
     }
     
     private func formatFirstTime() -> String {
@@ -459,9 +462,9 @@ struct DateTimeCard: View {
         
         if let time = formatter.date(from: timeText) {
             let hour = Calendar.current.component(.hour, from: time)
-            return hour < 12 ? "am" : "pm"
+            return hour < 12 ? "am".localized : "pm".localized
         }
-        return "pm"
+        return "pm".localized
     }
     
     var body: some View {

@@ -1,7 +1,7 @@
 import SwiftUI
 import SafariServices
 
-// MARK: - Updated RentalView with Universal Warning System
+// MARK: - Updated RentalView with Localized Date Display
 struct RentalView: View {
     @Namespace private var animationNamespace
     
@@ -11,16 +11,9 @@ struct RentalView: View {
     @State private var pickUpIATACode = ""
     @State private var dropOffIATACode = ""
     
-    @State private var checkInDateTime: String = {
-        let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: Date()) ?? Date()
-        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
-    }()
-
-    @State private var checkOutDateTime: String = {
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-        let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: tomorrow) ?? tomorrow
-        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
-    }()
+    // ✅ UPDATED: Remove default system formatter, let updateDateTimeLabels handle it
+    @State private var checkInDateTime: String = ""
+    @State private var checkOutDateTime: String = ""
     
     // Date and Time Selection States
     @State private var navigateToDateTimeSelection = false
@@ -132,7 +125,7 @@ struct RentalView: View {
                         HStack(spacing: 10) {
                             dateTimeView(
                                 icon: "CalenderIcon",
-                                title: isSameDropOff ? "Pick-up (Same drop-off)" : "Pick-up & Drop-off"
+                                title: isSameDropOff ? "pick-up.same.drop-off".localized : "pick-up.drop-off".localized
                             )
                             .id("datetime_selector")
                         }
@@ -247,7 +240,7 @@ struct RentalView: View {
                     HStack {
                         Image("DepartureIcon")
                             .frame(width: 20, height: 20)
-                        Text(pickUpLocation.isEmpty ? "Enter Pick-up Location" : pickUpLocation)
+                        Text(pickUpLocation.isEmpty ? "enter.pick-up.location".localized : pickUpLocation)
                             .foregroundColor(pickUpLocation.isEmpty ? .gray : .black)
                             .fontWeight(pickUpLocation.isEmpty ? .medium : .bold)
                             .font(CustomFont.font(.regular))
@@ -273,7 +266,7 @@ struct RentalView: View {
                         HStack {
                             Image("DestinationIcon")
                                 .frame(width: 20, height: 20)
-                            Text(dropOffLocation.isEmpty ? "Enter Drop-off Location" : dropOffLocation)
+                            Text(dropOffLocation.isEmpty ? "enter.drop-off.location".localized : dropOffLocation)
                                 .foregroundColor(dropOffLocation.isEmpty ? .gray : .black)
                                 .fontWeight(dropOffLocation.isEmpty ? .medium : .bold)
                                 .font(CustomFont.font(.regular))
@@ -431,16 +424,12 @@ struct RentalView: View {
         rentalSearchVM.searchRentals()
     }
     
-    // MARK: - Date Time View (same as before)
+    // ✅ UPDATED: Date Time View with localized formatting
     private func dateTimeView(icon: String, title: String) -> some View {
         let displayText: String
         
         if selectedDates.isEmpty || selectedTimes.isEmpty {
-            if isSameDropOff {
-                displayText = "Tap to select"
-            } else {
-                displayText = "Tap to select"
-            }
+            displayText = "tap.to.select".localized
         } else {
             let actualPickUp = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
             let actualDropOff = selectedDates.count > 1 && selectedTimes.count > 1 ?
@@ -449,9 +438,9 @@ struct RentalView: View {
             let isSameDay = Calendar.current.isDate(actualPickUp, inSameDayAs: actualDropOff)
             
             if isSameDropOff || isSameDay {
-                displayText = formattedDate(actualPickUp)
+                displayText = formatLocalizedDateTime(actualPickUp)
             } else {
-                displayText = "\(formattedDate(actualPickUp)) • \(formattedDate(actualDropOff))"
+                displayText = "\(formatLocalizedDateTime(actualPickUp)) • \(formatLocalizedDateTime(actualDropOff))"
             }
         }
         
@@ -477,19 +466,61 @@ struct RentalView: View {
         }
     }
     
-    // MARK: - Helper Methods (same as before)
-    private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM, HH:mm"
-        return formatter.string(from: date)
+    // ✅ NEW: Format date with localized weekday and month
+    private func formatLocalizedDateTime(_ date: Date) -> String {
+        let calendar = Calendar.current
+        
+        // Get weekday index (0 = Sunday, 1 = Monday, etc.)
+        let weekdayIndex = calendar.component(.weekday, from: date) - 1
+        let localizedWeekday = CalendarLocalization.getLocalizedWeekdayName(for: weekdayIndex)
+        
+        // Get day number
+        let dayNumber = calendar.component(.day, from: date)
+        
+        // Get month using custom localization
+        let localizedMonth = CalendarLocalization.getLocalizedMonthName(for: date, isShort: true)
+        
+        // Get time
+        let hour = calendar.component(.hour, from: date)
+        let minute = calendar.component(.minute, from: date)
+        
+        return "\(localizedWeekday) \(dayNumber) \(localizedMonth), \(String(format: "%02d:%02d", hour, minute))"
     }
     
     private func initializeDateTimes() {
         if !selectedDates.isEmpty && !selectedTimes.isEmpty {
             updateDateTimeLabels()
+        } else {
+            // Initialize with default values
+            initializeDefaultDateTimes()
         }
         
         print("📅 RentalView initializeDateTimes completed. Mode: \(isSameDropOff ? "Same" : "Different") drop-off")
+    }
+    
+    // ✅ NEW: Initialize default date/times with localized formatting
+    private func initializeDefaultDateTimes() {
+        let now = Date()
+        let calendar = Calendar.current
+        
+        if isSameDropOff {
+            // Same location: today with 2-hour difference
+            let pickupTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+            let dropoffTime = calendar.date(byAdding: .hour, value: 2, to: pickupTime) ?? pickupTime
+            
+            checkInDateTime = formatLocalizedDateTime(pickupTime)
+            checkOutDateTime = formatLocalizedDateTime(dropoffTime)
+        } else {
+            // Different location: 2 days apart
+            let pickupDate = now
+            let dropoffDate = calendar.date(byAdding: .day, value: 2, to: now) ?? now
+            
+            let pickupTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: pickupDate) ?? pickupDate
+            let dropoffTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: dropoffDate) ?? dropoffDate
+            
+            checkInDateTime = formatLocalizedDateTime(pickupTime)
+            checkOutDateTime = formatLocalizedDateTime(dropoffTime)
+        }
     }
     
     private func calculateDefaultCheckoutDateTime() -> String {
@@ -502,18 +533,18 @@ struct RentalView: View {
         
         let checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: baseCheckinDate) ?? baseCheckinDate
         let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: checkoutDate) ?? checkoutDate
-        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
+        return formatLocalizedDateTime(defaultTime)
     }
     
     private func updateDateTimeLabels() {
         if selectedDates.count > 0 && selectedTimes.count > 0 {
             let combinedCheckInDateTime = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
-            checkInDateTime = LocalizedDateFormatter.formatWithPattern(combinedCheckInDateTime, pattern: "E dd MMM, HH:mm")
+            checkInDateTime = formatLocalizedDateTime(combinedCheckInDateTime)
         }
         
         if selectedDates.count > 1 && selectedTimes.count > 1 {
             let combinedCheckOutDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
-            checkOutDateTime = LocalizedDateFormatter.formatWithPattern(combinedCheckOutDateTime, pattern: "E dd MMM, HH:mm")
+            checkOutDateTime = formatLocalizedDateTime(combinedCheckOutDateTime)
         } else {
             checkOutDateTime = calculateDefaultCheckoutDateTime()
         }
@@ -554,8 +585,6 @@ struct RentalView: View {
             print("✅ RentalView: Auto-prefilled from recent searches")
         }
     }
-    
-    
     
     private func saveCurrentSearchPair() {
         let pickUpLocationObj = Location(
@@ -653,6 +682,6 @@ struct RentalWebView: UIViewControllerRepresentable {
     }
 }
 
-//#Preview {
-//    RentalView()
-//}
+#Preview {
+    RentalView()
+}

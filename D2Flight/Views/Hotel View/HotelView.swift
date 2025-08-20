@@ -1,20 +1,13 @@
 import SwiftUI
 
-// MARK: - Updated HotelView with Universal Warning System
+// MARK: - Updated HotelView with Localized Date Display
 struct HotelView: View {
     @State private var hotelLocation = ""
     @State private var hotelIATACode = ""
     
-    @State private var checkInDateTime: String = {
-        let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: Date()) ?? Date()
-        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
-    }()
-
-    @State private var checkOutDateTime: String = {
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-        let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: tomorrow) ?? tomorrow
-        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
-    }()
+    // ✅ UPDATED: Remove the default system formatter and let updateDateTimeLabels handle it
+    @State private var checkInDateTime: String = ""
+    @State private var checkOutDateTime: String = ""
     
     @State private var guestsCount: String = ""
     
@@ -71,14 +64,14 @@ struct HotelView: View {
                                 dateTimeView(
                                     label: formatSelectedDateTime(for: .checkin),
                                     icon: "CalenderIcon",
-                                    title: "Check-in"
+                                    title: "check-in".localized
                                 )
                                 .id("checkin_date")
                                 
                                 dateTimeView(
                                     label: formatSelectedDateTime(for: .checkout),
                                     icon: "CalenderIcon",
-                                    title: "Check-out"
+                                    title: "check-out".localized
                                 )
                                 .id("checkout_date")
                             }
@@ -212,9 +205,8 @@ struct HotelView: View {
             initializeDateTimes()
             
             if guestsCount.isEmpty {
-                            guestsCount = formatGuestsText(adults: adults, children: children, rooms: rooms)
-                        }
-
+                guestsCount = formatGuestsText(adults: adults, children: children, rooms: rooms)
+            }
         }
     }
     
@@ -227,7 +219,7 @@ struct HotelView: View {
                 HStack {
                     Image("HotelIcon")
                         .frame(width: 20, height: 20)
-                    Text(hotelLocation.isEmpty ? "Enter Hotel Location" : hotelLocation)
+                    Text(hotelLocation.isEmpty ? "enter.hotel.location".localized : hotelLocation)
                         .foregroundColor(hotelLocation.isEmpty ? .gray : .black)
                         .fontWeight(hotelLocation.isEmpty ? .medium : .bold)
                         .font(CustomFont.font(.regular))
@@ -245,7 +237,7 @@ struct HotelView: View {
         .cornerRadius(12)
     }
     
-    // Date Time View
+    // ✅ UPDATED: Date Time View with localized formatting
     func dateTimeView(label: String, icon: String, title: String) -> some View {
         Button(action: {
             navigateToDateTimeSelection = true
@@ -355,31 +347,50 @@ struct HotelView: View {
         case checkin, checkout
     }
     
+    // ✅ UPDATED: Use LocalizedDateFormatter for date/time formatting
     private func formatSelectedDateTime(for type: HotelDateType) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM, HH:mm"
-        
         switch type {
         case .checkin:
             if selectedDates.count > 0 && selectedTimes.count > 0 {
                 let combinedDateTime = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
-                return formatter.string(from: combinedDateTime)
+                return formatLocalizedDateTime(combinedDateTime)
             }
             return calculateDefaultCheckinDateTime()
             
         case .checkout:
             if selectedDates.count > 1 && selectedTimes.count > 1 {
                 let combinedDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
-                return formatter.string(from: combinedDateTime)
+                return formatLocalizedDateTime(combinedDateTime)
             }
             return calculateDefaultCheckoutDateTime()
         }
     }
     
+    // ✅ NEW: Format date with localized weekday and month
+    private func formatLocalizedDateTime(_ date: Date) -> String {
+        let calendar = Calendar.current
+        
+        // Get weekday index (0 = Sunday, 1 = Monday, etc.)
+        let weekdayIndex = calendar.component(.weekday, from: date) - 1
+        let localizedWeekday = CalendarLocalization.getLocalizedWeekdayName(for: weekdayIndex)
+        
+        // Get day number
+        let dayNumber = calendar.component(.day, from: date)
+        
+        // Get month using custom localization
+        let localizedMonth = CalendarLocalization.getLocalizedMonthName(for: date, isShort: true)
+        
+        // Get time
+        let hour = calendar.component(.hour, from: date)
+        let minute = calendar.component(.minute, from: date)
+        
+        return "\(localizedWeekday) \(dayNumber) \(localizedMonth), \(String(format: "%02d:%02d", hour, minute))"
+    }
+    
     private func calculateDefaultCheckinDateTime() -> String {
         let today = Date()
         let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: today) ?? today
-        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
+        return formatLocalizedDateTime(defaultTime)
     }
     
     private func calculateDefaultCheckoutDateTime() -> String {
@@ -392,12 +403,16 @@ struct HotelView: View {
         
         let checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: baseCheckinDate) ?? baseCheckinDate
         let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: checkoutDate) ?? checkoutDate
-        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
+        return formatLocalizedDateTime(defaultTime)
     }
     
     private func initializeDateTimes() {
         if !selectedDates.isEmpty && !selectedTimes.isEmpty {
             updateDateTimeLabels()
+        } else {
+            // Initialize with default values using localized formatting
+            checkInDateTime = calculateDefaultCheckinDateTime()
+            checkOutDateTime = calculateDefaultCheckoutDateTime()
         }
         
         print("📅 HotelView initializeDateTimes completed")
@@ -406,12 +421,12 @@ struct HotelView: View {
     private func updateDateTimeLabels() {
         if selectedDates.count > 0 && selectedTimes.count > 0 {
             let combinedCheckInDateTime = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
-            checkInDateTime = LocalizedDateFormatter.formatWithPattern(combinedCheckInDateTime, pattern: "E dd MMM, HH:mm")
+            checkInDateTime = formatLocalizedDateTime(combinedCheckInDateTime)
         }
         
         if selectedDates.count > 1 && selectedTimes.count > 1 {
             let combinedCheckOutDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
-            checkOutDateTime = LocalizedDateFormatter.formatWithPattern(combinedCheckOutDateTime, pattern: "E dd MMM, HH:mm")
+            checkOutDateTime = formatLocalizedDateTime(combinedCheckOutDateTime)
         } else {
             checkOutDateTime = calculateDefaultCheckoutDateTime()
         }
@@ -489,17 +504,17 @@ struct HotelView: View {
         recentLocationsManager.addSearchPair(origin: hotelLocationObj, destination: hotelLocationObj)
         print("💾 Saved popular hotel search: \(location.title)")
     }
-    private func formatGuestsText(adults: Int, children: Int, rooms: Int) -> String {
-            let totalGuests = adults + children
-            let guestsText = totalGuests == 1 ?
-                "\(totalGuests) \("guest".localized)" :
-                "\(totalGuests) \("guests".localized)"
-            let roomsText = rooms == 1 ?
-                "\(rooms) \("room".localized)" :
-                "\(rooms) \("rooms".localized)"
-            return "\(guestsText), \(roomsText)"
-        }
     
+    private func formatGuestsText(adults: Int, children: Int, rooms: Int) -> String {
+        let totalGuests = adults + children
+        let guestsText = totalGuests == 1 ?
+            "\(totalGuests) \("guest".localized)" :
+            "\(totalGuests) \("guests".localized)"
+        let roomsText = rooms == 1 ?
+            "\(rooms) \("room".localized)" :
+            "\(rooms) \("rooms".localized)"
+        return "\(guestsText), \(roomsText)"
+    }
 }
 
 #Preview {
