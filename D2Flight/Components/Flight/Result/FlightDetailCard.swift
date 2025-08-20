@@ -129,7 +129,7 @@ struct FlightDetailCard: View {
                         Image(systemName: "wifi")
                             .font(.system(size: 12))
                             .foregroundColor(.blue)
-                        Text("WiFi")
+                        Text("wifi".localized)
                             .font(.system(size: 12))
                             .foregroundColor(.blue)
                     }
@@ -144,7 +144,7 @@ struct FlightDetailCard: View {
                             }
                         }) {
                             HStack(spacing: 4) {
-                                Text(showAllSegments ? "Hide details" : "View details")
+                                Text(showAllSegments ? "Hide details" : "view.details".localized)
                                     .font(.system(size: 14))
                                     .foregroundColor(.purple)
                                 

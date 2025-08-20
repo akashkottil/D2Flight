@@ -10,7 +10,7 @@ struct EmptySearch: View {
                 .foregroundColor(.black)
                 .font(CustomFont.font(.medium))
             
-            Text("Select location to search flight")
+            Text("select.location.to.search.flight".localized)
                 .font(CustomFont.font(.regular, weight: .medium))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.leading)

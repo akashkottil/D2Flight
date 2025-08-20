@@ -9,7 +9,7 @@ struct PaginationDebugView: View {
         VStack {
             if showDebugInfo {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Debug Info")
+                    Text("debug.info".localized)
                         .font(CustomFont.font(.small, weight: .bold))
                         .foregroundColor(.white)
                     

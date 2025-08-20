@@ -42,6 +42,12 @@ struct SearchCard: View {
     // Action closure
     let onSearchFlights: () -> Void
     
+    // Date type enum for formatting
+    enum DateType {
+        case departure
+        case `return`
+    }
+    
     // Updated initializer to include animation namespace
     init(
         isOneWay: Binding<Bool>,
@@ -144,7 +150,7 @@ struct SearchCard: View {
             }
             
             // Search Flights Button with matched geometry effect
-            PrimaryButton(title: "Search Flights",
+            PrimaryButton(title: "search.flights".localized,
                           font: CustomFont.font(.medium),
                           fontWeight: .bold,
                           textColor: .white,
@@ -171,7 +177,7 @@ struct SearchCard: View {
                     HStack {
                         Image("DepartureIcon")
                             .frame(width: 20, height: 20)
-                        Text(originLocation.isEmpty ? "Enter Departure" : originLocation)
+                        Text(originLocation.isEmpty ? "enter.departure".localized : originLocation)
                             .foregroundColor(originLocation.isEmpty ? .gray : .black)
                             .fontWeight(originLocation.isEmpty ? .medium : .bold)
                             .font(CustomFont.font(.regular))
@@ -190,7 +196,7 @@ struct SearchCard: View {
                     HStack {
                         Image("DestinationIcon")
                             .frame(width: 20, height: 20)
-                        Text(destinationLocation.isEmpty ? "Enter Destination" : destinationLocation)
+                        Text(destinationLocation.isEmpty ? "enter.destination".localized : destinationLocation)
                             .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
                             .fontWeight(destinationLocation.isEmpty ? .medium : .bold)
                             .font(CustomFont.font(.regular))
@@ -251,6 +257,25 @@ struct SearchCard: View {
         }
     }
     
+    // MARK: - NEW: Format Selected Date Function
+    private func formatSelectedDate(for type: DateType) -> String {
+        switch type {
+        case .departure:
+            if let firstDate = selectedDates.first {
+                return LocalizedDateFormatter.formatShortDate(firstDate)
+            } else {
+                return LocalizedDateFormatter.formatShortDate(Date())
+            }
+            
+        case .return:
+            if selectedDates.count > 1, let secondDate = selectedDates.last {
+                return LocalizedDateFormatter.formatShortDate(secondDate)
+            } else {
+                return calculateDefaultReturnDate()
+            }
+        }
+    }
+    
     // MARK: Helper Methods
     private func initializeReturnDate() {
         if returnDate.isEmpty {
@@ -261,31 +286,7 @@ struct SearchCard: View {
         }
     }
     
-    private func formatSelectedDate(for type: CalendarDateType) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        
-        switch type {
-        case .departure:
-            if let firstDate = selectedDates.first {
-                return formatter.string(from: firstDate)
-            }
-            return departureDate // Fallback to default
-            
-        case .return:
-            if selectedDates.count > 1, let secondDate = selectedDates.last {
-                return formatter.string(from: secondDate)
-            }
-            // Calculate return date based on departure date + 2 days
-            return calculateDefaultReturnDate()
-        }
-    }
-    
     private func calculateDefaultReturnDate() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        
-        // Use selected departure date if available, otherwise use current date
         let baseDepartureDate: Date
         if let selectedDepartureDate = selectedDates.first {
             baseDepartureDate = selectedDepartureDate
@@ -293,23 +294,18 @@ struct SearchCard: View {
             baseDepartureDate = Date()
         }
         
-        // Add 2 days to the departure date
         let returnDate = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
-        return formatter.string(from: returnDate)
+        return LocalizedDateFormatter.formatShortDate(returnDate)
     }
     
     private func updateDateLabels() {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        
         if let firstDate = selectedDates.first {
-            departureDate = formatter.string(from: firstDate)
+            departureDate = LocalizedDateFormatter.formatShortDate(firstDate)
         }
         
         if selectedDates.count > 1, let secondDate = selectedDates.last {
-            returnDate = formatter.string(from: secondDate)
+            returnDate = LocalizedDateFormatter.formatShortDate(secondDate)
         } else {
-            // Update return date based on new departure date + 2 days
             returnDate = calculateDefaultReturnDate()
         }
     }

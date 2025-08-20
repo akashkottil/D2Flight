@@ -8,9 +8,9 @@ struct AnimatedResultLoader: View {
     @Binding var isVisible: Bool
     
     let messages = [
-        "Searching for best price for your journey",
-        "Scanning hundreds of airlines",
-        "Finalizing your best deals"
+        "searching.for.best.price.for.your.journey".localized,
+        "scanning.hundreds.of.airlines".localized,
+        "finalizing.your.best.deals".localized
     ]
     
     var body: some View {
@@ -66,7 +66,7 @@ struct AnimatedResultLoader: View {
                 .frame(height: 300)
                 
                 VStack(spacing: 12) {
-                    Text("Looking For Best Deals")
+                    Text("looking.for.best.deals".localized)
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundColor(.white)
                     

@@ -39,10 +39,13 @@ class CountryManager: ObservableObject {
                     self?.errorMessage = nil
                     print("🌍 Loaded \(countryInfos.count) countries from API")
                     
-                    // Set default selection if none exists
-                    if self?.selectedCountry == nil {
-                        self?.setDefaultCountry()
-                    }
+                    // 🆕 POST NOTIFICATION THAT COUNTRIES ARE LOADED
+                    NotificationCenter.default.post(name: NSNotification.Name("CountriesDidLoad"), object: nil)
+                    
+                    // Set default selection if none exists (remove this if using SettingsManager)
+                    // if self?.selectedCountry == nil {
+                    //     self?.setDefaultCountry()
+                    // }
                     
                 case .failure(let error):
                     self?.errorMessage = "Failed to load countries: \(error.localizedDescription)"

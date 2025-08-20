@@ -40,17 +40,29 @@
 		8CB287B02E422AA3002CE17F /* Exceptions for "D2Flight" folder in "D2Flight" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Extensions/DateFormatter+Extensions.swift",
 				Info.plist,
 			);
 			target = 8CD5352E2DE0410900F3FD75 /* D2Flight */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		8C526F822E55BA930010EE6B /* Exceptions for "D2Flight" folder in "Copy Bundle Resources" phase from "D2Flight" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 8CD5352D2DE0410900F3FD75 /* Resources */;
+			membershipExceptions = (
+				"Extensions/DateFormatter+Extensions.swift",
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8CD535312DE0410900F3FD75 /* D2Flight */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				8CB287B02E422AA3002CE17F /* Exceptions for "D2Flight" folder in "D2Flight" target */,
+				8C526F822E55BA930010EE6B /* Exceptions for "D2Flight" folder in "Copy Bundle Resources" phase from "D2Flight" target */,
 			);
 			path = D2Flight;
 			sourceTree = "<group>";
@@ -220,6 +232,33 @@
 			knownRegions = (
 				en,
 				Base,
+				sv,
+				it,
+				nb,
+				vi,
+				pt,
+				"zh-Hans",
+				fi,
+				he,
+				es,
+				ar,
+				el,
+				uk,
+				da,
+				ko,
+				de,
+				ms,
+				cs,
+				ru,
+				fr,
+				th,
+				ja,
+				ro,
+				id,
+				pl,
+				ca,
+				tr,
+				nl,
 			);
 			mainGroup = 8CD535262DE0410900F3FD75;
 			minimizedProjectReferenceProxies = 1;

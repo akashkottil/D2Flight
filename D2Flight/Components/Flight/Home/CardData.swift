@@ -15,22 +15,22 @@ struct AutoSlidingCardsView: View {
     
     let cards = [
         CardData(
-            title: "Why Last Minute Flights ?",
-            subtitle: "Compare flights from various airlines to find the best prices.",
+            title: "why.last.minute.flights".localized,
+            subtitle: "compare.flights.from.various.airlines.to.find.the.best.prices".localized,
             iconName: "airplane",
             backgroundImageName: "slide1",
             iconImage: "priceHand"
         ),
         CardData(
-            title: "Book Smart, Travel Easy",
-            subtitle: "Save money by comparing affordable flights from top airlines quickly.",
+            title: "book.smart.travel.easy".localized,
+            subtitle: "save.money.by.comparing.affordable.flights.from.top.airlines.quickly".localized,
             iconName: "star.fill",
             backgroundImageName: "slide2",
             iconImage: "calendarTime"
         ),
         CardData(
-            title: "24/7 Customer Support",
-            subtitle: "Find flights instantly, then book directly with your chosen provider.",
+            title: "247.customer.support".localized,
+            subtitle: "find.flights.instantly.then.book.directly.with.your.chosen.provider".localized,
             iconName: "phone.fill",
             backgroundImageName: "slide3",
             iconImage: "tickets"

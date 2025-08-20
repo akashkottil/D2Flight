@@ -16,6 +16,7 @@ struct ProfileLists: View {
     @Binding var isLoggedIn: Bool
     @EnvironmentObject var authManager: AuthenticationManager
     @StateObject private var settingsManager = SettingsManager.shared
+    @StateObject private var localizationManager = LocalizationManager.shared
     
     // Observe the managers to get selected values
     @StateObject private var countryManager = CountryManager.shared
@@ -25,14 +26,16 @@ struct ProfileLists: View {
             [
                 ProfileItem(
                     icon: "RegionIcon",
-                    title: "Region",
+                    // ✅ LOCALIZED: Using localized title
+                    title: "region".localized,
                     trailing: settingsManager.getSelectedCountryName(),
                     destination: AnyView(Country()),
                     showsArrow: true
                 ),
                 ProfileItem(
                     icon: "CurrencyIcon",
-                    title: "Currency",
+                    // ✅ LOCALIZED: Using localized title
+                    title: "currency".localized,
                     trailing: settingsManager.getSelectedCurrencyCode(),
                     destination: AnyView(Currency()),
                     showsArrow: true
@@ -40,29 +43,72 @@ struct ProfileLists: View {
             ]
         }
     
-//    // Top Section Items - now computed to show dynamic values
-//    var topItems: [ProfileItem] {
-//        let selectedCountryName = countryManager.selectedCountry?.countryName ?? "Loading..."
-//        let selectedCurrencyCode = currencyManager.selectedCurrency?.code ?? "Loading..."
-//        
-//        return [
-//            ProfileItem(icon: "RegionIcon", title: "Region", trailing: selectedCountryName, destination: AnyView(Country()), showsArrow: true),
-//            ProfileItem(icon: "CurrencyIcon", title: "Currency", trailing: selectedCurrencyCode, destination: AnyView(Currency()), showsArrow: true)
-//        ]
-//    }
-    
     var bottomItems: [ProfileItem] {
         var items: [ProfileItem] = [
-            ProfileItem(icon: "RequestIcon", title: "Request a Feature", trailing: nil, destination: AnyView(DemoScreen()), showsArrow: true),
-            ProfileItem(icon: "ContactIcon", title: "Contact Us", trailing: nil, destination: AnyView(DemoScreen()), showsArrow: true),
-            ProfileItem(icon: "PrivacyIcon", title: "Privacy Policy", trailing: nil, destination: AnyView(DemoScreen()), showsArrow: true),
-            ProfileItem(icon: "AboutIcon", title: "About Us", trailing: nil, destination: AnyView(AboutUs()), showsArrow: true),
-            ProfileItem(icon: "RateIcon", title: "Rate Our App", trailing: nil, destination: AnyView(DemoScreen()), showsArrow: true),
+            ProfileItem(
+                icon: "RequestIcon",
+                // ✅ LOCALIZED: Using localized title
+                title: "request.a.feature".localized,
+                trailing: nil,
+                destination: AnyView(DemoScreen()),
+                showsArrow: true
+            ),
+            ProfileItem(
+                icon: "ContactIcon",
+                // ✅ LOCALIZED: Using localized title
+                title: "contact.us".localized,
+                trailing: nil,
+                destination: AnyView(DemoScreen()),
+                showsArrow: true
+            ),
+            ProfileItem(
+                icon: "PrivacyIcon",
+                // ✅ LOCALIZED: Using localized title
+                title: "privacy.policy".localized,
+                trailing: nil,
+                destination: AnyView(DemoScreen()),
+                showsArrow: true
+            ),
+            ProfileItem(
+                icon: "AboutIcon",
+                // ✅ LOCALIZED: Using localized title
+                title: "about.us".localized,
+                trailing: nil,
+                destination: AnyView(AboutUs()),
+                showsArrow: true
+            ),
+            ProfileItem(
+                icon: "RateIcon",
+                // ✅ LOCALIZED: Using localized title
+                title: "rate.our.app".localized,
+                trailing: nil,
+                destination: AnyView(DemoScreen()),
+                showsArrow: true
+            ),
         ]
         
         if isLoggedIn {
-            items.insert(ProfileItem(icon: "AccountIcon", title: "Account Settings", trailing: nil, destination: AnyView(AccountSettings()), showsArrow: true), at: 1)
-            items.append(ProfileItem(icon: "LogoutIcon", title: "Logout", trailing: nil, destination: nil, showsArrow: false))
+            items.insert(
+                ProfileItem(
+                    icon: "AccountIcon",
+                    // ✅ LOCALIZED: Using localized title
+                    title: "account.settings".localized,
+                    trailing: nil,
+                    destination: AnyView(AccountSettings()),
+                    showsArrow: true
+                ),
+                at: 1
+            )
+            items.append(
+                ProfileItem(
+                    icon: "LogoutIcon",
+                    // ✅ LOCALIZED: Using localized title
+                    title: "logout".localized,
+                    trailing: nil,
+                    destination: nil,
+                    showsArrow: false
+                )
+            )
         }
         
         return items
@@ -79,6 +125,11 @@ struct ProfileLists: View {
             print("📱 ProfileLists appeared - Current selections:")
             print("   Country: \(countryManager.selectedCountry?.countryName ?? "None")")
             print("   Currency: \(currencyManager.selectedCurrency?.code ?? "None")")
+            print("   Language: \(localizationManager.currentLanguage)")
+        }
+        // ✅ IMPORTANT: Listen to language changes to update the UI
+        .onReceive(localizationManager.$currentLanguage) { _ in
+            print("🌐 Language changed, UI will refresh")
         }
     }
     
@@ -101,7 +152,7 @@ struct ProfileLists: View {
                         .buttonStyle(PlainButtonStyle())
                     } else {
                         Button {
-                            if item.title == "Logout" {
+                            if item.title == "logout".localized {
                                 Task {
                                     await authManager.signOut()
                                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -166,7 +217,8 @@ struct ProfileListItem: View {
 // MARK: - Demo Screens
 struct DemoScreen: View {
     var body: some View {
-        Text("Demo Screen")
+        // ✅ LOCALIZED: Using localized text
+        Text("demo.screen".localized)
             .navigationTitle("Demo")
     }
 }

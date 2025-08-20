@@ -1,0 +1,780 @@
+/* Auto-generated from translations.csv */
+"english" = "Arabic";
+"last.minute.flights" = "رحلات اللحظة الأخيرة";
+"flight.ads" = "إعلانات الطيران";
+"flight" = "رحلة جوية";
+"rental" = "الإيجار";
+"hotel" = "الفندق";
+"profile" = "حساب تعريفي";
+"one.way" = "طريقة واحدة";
+"round.trip" = "رحلة ذهاب وعودة";
+"same.drop-off" = "نفس نقطة الإنزال";
+"different.drop-off" = "انخفاض مختلف";
+"enter.departure" = "أدخل المغادرة";
+"enter.destination" = "أدخل الوجهة";
+"enter.pick-up.location" = "أدخل موقع الاستلام";
+"enter.drop-off.location" = "أدخل موقع التسليم";
+"enter.hotel.location" = "أدخل موقع الفندق";
+"check-in" = "تحقق في";
+"check-out" = "الدفع";
+"pick-up" = "يلتقط";
+"drop-off" = "نقطة الإنزال";
+"departure" = "رحيل";
+"return" = "يعود";
+"add.return" = "إضافة إرجاع";
+"add.check-out" = "إضافة الخروج";
+"search.flights" = "البحث عن الرحلات الجوية";
+"search.hotels" = "البحث عن الفنادق";
+"search.rentals" = "البحث عن الإيجارات";
+"traveler.and.class" = "المسافر والطبقة";
+"guests.and.rooms" = "الضيوف والغرف";
+"adults" = "البالغون";
+"children" = "أطفال";
+"infants" = "الرضع";
+"rooms" = "الغرف";
+"over.11" = "أكثر من 11";
+"under.2" = "أقل من سنتين";
+"hotel.rooms" = "غرف الفندق";
+"economy" = "اقتصاد";
+"premium.economy" = "الدرجة السياحية المميزة";
+"business" = "عمل";
+"first.class" = "الدرجة الأولى";
+"sort" = "نوع";
+"times" = "الأوقات";
+"airlines" = "شركات الطيران";
+"duration" = "مدة";
+"price" = "سعر";
+"classes" = "الفصول الدراسية";
+"stops" = "توقف";
+"best" = "أفضل";
+"cheapest" = "أرخص";
+"quickest" = "الأسرع";
+"earliest" = "أقدم";
+"non-stop" = "بدون توقف";
+"1.stop" = "محطة واحدة";
+"count.stops" = "{count} توقف";
+"apply" = "يتقدم";
+"clear" = "واضح";
+"close" = "يغلق";
+"search" = "يبحث";
+"cancel" = "يلغي";
+"done" = "منتهي";
+"edit" = "يحرر";
+"save" = "يحفظ";
+"select.departure.location" = "حدد موقع المغادرة";
+"select.destination.location" = "حدد موقع الوجهة";
+"select.pick-up.location" = "حدد موقع الاستلام";
+"select.drop-off.location" = "حدد موقع التسليم";
+"select.hotel.location" = "حدد موقع الفندق";
+"recent.searches" = "عمليات البحث الأخيرة";
+"search.results" = "نتائج البحث";
+"select.dates" = "اختر التواريخ";
+"select.date" = "حدد التاريخ";
+"lets.find.great.deals.for.you" = "دعونا نجد لك صفقات كبيرة!";
+"sign.in.to.save.up.to.50.when.you.book.a.flight.last.minute.and.anytime" = "قم بتسجيل الدخول لتوفير ما يصل إلى 50% عند حجز رحلة في اللحظة الأخيرة وفي أي وقت 😊.";
+"continue.with.google" = "متابعة مع جوجل";
+"continue.with.apple" = "متابعة مع Apple";
+"sign.in.now" = "تسجيل الدخول الآن";
+"signing.in" = "جاري تسجيل الدخول...";
+"more.offers.awaits.you" = "المزيد من العروض في انتظاركم";
+"sign.up.and.access.to.our.exclusive.deals" = "سجل للحصول على الوصول إلى عروضنا الحصرية";
+"account.settings" = "إعدادات الحساب";
+"region" = "منطقة";
+"currency" = "عملة";
+"request.a.feature" = "طلب ميزة";
+"contact.us" = "اتصل بنا";
+"privacy.policy" = "سياسة الخصوصية";
+"about.us" = "معلومات عنا";
+"rate.our.app" = "قيم تطبيقنا";
+"logout" = "تسجيل الخروج";
+"edit.filter" = "تعديل الفلتر";
+"edit.your.filter.to.see.more.results.or.clear.all.filters" = "قم بتعديل الفلتر الخاص بك لرؤية المزيد من النتائج أو مسح جميع الفلاتر.";
+"clear.all.filter" = "مسح كل الفلتر";
+"booking.options" = "خيارات الحجز";
+"view.deal" = "عرض الصفقة";
+"per.ticket.including.taxes.fees" = "للتذكرة الواحدة، شاملة الضرائب والرسوم";
+"per.adult" = "لكل شخص بالغ";
+"looking.for.best.deals" = "هل تبحث عن أفضل الصفقات";
+"searching.for.best.price.for.your.journey" = "البحث عن أفضل سعر لرحلتك";
+"scanning.hundreds.of.airlines" = "مسح مئات من شركات الطيران";
+"finalizing.your.best.deals" = "إتمام أفضل الصفقات الخاصة بك";
+"loading.more.flights" = "جاري تحميل المزيد من الرحلات...";
+"loading.countries" = "جاري تحميل الدول...";
+"loading.currencies" = "جاري تحميل العملات...";
+"searching.locations" = "جاري البحث عن المواقع...";
+"no.internet.connection.try.reconnecting" = "لا يوجد اتصال بالإنترنت. حاول إعادة الاتصال.";
+"select.location.to.search.flight" = "حدد الموقع للبحث عن الرحلة";
+"try.different.locations" = "جرب مواقع مختلفة";
+"something.went.wrong" = "لقد حدث خطأ ما!";
+"try.again" = "حاول ثانية";
+"error.loading.countries" = "خطأ في تحميل البلدان";
+"error.loading.currencies" = "خطأ في تحميل العملات";
+"no.recent.searches" = "لا توجد عمليات بحث حديثة";
+"your.recent.flight.searches.will.appear.here" = "ستظهر عمليات البحث عن رحلات الطيران الأخيرة هنا";
+"no.locations.found" = "لم يتم العثور على أي مواقع";
+"try.searching.with.a.different.keyword" = "حاول البحث باستخدام كلمة رئيسية مختلفة";
+"no.countries.found" = "لم يتم العثور على دول";
+"try.searching.with.a.different.keyword" = "حاول البحث باستخدام كلمة رئيسية مختلفة";
+"no.currencies.found" = "لم يتم العثور على العملات";
+"try.searching.with.a.different.keyword" = "حاول البحث باستخدام كلمة رئيسية مختلفة";
+"flight.details" = "تفاصيل الرحلة";
+"aircraft.na" = "طائرة غير متوفرة";
+"wifi" = "واي فاي";
+"view.details" = "عرض التفاصيل";
+"hide.details" = "إخفاء التفاصيل";
+"login.to.get.some" = "قم بتسجيل الدخول للحصول على بعض";
+"exclusive.deals" = "عروض حصرية";
+"explore" = "يستكشف";
+"popular.destinations" = "الوجهات الشعبية";
+"popular.hotels" = "الفنادق الشعبية";
+"popular.car.rentals" = "تأجير السيارات الشعبية";
+"why.last.minute.flights" = "لماذا رحلات اللحظة الأخيرة؟";
+"compare.flights.from.various.airlines.to.find.the.best.prices" = "قم بمقارنة الرحلات الجوية من شركات الطيران المختلفة للعثور على أفضل الأسعار.";
+"book.smart.travel.easy" = "احجز بذكاء، سافر بسهولة";
+"save.money.by.comparing.affordable.flights.from.top.airlines.quickly" = "وفر المال عن طريق مقارنة الرحلات الجوية بأسعار معقولة من شركات الطيران الكبرى بسرعة.";
+"247.customer.support" = "دعم العملاء على مدار الساعة طوال أيام الأسبوع";
+"find.flights.instantly.then.book.directly.with.your.chosen.provider" = "ابحث عن الرحلات الجوية على الفور، ثم احجز مباشرة مع مزود الخدمة الذي اخترته.";
+"select.country" = "اختر البلد";
+"select.currency" = "اختر العملة";
+"search.country" = "البحث عن البلد";
+"search.currency" = "البحث عن العملة";
+"about.us" = "معلومات عنا";
+"last.minute.flights" = "رحلات اللحظة الأخيرة";
+"version.1.02" = "الإصدار: 1.02";
+"welcome.to.our.flight.price.comparison.app.we.know.that.planning.a.trip.can.be.stressful.especially.when.it.comes.to.finding.the.best.deals.on.flights.thats.where.we.come.in.our.app.makes.it.easy.for.you.to.compare.prices.from.multiple.airlines.so.you.can.find.the.best.option.for.your.budget.and.schedule" = "أهلاً بكم في تطبيقنا لمقارنة أسعار الرحلات! نعلم أن التخطيط للرحلة قد يكون مُرهقاً، خاصةً عند البحث عن أفضل عروض الرحلات. وهنا يأتي دورنا. يُسهّل تطبيقنا عليك مقارنة أسعار شركات الطيران المختلفة، لتجد الخيار الأنسب لميزانيتك وجدولك.";
+"our.team.is.passionate.about.helping.travelers.save.money.and.have.a.great.trip.we.are.constantly.updating.our.app.with.the.latest.deals.and.features.to.make.your.search.even.easier.with.our.user-friendly.interface.and.reliable.price.comparisons.you.can.book.your.next.flight.with.confidence" = "يحرص فريقنا على مساعدة المسافرين على توفير المال والاستمتاع برحلة رائعة. نعمل باستمرار على تحديث تطبيقنا بأحدث العروض والميزات لتسهيل بحثك. بفضل واجهتنا سهلة الاستخدام ومقارنات الأسعار الموثوقة، يمكنك حجز رحلتك القادمة بثقة.";
+"thank.you.for.choosing.our.app.we.hope.you.have.a.wonderful.journey" = "شكرًا لاختيارك تطبيقنا. نتمنى لك رحلة ممتعة!";
+"first.name" = "الاسم الأول";
+"last.name" = "اسم العائلة";
+"email" = "بريد إلكتروني";
+"delete.account" = "حذف الحساب";
+"select.check-in.time" = "حدد وقت تسجيل الوصول";
+"select.check-out.time" = "حدد وقت المغادرة";
+"select.pick-up.time" = "حدد وقت الاستلام";
+"select.drop-off.time" = "حدد وقت التسليم";
+"select.all" = "حدد الكل";
+"stopover" = "توقف";
+"flight.leg" = "ساق الطيران";
+"taking.off.from.airport" = "الإقلاع من {المطار}";
+"daily.local.taxes.fees" = "الضرائب والرسوم اليومية والمحلية";
+"average.price.is.price" = "متوسط السعر هو ₹{price}";
+"varies" = "يختلف";
+"from" = "من";
+"lets.make.sure.you.get.the.best" = "دعونا نتأكد من حصولك على الأفضل!";
+"allow.push.notifications.so.that.we.can.ensure.you.dont.miss.out.on.the.best.deals" = "اسمح بإشعارات الدفع حتى نتمكن من التأكد من عدم تفويتك لأفضل الصفقات.";
+"allow" = "يسمح";
+"sponsored" = "برعاية";
+"ad" = "إعلان";
+"all.count.flights.loaded" = "تم تحميل جميع الرحلات {count}";
+"count.guests.count.rooms" = "{count} ضيف(ين)، {count} غرفة(غرف)";
+"count.travelers.class" = "{count} مسافر(ين)، {class}";
+"su" = "سو";
+"mo" = "شهر";
+"tu" = "تو";
+"we" = "نحن";
+"th" = "ذ";
+"fr" = "فرنسي";
+"sa" = "سا";
+"by.creating.or.logging.into.an.account.youre.agreeing.with.our.terms.and.conditions.and.privacy.policy" = "من خلال إنشاء حساب أو تسجيل الدخول إليه، فإنك توافق على شروطنا وأحكامنا وسياسة الخصوصية";
+"yes.keep.me.informed.with.the.latest.updates.alerts.and.offers.through.email.and.push.notifications" = "نعم، أبقني على اطلاع بأحدث التحديثات والتنبيهات والعروض عبر البريد الإلكتروني والإشعارات الفورية";
+"kochi" = "كوتشي";
+"gods.own.country" = "بلد الله";
+"sydney" = "سيدني";
+"harbor.city" = "هاربور سيتي";
+"milan" = "ميلانو";
+"fashion.capital" = "عاصمة الموضة";
+"berlin" = "برلين";
+"historic.germany" = "ألمانيا التاريخية";
+"rio.de.janeiro" = "ريو دي جانيرو";
+"city.of.samba" = "مدينة سامبا";
+"cairo" = "القاهرة";
+"land.of.pyramids" = "أرض الأهرامات";
+"viewmodel.isloadingmore" = ":viewModel.isLoadingMore ؟";
+"economy.2.travelers" = "• الدرجة الاقتصادية • مسافران";
+"121965" = "#121965";
+"141738" = "#141738";
+"151838" = "#151838";
+"da1010" = "#DA1010";
+"dacfff" = "#DACFFF";
+"f8f5ff" = "#F8F5FF";
+"f92e12" = "#F92E12";
+"fe6439" = "#FE6439";
+"ff5f30" = "#FF5F30";
+"234" = "234 دولارًا";
+"intprice" = "$\\(Int(السعر))";
+"intrange.lowerbound" = "$\\(Int(النطاق.الحد الأدنى))";
+"intrange.upperbound" = "$\\(Int(النطاق.الحد العلوي))";
+"02d02d" = "%02d:%02d";
+"02d00" = "%02د:00";
+"string.key" = "]+)[";
+"location.iatacode" = "((رمز موقع iata))";
+"recentlocation.iatacode" = "((recentLocation.iataCode))";
+"rating.ratingcount" = "، التقييم)) (\\(ratingCount))";
+"autocomplete" = "/الإكمال التلقائي";
+"countries" = "/بلدان/";
+"currencies" = "/العملات/";
+"deeplink" = "/رابط عميق/";
+"poll" = "/استطلاع/";
+"search" = "/يبحث/";
+"0900" = "09:00";
+"1.adult.0.children" = "1 بالغ، 0 أطفال";
+"1.stop" = "محطة واحدة";
+"1.0.0" = "1.0.0";
+"1.02" = "1.02";
+"1000" = "10:00";
+"1100" = "11:00";
+"1500" = "15:00";
+"2.travelers.business" = "2 مسافرين، عمل";
+"2-11" = "2-11";
+"2h.15m" = "ساعتان و 15 دقيقة";
+"516" = "516";
+"6e" = "6E";
+"9i" = "9I";
+"age.wrappedvalue.years" = "\\(age.wrappedValue) سنوات";
+"ageoption.years" = "\\(ageOption) سنوات";
+"baseurlendpoint" = "\\(baseURL)/\\(نقطة النهاية)";
+"code.currency" = "\\(الرمز) العملة";
+"count.wrappedvalue" = "\\(count.wrappedValue)";
+"currency.abbreviation" = "\\(العملة) (\\(الاختصار))";
+"dateformatter.stringfrom.pickupdate.-.dateformatter.stringfrom.dropoffdate" = "\\(dateFormatter.string(من: pickUpDate)) - \\(dateFormatter.string(من: dropOffDate))";
+"destinationcode.-.origincode" = "\\(رمز الوجهة) - \\(رمز الأصل)";
+"firstleg.origincode.firstleg.destinationcode" = "\\(firstLeg.originCode) → \\(firstLeg.destinationCode)";
+"firstsegment.airlinename.firstsegment.flightnumber" = "\\(firstSegment.airlineName) \\(firstSegment.flightNumber)";
+"flight.providers.count.-.3.more.deal.from.intgetlowestremainingprice" = "\\(flight.providers.count - 3) المزيد من الصفقات ابتداءً من ₹\\(Int(getLowestRemainingPrice()))";
+"formatteddateactualpickup.formatteddateactualdropoff" = "\\(تاريخ التنسيق (الاستلام الفعلي)) • \\(تاريخ التنسيق (الانزال الفعلي))";
+"formatter.stringfrom.checkindate.-.formatter.stringfrom.checkoutdate" = "\\(formatter.string(من: checkinDate)) - \\(formatter.string(من: checkoutDate))";
+"formatter.stringfrom.departuredate.-.formatter.stringfrom.returndate" = "\\(formatter.string(من: تاريخ المغادرة)) - \\(formatter.string(من: تاريخ العودة))";
+"formatter.stringfrom.firstdate.-.returndatestring" = "\\(formatter.string(من: firstDate)) - \\(returnDateString)";
+"getappversion.getbuildnumber" = "\\(الحصول على إصدار التطبيق()) (\\(الحصول على رقم البناء()))";
+"gueststext.roomstext" = "\\(نص الضيوف)، \\(نص الغرف)";
+"hoursh.minsm" = "\\(ساعات)س \\(دقائق)د";
+"hoursh.minutesm" = "\\(ساعات)س \\(دقائق)د";
+"intprogress.100" = "\\(Int(التقدم * 100))%";
+"languagecode-getcurrentcountrycode" = "\\(رمز اللغة)-\\(احصل على رمز البلد الحالي())";
+"origincode.-.destinationcode" = "\\(رمز الأصل) - \\(رمز الوجهة)";
+"origincode.to.destinationcode" = "\\(originCode) إلى \\(destinationCode)";
+"origincode-destinationcode" = "\\(رمز الأصل)-\\(رمز الوجهة)";
+"pickuplocationname.to.dropofflocationname" = "\\(pickUpLocationName) إلى \\(dropOffLocationName ؟؟";
+"stopcount.stops" = "\\(stopCount) توقفات";
+"stringformat" = "\\(سلسلة(التنسيق:";
+"totaltravelers.travelertext.selectedclass.displayname" = "\\(إجمالي المسافرين) \\(نص المسافر)، \\(اسم العرض المحدد للفئة)";
+"traveldate.travelerinfo" = "\\(تاريخ السفر)، \\(معلومات المسافر)";
+"travelerstext.selectedclass.displayname" = "\\(travelersText)، \\(selectedClass.displayName)";
+"n" = "_ن";
+"accept" = "يقبل";
+"accept" = "يقبل";
+"ad" = "إعلان";
+"ad_id" = "معرف الإعلان";
+"add.check-out" = "إضافة الخروج";
+"add.return" = "إضافة إرجاع";
+"adsflightlist" = "الإعلانات/الرحلات/القائمة";
+"adult" = "بالغ";
+"adults" = "البالغين";
+"ae" = "AE";
+"aircraft.na" = "طائرة غير متوفرة";
+"airport" = "مطار";
+"all" = "الجميع";
+"all.viewmodel.totalresultscount.flights.loaded" = "تم تحميل جميع الرحلات \\(viewModel.totalResultsCount)";
+"alliance.air" = "تحالف الطيران";
+"allow" = "يسمح";
+"almost.done" = "تم الانتهاء تقريبا...";
+"ao" = "ايه او";
+"api" = "واجهة برمجة التطبيقات";
+"api.calls.viewmodel.totalpollcount" = "مكالمات واجهة برمجة التطبيقات: \\(viewModel.totalPollCount)";
+"apple" = "تفاحة";
+"apple" = "تفاحة";
+"applicationjson" = "تطبيق/json";
+"apply" = "يتقدم";
+"applying.changes" = "جاري تطبيق التغييرات...";
+"ar" = "ع";
+"ar" = "الواقع المعزز";
+"ar-sa" = "ar-SA";
+"arrival" = "الوصول";
+"asc" = "تصاعدي";
+"at" = "في";
+"atr.72-201.202" = "ATR 72-201 / 202";
+"au" = "أو";
+"au" = "أستراليا";
+"aud" = "الدولار الأسترالي";
+"authentication.configuration.error" = "خطأ في تكوين المصادقة";
+"authentication.failed.error.localizeddescription" = "فشل المصادقة: \\(error.localizedDescription)";
+"average.price.is.intaverageprice" = "متوسط السعر هو $\\(Int(averagePrice))";
+"average.price.is.intaverageprice" = "متوسط السعر هو ₹\\(Int(averagePrice))";
+"be" = "يكون";
+"bearer.bearertoken" = "حامل \\(bearerToken)";
+"beautiful.landscape.with.mountains" = "منظر طبيعي جميل مع الجبال";
+"best" = "أفضل";
+"bg" = "خلفية";
+"bg-bg" = "bg-BG";
+"bh" = "بي اتش";
+"bo" = "بو";
+"br" = "بر";
+"br" = "البرازيل";
+"bright.and.sunny.day" = "يوم مشرق ومشمس";
+"bwimg" = "بويج";
+"by" = "بواسطة";
+"ca" = "كاليفورنيا";
+"ca" = "كاليفورنيا";
+"ca-es" = "ca-ES";
+"cache.pollresponse.cache" = "ذاكرة التخزين المؤقت: \\(pollResponse.cache ?";
+"cad" = "كاد";
+"cancel" = "يلغي";
+"car" = "سيارة";
+"ccj" = "محكمة العدل المركزية";
+"cdg" = "شارل ديغول";
+"ch" = "CH";
+"check-out.date.must.be.after.check-in.date" = "يجب أن يكون تاريخ المغادرة بعد تاريخ تسجيل الوصول";
+"check-out.date.must.be.after.check-in.date" = "يجب أن يكون تاريخ المغادرة بعد تاريخ الوصول.";
+"checkin" = "تحقق في";
+"checking.road.conditions" = "التحقق من حالة الطريق";
+"chf" = "الفرنك السويسري";
+"child" = "طفل";
+"children.childnumber" = "الأطفال \\(رقم الطفل)";
+"city" = "مدينة";
+"cl" = "سي إل";
+"classes" = "الفصول الدراسية";
+"clear" = "واضح";
+"clear.all.filter" = "مسح كل الفلتر";
+"clear.user.data" = "مسح بيانات المستخدم";
+"clock" = "ساعة";
+"cn" = "الصين";
+"cnn" = "سي إن إن";
+"cny" = "يوان صيني";
+"co" = "أول أكسيد الكربون";
+"cok" = "كوك";
+"cookie" = "كوكيز";
+"country" = "دولة";
+"cr" = "سي آر";
+"created.usermanager.isusercreated" = "تم الإنشاء: \\(userManager.isUserCreated ?";
+"cs" = "CS";
+"cs-cz" = "cs-CZ";
+"cu" = "وحدة النقد الاجنبية";
+"current.location" = "الموقع الحالي";
+"cv" = "السيرة الذاتية";
+"cz" = "تشيكوسلوفاكيا";
+"d1wf" = "D1WF";
+"da" = "دا";
+"da-dk" = "دا-دي كيه";
+"data" = "بيانات";
+"dd.mmm" = "dd MMM";
+"de" = "دي";
+"de" = "ألمانيا";
+"de-de" = "دي-دي";
+"demo" = "العرض التوضيحي";
+"desc" = "الوصف";
+"digital.art.creation.tools" = "أدوات إنشاء الفن الرقمي";
+"direct" = "مباشر";
+"dk" = "دك";
+"do" = "يفعل";
+"drop-off.same.location" = "نقطة الإنزال (نفس الموقع)";
+"dubai" = "دبي";
+"dxb" = "مطار دبي الدولي";
+"e.dd.mmm" = "E dd MMM";
+"e.dd.mmm.hhmm" = "E dd MMM, HH:mm";
+"e.dd.mmm" = "هـ د، م م م";
+"ec" = "المفوضية الأوروبية";
+"economy" = "اقتصاد";
+"economy" = "اقتصاد";
+"edit" = "يحرر";
+"ee" = "إي إي";
+"eg" = "على سبيل المثال";
+"ek" = "إي كيه";
+"el" = "إل";
+"el-gr" = "إل-جي آر";
+"email" = "بريد إلكتروني";
+"email" = "بريد إلكتروني";
+"en" = "en";
+"en-gb" = "en-GB";
+"enter.departure" = "أدخل المغادرة";
+"enter.destination" = "أدخل الوجهة";
+"enter.drop-off.location" = "أدخل موقع التسليم";
+"enter.hotel.location" = "أدخل موقع الفندق";
+"enter.pick-up.location" = "أدخل موقع الاستلام";
+"es" = "اللغة الإنجليزية: ES";
+"es" = "es";
+"es-es" = "es-ES";
+"et-ee" = "et-EE";
+"etihad" = "الاتحاد";
+"eur" = "يورو";
+"explore" = "يستكشف";
+"ey" = "إي واي";
+"failed.to.apply.filters.error.localizeddescription" = "فشل تطبيق المرشحات: \\(error.localizedDescription)";
+"failed.to.create.session.please.try.again" = "فشل إنشاء الجلسة. يُرجى المحاولة مرة أخرى.";
+"failed.to.decode.response" = "فشل في فك تشفير الاستجابة";
+"failed.to.delete.account.error.localizeddescription" = "فشل حذف الحساب: \\(error.localizedDescription)";
+"failed.to.encode.request" = "فشل في ترميز الطلب";
+"failed.to.fetch.flights.after.maxretries.attempts.error.localizeddescription" = "فشل جلب الرحلات بعد \\(maxRetries) المحاولات: \\(error.localizedDescription)";
+"failed.to.fetch.locations.error.localizeddescription" = "فشل جلب المواقع: \\(error.localizedDescription)";
+"failed.to.load.countries.error.localizeddescription" = "فشل تحميل البلدان: \\(error.localizedDescription)";
+"failed.to.load.currencies.error.localizeddescription" = "فشل تحميل العملات: \\(error.localizedDescription)";
+"failed.to.prepare.request.data" = "فشل في إعداد بيانات الطلب.";
+"failed.to.process.server.response" = "فشل في معالجة استجابة الخادم.";
+"favorite.items" = "العناصر المفضلة";
+"fbclid" = "معرف fbclid";
+"featured.content" = "المحتوى المميز";
+"fi" = "فاي";
+"fi" = "في اي";
+"fi-fi" = "فاي فاي";
+"finalizing.your.best.deals" = "إتمام أفضل الصفقات الخاصة بك";
+"finding.the.best.route.for.your.journey" = "العثور على أفضل طريق لرحلتك";
+"first" = "أولاً";
+"first.class" = "الدرجة الأولى";
+"flight" = "رحلة جوية";
+"flight" = "رحلة جوية";
+"flight.ads" = "إعلانات الطيران";
+"flight.deals.loaded.successfully" = "تم تحميل عروض الرحلات بنجاح";
+"flight.details" = "تفاصيل الرحلة";
+"fr" = "فرنسي";
+"fr-fr" = "فرنسي-فرنسي";
+"gaming" = "الألعاب";
+"gb" = "جيجا بايت";
+"gb" = "بريطانيا العظمى";
+"gbp" = "GBP";
+"gclid" = "gclid";
+"general" = "عام";
+"get" = "يحصل";
+"google" = "جوجل";
+"google" = "جوجل";
+"gr" = "جي آر";
+"gt" = "جي تي";
+"gw" = "جورج دبليو";
+"hmm.a" = "ح:م أ";
+"hasmore.viewmodel.hasmoreresults" = "HasMore: \\(viewModel.hasMoreResults؟";
+"he" = "هو";
+"he-il" = "هي-إل";
+"hhmm" = "س س:مم";
+"hi-in" = "هاي-إن";
+"hide.details" = "إخفاء التفاصيل";
+"hk" = "هونج كونج";
+"hkg" = "هونغ كونغ";
+"hn" = "ح ن";
+"hong.kong" = "هونغ كونغ";
+"hotel" = "الفندق";
+"hotel" = "الفندق";
+"hotel.search.url.generated.successfully.with.language.apiparams.language" = "تم إنشاء عنوان URL للبحث عن الفندق بنجاح باستخدام اللغة \\(apiParams.language)";
+"hr" = "الموارد البشرية";
+"hr-hr" = "ساعة-ساعة";
+"hu" = "هو";
+"hu-hu" = "هو-هو";
+"id" = "بطاقة تعريف";
+"id" = "بطاقة تعريف";
+"id-id" = "فعلتُ";
+"idfa" = "idfa";
+"ie" = "أي";
+"il" = "إلينوي";
+"impression.tracked" = "تم تتبع الانطباع";
+"in" = "في";
+"in" = "في";
+"india" = "الهند";
+"indigo" = "نيلي";
+"indigo.airways" = "خطوط إنديجو الجوية";
+"infant" = "رضيع";
+"inr" = "روبية هندية";
+"installed.installdate.formatter.dateformatter" = "تم التثبيت: \\(installDate، formatter: dateFormatter)";
+"invalid.credentials.provided" = "تم تقديم بيانات اعتماد غير صالحة";
+"invalid.response" = "استجابة غير صالحة";
+"invalid.search.id" = "معرف بحث غير صالح";
+"invalid.url" = "عنوان URL غير صالح";
+"iq" = "معدل الذكاء";
+"is" = "يكون";
+"it" = "هو - هي";
+"it" = "هو - هي";
+"it-it" = "إنها هي";
+"ja" = "جا";
+"ja-jp" = "جا-جي بي";
+"jo" = "جو";
+"jp" = "جي بي";
+"jp" = "اليابان";
+"jpy" = "ين يابانى";
+"july.30.2025" = "30 يوليو 2025";
+"kch" = "كيه سي إتش";
+"keep.getlanguagedisplaynamecurrentlanguage" = "احتفظ بـ \\(getLanguageDisplayName(اللغة الحالية))";
+"kerala" = "كيرالا";
+"kg" = "كجم";
+"ko" = "كو";
+"ko-kr" = "كو-كي آر";
+"kochi" = "كوتشي";
+"kr" = "كي آر";
+"krw" = "وون كوري";
+"kw" = "كيلو وات";
+"kz" = "كيه زد";
+"language.change" = "تغيير اللغة";
+"language.updated.successfully" = "تم تحديث اللغة بنجاح!";
+"last.minute.flights" = "رحلات اللحظة الأخيرة";
+"launch.screen" = "شاشة الإطلاق";
+"lax" = "مطار لوس أنجلوس الدولي";
+"lb" = "رطل";
+"lhr" = "مطار هيثرو";
+"li" = "لي";
+"light" = "ضوء";
+"limit" = "حد";
+"loading.viewmodel.isloading" = "جاري التحميل: \\(viewModel.isLoading ?";
+"lon" = "لندن";
+"london.heathrow" = "مطار لندن هيثرو";
+"los.angeles" = "لوس أنجلوس";
+"lproj" = "مشروع";
+"lt" = "LT";
+"lt-lt" = "ملازم أول-ملازم أول";
+"lu" = "لو";
+"lv" = "LV";
+"lv-lv" = "LV-LV";
+"managed" = "تمكنت";
+"masonry.layout" = "تخطيط البناء";
+"max" = "الأعلى";
+"mc" = "MC";
+"mel" = "ميل";
+"min" = "دقيقة";
+"minus" = "ناقص";
+"mmmm.yyyy" = "ممممم ييي";
+"mo" = "شهر";
+"mo" = "شهر";
+"mozilla5.0.macintosh.intel.mac.os.x.10_15_7.applewebkit605.1.15.khtml.like.gecko.version14.1.1.safari605.1.15" = "Mozilla/5.0 (Macintosh؛ Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML، مثل Gecko) الإصدار/14.1.1 Safari/605.1.15";
+"mp3" = "mp3";
+"ms" = "آنسة";
+"ms-my" = "ms-MY";
+"msclkid" = "msclkid";
+"music.note" = "نوتة موسيقية";
+"mx" = "مكس";
+"mx" = "مكسيكو";
+"my" = "لي";
+"mz" = "م زد";
+"nature.and.environment" = "الطبيعة والبيئة";
+"nb" = "ملاحظة";
+"network.connection.failed" = "فشل الاتصال بالشبكة";
+"network.connection.failed.please.check.your.internet.connection" = "فشل اتصال الشبكة. يُرجى التحقق من اتصالك بالإنترنت.";
+"new.york" = "نيويورك";
+"new.york.city" = "مدينة نيويورك";
+"new.york.united.states" = "نيويورك، الولايات المتحدة";
+"ni" = "أيرلندا الشمالية";
+"night.mode" = "الوضع الليلي";
+"nl" = "هولندا";
+"nl" = "الهولندية";
+"nl-nl" = "الهولندية-الهولندية";
+"no" = "لا";
+"no.flight.deals.found.for.your.search.criteria" = "لم يتم العثور على عروض طيران تناسب معايير البحث الخاصة بك.";
+"no.internet.connection.try.reconnecting" = "لا يوجد اتصال بالإنترنت. حاول إعادة الاتصال.";
+"no.locations.found" = "لم يتم العثور على أي مواقع";
+"no.recent.searches" = "لا توجد عمليات بحث حديثة";
+"no.response.data" = "لا توجد بيانات استجابة";
+"no-no" = "لا لا";
+"nrt" = "العلاج ببدائل النيكوتين";
+"nyc" = "مدينة نيويورك";
+"nz" = "نيوزيلندا";
+"om" = "أوم";
+"opening.booking.page" = "فتح صفحة الحجز";
+"organic" = "عضوي";
+"pa" = "السلطة الفلسطينية";
+"page" = "صفحة";
+"paris.charles.de.gaulle" = "باريس شارل ديغول";
+"pe" = "التربية البدنية";
+"per.adult" = "لكل شخص بالغ";
+"ph" = "الرقم الهيدروجيني";
+"photo" = "صورة";
+"pick-up" = "يلتقط";
+"pick-up.drop-off" = "الاستلام والتوصيل";
+"pick-up.same.drop-off" = "الاستلام (نفس نقطة التسليم)";
+"pick_up" = "يلتقط";
+"pl" = "اللغة الإنجليزية:";
+"pl" = "بل";
+"pl-pl" = "pl-PL";
+"please.select.a.hotel.location" = "الرجاء تحديد موقع الفندق";
+"please.select.at.least.1.adult" = "الرجاء اختيار شخص بالغ واحد على الأقل";
+"please.select.at.least.1.room" = "الرجاء تحديد غرفة واحدة على الأقل";
+"please.select.both.departure.and.destination.locations" = "الرجاء تحديد موقعي المغادرة والوجهة.";
+"please.select.drop-off.location" = "الرجاء تحديد موقع التسليم.";
+"please.select.hotel.location" = "الرجاء تحديد موقع الفندق.";
+"please.select.pick-up.location" = "الرجاء تحديد موقع الاستلام.";
+"plist" = "قائمة بليست";
+"plus" = "زائد";
+"pm" = "مساءً";
+"post" = "بريد";
+"pr" = "العلاقات العامة";
+"premium.economy" = "الدرجة السياحية المميزة";
+"price" = "سعر";
+"price" = "سعر";
+"price.varies" = "السعر يختلف";
+"profile" = "حساب تعريفي";
+"pt" = "العلاج الطبيعي";
+"pt" = "نقطة";
+"pt-br" = "pt-BR";
+"py" = "بي واي";
+"qa" = "ضمان الجودة";
+"qatar.airways" = "الخطوط الجوية القطرية";
+"qr" = "رمز الاستجابة السريعة";
+"quality" = "جودة";
+"reading.collection" = "مجموعة القراءة";
+"recent.searches" = "عمليات البحث الأخيرة";
+"refreshing.interface" = "تحديث الواجهة...";
+"rental" = "الإيجار";
+"rental.search.url.generated.successfully.with.language.request.languagecode" = "تم إنشاء عنوان URL للبحث عن الإيجار بنجاح باستخدام اللغة \\(request.languageCode)";
+"results.viewmodel.flightresults.countviewmodel.totalresultscount" = "النتائج: \\(viewModel.flightResults.count)/\\(viewModel.totalResultsCount)";
+"retry" = "إعادة المحاولة";
+"return" = "يعود";
+"ro" = "رو";
+"ro" = "رو";
+"ro-ro" = "رو-رو";
+"rooms" = "الغرف";
+"ru" = "روسيا";
+"ru" = "رو";
+"ru-ru" = "رو-رو";
+"sa" = "سا";
+"salem" = "سالم";
+"scanning.hundreds.of.airlines" = "مسح مئات من شركات الطيران";
+"scroll" = "التمرير";
+"se" = "جنوب شرق";
+"search" = "يبحث";
+"search" = "يبحث";
+"search.currency" = "البحث عن العملة";
+"search.failed.error.localizeddescription" = "فشل البحث: \\(error.localizedDescription)";
+"search.results" = "نتائج البحث";
+"search.timeout.-.please.try.again" = "انتهت مهلة البحث - يرجى المحاولة مرة أخرى";
+"searching.for.best.price.for.your.journey" = "البحث عن أفضل سعر لرحلتك";
+"select.all" = "حدد الكل";
+"select.check-in.time" = "حدد وقت تسجيل الوصول";
+"select.check-out.time" = "حدد وقت المغادرة";
+"select.class" = "اختر الفصل";
+"select.date" = "حدد التاريخ";
+"select.departure.location" = "حدد موقع المغادرة";
+"select.destination.location" = "حدد موقع الوجهة";
+"select.drop-off.location" = "حدد موقع التسليم";
+"select.drop-off.time" = "حدد وقت التسليم";
+"select.guests.and.rooms" = "اختيار الضيوف والغرف";
+"select.hotel.location" = "حدد موقع الفندق";
+"select.location.to.search.flight" = "حدد الموقع للبحث عن الرحلة";
+"select.pick-up.location" = "حدد موقع الاستلام";
+"select.pick-up.time" = "حدد وقت الاستلام";
+"select.travellers" = "اختيار المسافرين";
+"server.error.with.code.code" = "خطأ في الخادم مع الكود: \\(code)";
+"session" = "حصة";
+"session.created.successfully" = "تم إنشاء الجلسة بنجاح";
+"session.id.usermanager.currentsessionid.description" = "معرف الجلسة: \\(userManager.currentSessionId?.description ??";
+"sg" = "س ج";
+"show.less" = "إظهار أقل";
+"si" = "سي";
+"sign.in.was.cancelled" = "تم إلغاء تسجيل الدخول";
+"sin" = "الخطيئة";
+"sk" = "سك";
+"sk-sk" = "sk-SK";
+"sl-si" = "sl-SI";
+"slide1" = "الشريحة 1";
+"slide2" = "الشريحة 2";
+"slide3" = "الشريحة 3";
+"sm" = "س م";
+"something.went.wrong.please.try.again" = "حدث خطأ ما. يُرجى المحاولة مرة أخرى.";
+"sort" = "نوع";
+"sort.filterviewmodel.selectedsortoption.displayname" = "الفرز: \\(filterViewModel.selectedSortOption.displayName)";
+"sort.headerviewmodel.filterviewmodel.selectedsortoption.displayname" = "الفرز: \\(headerViewModel.filterViewModel.selectedSortOption.displayName)";
+"sort_by" = "فرز حسب";
+"spice.jet" = "سبايس جيت";
+"st" = "شارع";
+"stops" = "توقف";
+"su" = "سو";
+"success" = "نجاح";
+"sv" = "إس في";
+"sv" = "إس في";
+"sv-se" = "إس في-إس إي";
+"switch.to.getlanguagedisplaynamesuggestedlanguage" = "التبديل إلى \\(getLanguageDisplayName(suggestedLanguage))";
+"sxv" = "SXV";
+"sy" = "سي";
+"syd" = "سيدني";
+"sydney" = "سيدني";
+"taking.off.from.destinationcode" = "الإقلاع من \\(destinationCode)";
+"taking.off.from.origincode" = "الإقلاع من \\(originCode)";
+"tap.to.select" = "انقر للتحديد";
+"test" = "امتحان";
+"th" = "ذ";
+"th" = "ذ";
+"th" = "ذ";
+"th-th" = "ث-ث";
+"tickets" = "تذاكر";
+"time" = "وقت";
+"times" = "الأوقات";
+"tj" = "تي جيه";
+"tl" = "تي ال";
+"tokyo.narita" = "طوكيو ناريتا";
+"tr" = "تي ار";
+"tr" = "تر";
+"tr-tr" = "تي آر-تي آر";
+"travel.adventures" = "مغامرات السفر";
+"try.again" = "حاول ثانية";
+"try.different.locations" = "جرب مواقع مختلفة";
+"try.searching.with.a.different.keyword" = "حاول البحث باستخدام كلمة رئيسية مختلفة";
+"tu" = "تو";
+"tw" = "TW";
+"ua" = "الاتحاد العربي";
+"uk" = "المملكة المتحدة";
+"uk" = "المملكة المتحدة";
+"uk-ua" = "المملكة المتحدة-الإمارات العربية المتحدة";
+"unable.to.decode.response" = "غير قادر على فك تشفير الاستجابة";
+"unknown" = "مجهول";
+"updating.language" = "تحديث اللغة...";
+"us" = "نحن";
+"us" = "نحن";
+"usd" = "دولار أمريكي";
+"user" = "مستخدم";
+"user.id.usermanager.userid.description" = "معرف المستخدم: \\(userManager.userId?.description ??";
+"user_id" = "معرف المستخدم";
+"uy" = "يو واي";
+"va" = "VA";
+"ve" = "في إي";
+"vi" = "السادس";
+"vi-vn" = "في-في إن";
+"view.deal" = "عرض الصفقة";
+"view.details" = "عرض التفاصيل";
+"view.more.deals" = "عرض المزيد من العروض";
+"violet" = "بنفسجي";
+"vistara" = "فيستارا";
+"vn" = "فيتنام";
+"we" = "نحن";
+"wed.17.oct.-.mon.24.oct" = "الأربعاء 17 أكتوبر - الاثنين 24 أكتوبر";
+"wifi" = "واي فاي";
+"window.location.hrefss" = "window\\.location(?:\\.href)?\\s*=\\s*[";
+"woosh" = "ووش";
+"xmark" = "إكس مارك";
+"ye" = "نعم";
+"youve.selected.countryname.would.you.like.to.switch.to.getlanguagedisplaynamesuggestedlanguage.or.keep.getlanguagedisplaynamecurrentlanguage" = "لقد حددتَ \\(countryName). هل ترغب في التبديل إلى \\(getLanguageDisplayName(suggestedLanguage)) أم الاحتفاظ بـ \\(getLanguageDisplayName(currentLanguage))؟";
+"your.recent.flight.searches.will.appear.here" = "ستظهر عمليات البحث عن رحلات الطيران الأخيرة هنا";
+"yyyy-mm-ddthhmm" = "yyyy-MM-dd'T'HH:mm";
+"yyyy-mm-ddthhmm" = "YYYY-MM-DDTHH:MM";
+"za" = "ZA";
+"zh-cn" = "zh-CN";
+"zh-hans" = "زه-هانز";
+"0f" = "₹%.0f";
+"intplatform.price" = "₹\\(Int(سعر المنصة))";
+"intprice" = "₹\\(Int(السعر))";
+"travellers" = "مسافرين";
+"guests" = "الضيوف";
+"room" = "غرفة";
+"january" = "يناير";
+"february" = "فبراير";
+"march" = "يمشي";
+"april" = "أبريل";
+"may" = "يمكن";
+"june" = "يونيو";
+"july" = "يوليو";
+"august" = "أغسطس";
+"september" = "سبتمبر";
+"october" = "أكتوبر";
+"november" = "نوفمبر";
+"december" = "ديسمبر";
+"mon" = "الاثنين";
+"tue" = "الثلاثاء";
+"wed" = "تزوج";
+"thu" = "الخميس";
+"fri" = "الجمعة";
+"sat" = "قعد";
+"sun" = "شمس";
+"jan" = "يناير";
+"feb" = "فبراير";
+"mar" = "مارس";
+"apr" = "أبريل";
+"may" = "يمكن";
+"jun" = "يونيو";
+"jul" = "يوليو";
+"aug" = "أغسطس";
+"sep" = "سبتمبر";
+"oct" = "أكتوبر";
+"nov" = "نوفمبر";
+"dec" = "ديسمبر";
+"stop" = "قف";
+"travellers" = "المسافرون";
