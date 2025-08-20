@@ -437,8 +437,7 @@ struct FlightView: View {
     }
     
     private func calculateDefaultReturnDate() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
+        let formatter = DateFormatter.localizedDateFormatter(format: "E dd MMM")  // ← Changed this line
         
         let baseDepartureDate: Date
         if let selectedDepartureDate = selectedDates.first {
@@ -452,8 +451,7 @@ struct FlightView: View {
     }
     
     private func updateDateLabels() {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
+        let formatter = DateFormatter.localizedDateFormatter(format: "E dd MMM")  // ← Changed this line
         
         if let firstDate = selectedDates.first {
             departureDate = formatter.string(from: firstDate)
@@ -504,6 +502,15 @@ struct FlightView: View {
 }
 
 
+// Add this extension - you can put it at the bottom of FlightView.swift
+extension DateFormatter {
+    static func localizedDateFormatter(format: String) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        formatter.locale = Locale.current  // This enables localization
+        return formatter
+    }
+}
 
 
 

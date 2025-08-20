@@ -11,6 +11,7 @@ struct DateSelectionView: View {
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd, MMM"
+        formatter.locale = Locale.current  // ← Add this
         return formatter
     }()
     

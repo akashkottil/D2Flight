@@ -264,19 +264,19 @@ struct SearchCard: View {
     private func formatSelectedDate(for type: CalendarDateType) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd MMM"
+        formatter.locale = Locale.current  // ← Add this line for localization
         
         switch type {
         case .departure:
             if let firstDate = selectedDates.first {
                 return formatter.string(from: firstDate)
             }
-            return departureDate // Fallback to default
+            return departureDate
             
         case .return:
             if selectedDates.count > 1, let secondDate = selectedDates.last {
                 return formatter.string(from: secondDate)
             }
-            // Calculate return date based on departure date + 2 days
             return calculateDefaultReturnDate()
         }
     }
