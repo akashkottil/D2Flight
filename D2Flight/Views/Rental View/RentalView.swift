@@ -11,19 +11,15 @@ struct RentalView: View {
     @State private var pickUpIATACode = ""
     @State private var dropOffIATACode = ""
     
-    @State private var pickUpDateTime: String = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM, HH:mm"
-        let defaultTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
-        return formatter.string(from: defaultTime)
+    @State private var checkInDateTime: String = {
+        let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: Date()) ?? Date()
+        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
     }()
-    
-    @State private var dropOffDateTime: String = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM, HH:mm"
-        let defaultDate = Calendar.current.date(byAdding: .day, value: 2, to: Date()) ?? Date()
-        let defaultTime = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: defaultDate) ?? defaultDate
-        return formatter.string(from: defaultTime)
+
+    @State private var checkOutDateTime: String = {
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+        let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
     }()
     
     // Date and Time Selection States
@@ -496,22 +492,30 @@ struct RentalView: View {
         print("📅 RentalView initializeDateTimes completed. Mode: \(isSameDropOff ? "Same" : "Different") drop-off")
     }
     
-    private func updateDateTimeLabels() {
-        let dateTimeFormatter = DateFormatter()
-        dateTimeFormatter.dateFormat = "E dd MMM, HH:mm"
+    private func calculateDefaultCheckoutDateTime() -> String {
+        let baseCheckinDate: Date
+        if selectedDates.count > 0 {
+            baseCheckinDate = selectedDates[0]
+        } else {
+            baseCheckinDate = Date()
+        }
         
+        let checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: baseCheckinDate) ?? baseCheckinDate
+        let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: checkoutDate) ?? checkoutDate
+        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
+    }
+    
+    private func updateDateTimeLabels() {
         if selectedDates.count > 0 && selectedTimes.count > 0 {
-            let combinedPickUpDateTime = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
-            pickUpDateTime = dateTimeFormatter.string(from: combinedPickUpDateTime)
+            let combinedCheckInDateTime = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
+            checkInDateTime = LocalizedDateFormatter.formatWithPattern(combinedCheckInDateTime, pattern: "E dd MMM, HH:mm")
         }
         
         if selectedDates.count > 1 && selectedTimes.count > 1 {
-            let combinedDropOffDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
-            dropOffDateTime = dateTimeFormatter.string(from: combinedDropOffDateTime)
-        } else if selectedDates.count > 0 && selectedTimes.count > 1 {
-            let defaultDropOffDate = Calendar.current.date(byAdding: .day, value: 2, to: selectedDates[0]) ?? selectedDates[0]
-            let combinedDropOffDateTime = combineDateAndTime(date: defaultDropOffDate, time: selectedTimes[1])
-            dropOffDateTime = dateTimeFormatter.string(from: combinedDropOffDateTime)
+            let combinedCheckOutDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
+            checkOutDateTime = LocalizedDateFormatter.formatWithPattern(combinedCheckOutDateTime, pattern: "E dd MMM, HH:mm")
+        } else {
+            checkOutDateTime = calculateDefaultCheckoutDateTime()
         }
     }
     
@@ -550,6 +554,8 @@ struct RentalView: View {
             print("✅ RentalView: Auto-prefilled from recent searches")
         }
     }
+    
+    
     
     private func saveCurrentSearchPair() {
         let pickUpLocationObj = Location(

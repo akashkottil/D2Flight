@@ -261,31 +261,8 @@ struct SearchCard: View {
         }
     }
     
-    private func formatSelectedDate(for type: CalendarDateType) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        formatter.locale = Locale.current  // ← Add this line for localization
-        
-        switch type {
-        case .departure:
-            if let firstDate = selectedDates.first {
-                return formatter.string(from: firstDate)
-            }
-            return departureDate
-            
-        case .return:
-            if selectedDates.count > 1, let secondDate = selectedDates.last {
-                return formatter.string(from: secondDate)
-            }
-            return calculateDefaultReturnDate()
-        }
-    }
     
     private func calculateDefaultReturnDate() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        
-        // Use selected departure date if available, otherwise use current date
         let baseDepartureDate: Date
         if let selectedDepartureDate = selectedDates.first {
             baseDepartureDate = selectedDepartureDate
@@ -293,23 +270,18 @@ struct SearchCard: View {
             baseDepartureDate = Date()
         }
         
-        // Add 2 days to the departure date
         let returnDate = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
-        return formatter.string(from: returnDate)
+        return LocalizedDateFormatter.formatShortDate(returnDate)
     }
     
     private func updateDateLabels() {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        
         if let firstDate = selectedDates.first {
-            departureDate = formatter.string(from: firstDate)
+            departureDate = LocalizedDateFormatter.formatShortDate(firstDate)
         }
         
         if selectedDates.count > 1, let secondDate = selectedDates.last {
-            returnDate = formatter.string(from: secondDate)
+            returnDate = LocalizedDateFormatter.formatShortDate(secondDate)
         } else {
-            // Update return date based on new departure date + 2 days
             returnDate = calculateDefaultReturnDate()
         }
     }

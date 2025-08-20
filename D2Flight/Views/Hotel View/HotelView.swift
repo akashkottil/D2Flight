@@ -6,18 +6,14 @@ struct HotelView: View {
     @State private var hotelIATACode = ""
     
     @State private var checkInDateTime: String = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM, HH:mm"
         let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: Date()) ?? Date()
-        return formatter.string(from: defaultTime)
+        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
     }()
-    
+
     @State private var checkOutDateTime: String = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM, HH:mm"
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
         let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: tomorrow) ?? tomorrow
-        return formatter.string(from: defaultTime)
+        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
     }()
     
     @State private var guestsCount: String = ""
@@ -381,18 +377,12 @@ struct HotelView: View {
     }
     
     private func calculateDefaultCheckinDateTime() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM, HH:mm"
-        
         let today = Date()
         let defaultTime = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: today) ?? today
-        return formatter.string(from: defaultTime)
+        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
     }
     
     private func calculateDefaultCheckoutDateTime() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM, HH:mm"
-        
         let baseCheckinDate: Date
         if selectedDates.count > 0 {
             baseCheckinDate = selectedDates[0]
@@ -402,7 +392,7 @@ struct HotelView: View {
         
         let checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: baseCheckinDate) ?? baseCheckinDate
         let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: checkoutDate) ?? checkoutDate
-        return formatter.string(from: defaultTime)
+        return LocalizedDateFormatter.formatWithPattern(defaultTime, pattern: "E dd MMM, HH:mm")
     }
     
     private func initializeDateTimes() {
@@ -414,17 +404,14 @@ struct HotelView: View {
     }
     
     private func updateDateTimeLabels() {
-        let dateTimeFormatter = DateFormatter()
-        dateTimeFormatter.dateFormat = "E dd MMM, HH:mm"
-        
         if selectedDates.count > 0 && selectedTimes.count > 0 {
             let combinedCheckInDateTime = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
-            checkInDateTime = dateTimeFormatter.string(from: combinedCheckInDateTime)
+            checkInDateTime = LocalizedDateFormatter.formatWithPattern(combinedCheckInDateTime, pattern: "E dd MMM, HH:mm")
         }
         
         if selectedDates.count > 1 && selectedTimes.count > 1 {
             let combinedCheckOutDateTime = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
-            checkOutDateTime = dateTimeFormatter.string(from: combinedCheckOutDateTime)
+            checkOutDateTime = LocalizedDateFormatter.formatWithPattern(combinedCheckOutDateTime, pattern: "E dd MMM, HH:mm")
         } else {
             checkOutDateTime = calculateDefaultCheckoutDateTime()
         }

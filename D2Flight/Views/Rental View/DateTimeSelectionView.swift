@@ -43,13 +43,7 @@ struct DateTimeSelectionView: View {
         self.isFromHotel = false
         self.onDatesSelected = onDatesSelected
     }
-    
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd, MMM"
-        formatter.locale = Locale.current  // ← Add this
-        return formatter
-    }()
+
     
     private let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -395,26 +389,26 @@ struct DateTimeSelectionView: View {
     
     private func formatFirstDate() -> String {
         guard let firstDate = selectedDates.first else {
-            return "select.date".localized
+            return "Select date"
         }
-        return dateFormatter.string(from: firstDate)
+        return LocalizedDateFormatter.formatShortDateWithComma(firstDate)
     }
     
     private func formatSecondDate() -> String {
         if selectedDates.count > 1, let secondDate = selectedDates.last {
-            return dateFormatter.string(from: secondDate)
+            return LocalizedDateFormatter.formatShortDateWithComma(secondDate)
         } else if (isSameDropOff || isFromHotel), let firstDate = selectedDates.first {
             // For same drop-off or hotel, show appropriate date
             if isFromHotel {
                 // Hotel: show tomorrow as default checkout
                 let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: firstDate) ?? firstDate
-                return dateFormatter.string(from: tomorrow)
+                return LocalizedDateFormatter.formatShortDateWithComma(tomorrow)
             } else {
                 // Same drop-off: show the same date
-                return dateFormatter.string(from: firstDate)
+                return LocalizedDateFormatter.formatShortDateWithComma(firstDate)
             }
         }
-        return "select.date".localized
+        return "Select date"
     }
     
     private func formatFirstTime() -> String {

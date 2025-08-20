@@ -8,11 +8,6 @@ struct FlightView: View {
     @State private var originLocation = ""
     @State private var destinationLocation = ""
     @State private var iataCode = ""
-    @State private var departureDate: String = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        return formatter.string(from: Date())
-    }()
     
     @State private var returnDate: String = ""
     @State private var travelersCount: String = ""
@@ -45,6 +40,10 @@ struct FlightView: View {
     // NEW: Recent locations management
     @StateObject private var recentLocationsManager = RecentLocationsManager.shared
     @State private var hasPrefilled = false
+    
+    @State private var departureDate: String = {
+        return LocalizedDateFormatter.formatShortDate(Date())
+    }()
     
     // ✅ UPDATED: Remove individual notification states, use WarningManager
     @StateObject private var warningManager = WarningManager.shared
@@ -437,8 +436,6 @@ struct FlightView: View {
     }
     
     private func calculateDefaultReturnDate() -> String {
-        let formatter = DateFormatter.localizedDateFormatter(format: "E dd MMM")  // ← Changed this line
-        
         let baseDepartureDate: Date
         if let selectedDepartureDate = selectedDates.first {
             baseDepartureDate = selectedDepartureDate
@@ -447,18 +444,20 @@ struct FlightView: View {
         }
         
         let returnDate = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
-        return formatter.string(from: returnDate)
+        return LocalizedDateFormatter.formatShortDate(returnDate)
+    }
+    
+    private func formatTravelDate() -> String {
+        return LocalizedDateFormatter.formatTravelDate(from: selectedDates, isOneWay: isOneWay)
     }
     
     private func updateDateLabels() {
-        let formatter = DateFormatter.localizedDateFormatter(format: "E dd MMM")  // ← Changed this line
-        
         if let firstDate = selectedDates.first {
-            departureDate = formatter.string(from: firstDate)
+            departureDate = LocalizedDateFormatter.formatShortDate(firstDate)
         }
         
         if selectedDates.count > 1, let secondDate = selectedDates.last {
-            returnDate = formatter.string(from: secondDate)
+            returnDate = LocalizedDateFormatter.formatShortDate(secondDate)
         } else {
             returnDate = calculateDefaultReturnDate()
         }

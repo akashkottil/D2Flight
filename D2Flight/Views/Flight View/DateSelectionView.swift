@@ -154,21 +154,21 @@ struct DateSelectionView: View {
     
     private func formatDepartureDate() -> String {
         guard let firstDate = selectedDates.first else {
-            return "select.date".localized
+            return "Select date"
         }
-        return dateFormatter.string(from: firstDate)
+        return LocalizedDateFormatter.formatShortDateWithComma(firstDate)
     }
     
     private func formatReturnDate() -> String {
         if selectedDates.count > 1, let secondDate = selectedDates.last {
-            return dateFormatter.string(from: secondDate)
+            return LocalizedDateFormatter.formatShortDateWithComma(secondDate)
         }
         
         // Return different placeholder based on context
         if isFromHotel {
-            return "add.check-out".localized
+            return "Add Check-out"
         } else {
-            return "add.return".localized
+            return "Add Return"
         }
     }
 }
