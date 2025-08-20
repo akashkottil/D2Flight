@@ -42,6 +42,12 @@ struct SearchCard: View {
     // Action closure
     let onSearchFlights: () -> Void
     
+    // Date type enum for formatting
+    enum DateType {
+        case departure
+        case `return`
+    }
+    
     // Updated initializer to include animation namespace
     init(
         isOneWay: Binding<Bool>,
@@ -251,6 +257,25 @@ struct SearchCard: View {
         }
     }
     
+    // MARK: - NEW: Format Selected Date Function
+    private func formatSelectedDate(for type: DateType) -> String {
+        switch type {
+        case .departure:
+            if let firstDate = selectedDates.first {
+                return LocalizedDateFormatter.formatShortDate(firstDate)
+            } else {
+                return LocalizedDateFormatter.formatShortDate(Date())
+            }
+            
+        case .return:
+            if selectedDates.count > 1, let secondDate = selectedDates.last {
+                return LocalizedDateFormatter.formatShortDate(secondDate)
+            } else {
+                return calculateDefaultReturnDate()
+            }
+        }
+    }
+    
     // MARK: Helper Methods
     private func initializeReturnDate() {
         if returnDate.isEmpty {
@@ -260,7 +285,6 @@ struct SearchCard: View {
             returnDate = formatter.string(from: twoDaysLater)
         }
     }
-    
     
     private func calculateDefaultReturnDate() -> String {
         let baseDepartureDate: Date

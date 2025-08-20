@@ -1,11 +1,3 @@
-//
-//  CalendarLocalization.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 20/08/25.
-//
-
-
 import SwiftUI
 
 // MARK: - Calendar Localization Helper
@@ -66,7 +58,11 @@ struct CalendarLocalization {
         let monthNames = isShort ? monthShortNames : monthFullNames
         
         guard monthIndex >= 0 && monthIndex < monthNames.count else {
-            return ""
+            // Fallback to system localization if index is out of bounds
+            let formatter = DateFormatter()
+            formatter.dateFormat = isShort ? "MMM" : "MMMM"
+            formatter.locale = Locale.current
+            return formatter.string(from: date)
         }
         
         return monthNames[monthIndex]
@@ -74,9 +70,33 @@ struct CalendarLocalization {
     
     static func getLocalizedWeekdayName(for weekdayIndex: Int) -> String {
         guard weekdayIndex >= 0 && weekdayIndex < weekdayShortNames.count else {
-            return ""
+            // Fallback to system localization if index is out of bounds
+            let calendar = Calendar.current
+            let weekdaySymbols = calendar.shortWeekdaySymbols
+            let adjustedIndex = weekdayIndex % 7
+            return adjustedIndex < weekdaySymbols.count ? weekdaySymbols[adjustedIndex] : "?"
         }
         return weekdayShortNames[weekdayIndex]
+    }
+    
+    // MARK: - Debug Helper
+    static func debugPrintLocalizedStrings() {
+        print("🌐 Debug: Calendar Localization Strings")
+        print("📅 Weekdays: \(weekdayShortNames)")
+        print("📅 Short Months: \(monthShortNames)")
+        print("📅 Full Months: \(monthFullNames)")
+        print("📅 Current Language: \(LocalizationManager.shared.currentLanguage)")
+    }
+    
+    // MARK: - Test function to verify localization is working
+    static func testLocalization() -> String {
+        let testDate = Date()
+        let weekdayIndex = Calendar.current.component(.weekday, from: testDate) - 1
+        let weekday = getLocalizedWeekdayName(for: weekdayIndex)
+        let month = getLocalizedMonthName(for: testDate, isShort: true)
+        let day = Calendar.current.component(.day, from: testDate)
+        
+        return "\(weekday) \(day) \(month)"
     }
 }
 
@@ -347,17 +367,7 @@ struct LocalizedDateSelectionView: View {
     
     // ✅ NEW: Format date with localized month names
     private func formatLocalizedDate(_ date: Date) -> String {
-        let calendar = Calendar.current
-        let day = calendar.component(.day, from: date)
-        let weekday = calendar.component(.weekday, from: date)
-        
-        // Get localized weekday (adjust for 0-based index)
-        let weekdayName = CalendarLocalization.getLocalizedWeekdayName(for: weekday - 1)
-        
-        // Get localized month (short form)
-        let monthName = CalendarLocalization.getLocalizedMonthName(for: date, isShort: true)
-        
-        return "\(weekdayName) \(day), \(monthName)"
+        return LocalizedDateFormatter.formatShortDateWithComma(date)
     }
 }
 
