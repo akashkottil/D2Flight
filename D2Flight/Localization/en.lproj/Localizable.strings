@@ -424,9 +424,6 @@
 "flight.ads" = "Flight Ads";
 "flight.deals.loaded.successfully" = "Flight deals loaded successfully";
 "flight.details" = "Flight Details";
-"fr" = "fr";
-"fr" = "Fr";
-"fr" = "FR";
 "fr-fr" = "fr-FR";
 "gaming" = "Gaming";
 "gb" = "gb";
@@ -528,8 +525,7 @@
 "min" = "min";
 "minus" = "minus";
 "mmmm.yyyy" = "MMMM yyyy";
-"mo" = "Mo";
-"mo" = "MO";
+
 "mozilla5.0.macintosh.intel.mac.os.x.10_15_7.applewebkit605.1.15.khtml.like.gecko.version14.1.1.safari605.1.15" = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15";
 "mp3" = "mp3";
 "ms" = "ms";
@@ -620,7 +616,6 @@
 "ru" = "ru";
 "ru-ru" = "ru-RU";
 "sa" = "Sa";
-"sa" = "SA";
 "salem" = "Salem";
 "scanning.hundreds.of.airlines" = "Scanning hundreds of airlines";
 "scroll" = "scroll";
@@ -685,9 +680,7 @@
 "taking.off.from.origincode" = "Taking off from \\(originCode)";
 "tap.to.select" = "Tap to select";
 "test" = "TEST";
-"th" = "Th";
-"th" = "TH";
-"th" = "th";
+
 "th-th" = "th-TH";
 "tickets" = "tickets";
 "time" = "Time";

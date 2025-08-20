@@ -63,9 +63,9 @@ struct DateSelectionView: View {
             Divider()
             
             // Weekday Headers
-            HStack(spacing: 8) { // Add spacing between each day
-                ForEach(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"], id: \.self) { day in
-                    Text(day)
+            HStack(spacing: 8) {
+                ForEach(0..<7, id: \.self) { index in
+                    Text(CalendarLocalization.getLocalizedWeekdayName(for: index))
                         .font(CustomFont.font(.regular, weight: .medium))
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity)
@@ -77,11 +77,11 @@ struct DateSelectionView: View {
                 }
             }
             .padding(.top)
-            .padding(.horizontal,20)
+            .padding(.horizontal, 20)
             
             // Calendar
             ZStack {
-                SimplifiedCalendar(
+                LocalizedSimplifiedCalendar(
                     selectedDates: $selectedDates,
                     isRoundTrip: isRoundTrip
                 )

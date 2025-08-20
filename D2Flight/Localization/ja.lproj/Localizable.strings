@@ -168,13 +168,13 @@
 "all.count.flights.loaded" = "すべての{count}便が読み込まれました";
 "count.guests.count.rooms" = "{count} 名のゲスト、{count} 室";
 "count.travelers.class" = "{count} 人の旅行者、{class}";
-"su" = "蘇";
-"mo" = "モ";
+"su" = "日";
+"mo" = "月";
 "tu" = "火";
-"we" = "私たちは";
-"th" = "Th";
-"fr" = "神父";
-"sa" = "サ";
+"we" = "水";
+"th" = "木";
+"fr" = "金";
+"sa" = "土";
 "by.creating.or.logging.into.an.account.youre.agreeing.with.our.terms.and.conditions.and.privacy.policy" = "アカウントを作成またはログインすると、利用規約とプライバシーポリシーに同意したことになります。";
 "yes.keep.me.informed.with.the.latest.updates.alerts.and.offers.through.email.and.push.notifications" = "はい、メールやプッシュ通知を通じて、最新のアップデート、アラート、オファーの情報をお知らせください。";
 "kochi" = "高知";
@@ -424,10 +424,6 @@
 "flight.ads" = "フライト広告";
 "flight.deals.loaded.successfully" = "フライトのお得な情報が正常に読み込まれました";
 "flight.details" = "フライトの詳細";
-"fr" = "fr";
-"fr" = "神父";
-"fr" = "フランス";
-"fr-fr" = "fr-FR";
 "gaming" = "ゲーム";
 "gb" = "ギガバイト";
 "gb" = "イギリス";
@@ -528,8 +524,6 @@
 "min" = "分";
 "minus" = "マイナス";
 "mmmm.yyyy" = "MMMM yyyy";
-"mo" = "モ";
-"mo" = "ミズーリ州";
 "mozilla5.0.macintosh.intel.mac.os.x.10_15_7.applewebkit605.1.15.khtml.like.gecko.version14.1.1.safari605.1.15" = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML、Gecko など) バージョン/14.1.1 Safari/605.1.15";
 "mp3" = "mp3";
 "ms" = "MS";
@@ -619,8 +613,6 @@
 "ru" = "ロシア";
 "ru" = "ru";
 "ru-ru" = "るる";
-"sa" = "サ";
-"sa" = "南アフリカ";
 "salem" = "セーラム";
 "scanning.hundreds.of.airlines" = "数百の航空会社をスキャン";
 "scroll" = "スクロール";
@@ -671,7 +663,6 @@
 "spice.jet" = "スパイスジェット";
 "st" = "ST";
 "stops" = "停止";
-"su" = "蘇";
 "success" = "成功";
 "sv" = "SV";
 "sv" = "SV";
@@ -685,9 +676,6 @@
 "taking.off.from.origincode" = "\\(originCode)から離陸";
 "tap.to.select" = "タップして選択";
 "test" = "テスト";
-"th" = "Th";
-"th" = "TH";
-"th" = "番目";
 "th-th" = "th-TH";
 "tickets" = "チケット";
 "time" = "時間";
@@ -702,7 +690,6 @@
 "try.again" = "もう一度やり直してください";
 "try.different.locations" = "さまざまな場所を試してみる";
 "try.searching.with.a.different.keyword" = "別のキーワードで検索してみてください";
-"tu" = "火";
 "tw" = "TW";
 "ua" = "UA";
 "uk" = "英国";
@@ -728,7 +715,6 @@
 "violet" = "バイオレット";
 "vistara" = "ヴィスタラ";
 "vn" = "ベトナム語";
-"we" = "私たちは";
 "wed.17.oct.-.mon.24.oct" = "10月17日(水)～10月24日(月)";
 "wifi" = "Wi-Fi";
 "window.location.hrefss" = "ウィンドウ\\.場所(?:\\.href)?\\s*=\\s*[";

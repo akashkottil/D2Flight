@@ -307,7 +307,7 @@ struct BookingPlatformRow: View {
                 
                 // Book button
                 PrimaryButton(
-                    title: "View Deal",
+                    title: "view.deal".localized,
                     font: .system(size: 12),
                     fontWeight: .bold,
                     textColor: .white,
