@@ -145,7 +145,9 @@ struct ResultHeader: View {
                     FilterButton(
                         title: "Time",
                         isSelected: filterViewModel.departureTimeRange != 0...1440 ||
-                                   (isRoundTrip && filterViewModel.returnTimeRange != 0...1440),
+                                   filterViewModel.arrivalTimeRange != 0...1440 || // ✅ NEW
+                                   (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...1440) ||
+                                   (isRoundTrip && filterViewModel.returnArrivalTimeRange != 0...1440), // ✅ NEW
                         action: {
                             selectedFilterType = .times
                             showUnifiedFilterSheet = true
@@ -244,7 +246,9 @@ struct ResultHeader: View {
         return filterViewModel.selectedSortOption != .best ||
                filterViewModel.maxStops < 3 ||
                filterViewModel.departureTimeRange != 0...1440 ||
-               (isRoundTrip && filterViewModel.returnTimeRange != 0...1440) ||
+               filterViewModel.arrivalTimeRange != 0...1440 || // ✅ NEW
+               (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...1440) ||
+               (isRoundTrip && filterViewModel.returnArrivalTimeRange != 0...1440) || // ✅ NEW
                filterViewModel.maxDuration < 1440 ||
                !filterViewModel.selectedAirlines.isEmpty ||
                filterViewModel.selectedClass != .economy ||
@@ -261,7 +265,9 @@ struct ResultHeader: View {
         filterViewModel.selectedSortOption = .best
         filterViewModel.maxStops = 3 // Reset to "Any"
         filterViewModel.departureTimeRange = 0...1440
-        filterViewModel.returnTimeRange = 0...1440
+        filterViewModel.arrivalTimeRange = 0...1440 // ✅ NEW
+        filterViewModel.returnDepartureTimeRange = 0...1440
+        filterViewModel.returnArrivalTimeRange = 0...1440 // ✅ NEW
         filterViewModel.maxDuration = 1440
         filterViewModel.selectedAirlines.removeAll()
         filterViewModel.excludedAirlines.removeAll()

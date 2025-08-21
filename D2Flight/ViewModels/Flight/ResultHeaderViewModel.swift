@@ -36,54 +36,54 @@ class ResultHeaderViewModel: ObservableObject {
     
     // ✅ NEW: Create airline options with real minimum prices from flight results
     private func createAirlineOptionsFromPollData(_ pollResponse: PollResponse) -> [AirlineOption] {
-            var airlineOptions: [AirlineOption] = []
-            
-            // Create a dictionary to track minimum price for each airline
-            var airlineMinPrices: [String: Double] = [:]
-            
-            // ✅ CRITICAL FIX: Only calculate prices if there are actual flight results
-            if !pollResponse.results.isEmpty {
-                // Go through all flight results to find minimum price for each airline
-                for flightResult in pollResponse.results {
-                    for leg in flightResult.legs {
-                        for segment in leg.segments {
-                            let airlineCode = segment.airlineIata
-                            let flightMinPrice = flightResult.min_price
-                            
-                            // Update minimum price for this airline
-                            if let existingPrice = airlineMinPrices[airlineCode] {
-                                airlineMinPrices[airlineCode] = min(existingPrice, flightMinPrice)
-                            } else {
-                                airlineMinPrices[airlineCode] = flightMinPrice
-                            }
+        var airlineOptions: [AirlineOption] = []
+        
+        // Create a dictionary to track minimum price for each airline
+        var airlineMinPrices: [String: Double] = [:]
+        
+        // ✅ CRITICAL FIX: Only calculate prices if there are actual flight results
+        if !pollResponse.results.isEmpty {
+            // Go through all flight results to find minimum price for each airline
+            for flightResult in pollResponse.results {
+                for leg in flightResult.legs {
+                    for segment in leg.segments {
+                        let airlineCode = segment.airlineIata
+                        let flightMinPrice = flightResult.min_price
+                        
+                        // Update minimum price for this airline
+                        if let existingPrice = airlineMinPrices[airlineCode] {
+                            airlineMinPrices[airlineCode] = min(existingPrice, flightMinPrice)
+                        } else {
+                            airlineMinPrices[airlineCode] = flightMinPrice
                         }
                     }
                 }
             }
-            
-            // Create AirlineOption objects with real data
-            for airline in pollResponse.airlines {
-                // ✅ FIXED: Use actual minimum price if available, otherwise use a reasonable default
-                let minPrice = airlineMinPrices[airline.airlineIata] ?? 0
-                
-                let airlineOption = AirlineOption(
-                    code: airline.airlineIata,
-                    name: airline.airlineName,
-                    logo: airline.airlineLogo,
-                    price: minPrice
-                )
-                
-                airlineOptions.append(airlineOption)
-            }
-            
-            // Sort by price (cheapest first) but only if we have real prices
-            if !airlineMinPrices.isEmpty {
-                return airlineOptions.sorted { $0.price < $1.price }
-            } else {
-                // If no flight results, sort alphabetically by name
-                return airlineOptions.sorted { $0.name < $1.name }
-            }
         }
+        
+        // Create AirlineOption objects with real data
+        for airline in pollResponse.airlines {
+            // ✅ FIXED: Use actual minimum price if available, otherwise use a reasonable default
+            let minPrice = airlineMinPrices[airline.airlineIata] ?? 0
+            
+            let airlineOption = AirlineOption(
+                code: airline.airlineIata,
+                name: airline.airlineName,
+                logo: airline.airlineLogo,
+                price: minPrice
+            )
+            
+            airlineOptions.append(airlineOption)
+        }
+        
+        // Sort by price (cheapest first) but only if we have real prices
+        if !airlineMinPrices.isEmpty {
+            return airlineOptions.sorted { $0.price < $1.price }
+        } else {
+            // If no flight results, sort alphabetically by name
+            return airlineOptions.sorted { $0.name < $1.name }
+        }
+    }
     
     func calculateAveragePrice() -> Double {
         guard let pollData = pollResponseData else { return 500 }
@@ -183,10 +183,13 @@ struct ResultHeaderView: View {
                         }
                     )
                     
+                    // ✅ UPDATED: Time Filter Button with new property names
                     FilterButton(
                         title: "Time",
                         isSelected: headerViewModel.filterViewModel.departureTimeRange != 0...1440 ||
-                                   (isRoundTrip && headerViewModel.filterViewModel.returnTimeRange != 0...1440),
+                                   headerViewModel.filterViewModel.arrivalTimeRange != 0...1440 || // ✅ NEW
+                                   (isRoundTrip && headerViewModel.filterViewModel.returnDepartureTimeRange != 0...1440) ||
+                                   (isRoundTrip && headerViewModel.filterViewModel.returnArrivalTimeRange != 0...1440), // ✅ NEW
                         action: {
                             headerViewModel.selectedFilterType = .times
                             headerViewModel.showUnifiedFilterSheet = true

@@ -1,16 +1,8 @@
-//
-//  FilterViewModel+ClearButton.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 21/08/25.
-//
-
-
 // Add these enhanced methods to your FilterViewModel.swift
 
 extension FilterViewModel {
     
-    // ✅ ENHANCED: Clear filters with proper reset
+    // ✅ ENHANCED: Clear filters with proper reset including new arrival time filters
     func clearFilters() {
         print("\n🗑️ ===== CLEAR FILTERS DEBUG =====")
         print("🔄 Clearing all filters...")
@@ -25,7 +17,9 @@ extension FilterViewModel {
         // Reset all filter values to defaults
         selectedSortOption = .best
         departureTimeRange = 0...1440
-        returnTimeRange = 0...1440
+        arrivalTimeRange = 0...1440 // ✅ NEW
+        returnDepartureTimeRange = 0...1440
+        returnArrivalTimeRange = 0...1440 // ✅ NEW
         maxDuration = 1440
         selectedClass = .economy
         selectedAirlines.removeAll()
@@ -78,71 +72,128 @@ extension FilterViewModel {
         return emptyRequest
     }
     
-    // ✅ NEW: Get user-friendly description of current stops filter
-    func getStopsFilterDescription() -> String {
-        switch maxStops {
-        case 0: return "Direct flights only"
-        case 1: return "Up to 1 stop"
-        case 2: return "Up to 2 stops"
-        default: return "Any number of stops"
-        }
-    }
-    
-    // ✅ NEW: Check if stops filter is active
-    func hasActiveStopsFilter() -> Bool {
-        return maxStops < 3
-    }
-    
-    // ✅ NEW: Reset only stops filter
-    func clearStopsFilter() {
-        print("\n🛑 ===== CLEAR STOPS FILTER =====")
-        print("🔄 Clearing stops filter only...")
-        print("   Previous max stops: \(maxStops) (\(getStopsFilterDescription()))")
+    // ✅ UPDATED: Get user-friendly description of current time filters
+    func getTimeFilterDescription() -> String {
+        var descriptions: [String] = []
         
-        maxStops = 3 // Reset to "Any"
-        
-        print("   New max stops: \(maxStops) (\(getStopsFilterDescription()))")
-        print("🛑 ===== END CLEAR STOPS FILTER =====\n")
-    }
-    
-    // ✅ ENHANCED: Detailed stops filter logging
-    func logStopsFilterChange(from oldValue: Int, to newValue: Int) {
-        print("\n🛑 ===== STOPS FILTER CHANGE =====")
-        print("🔄 Stops filter changed:")
-        print("   From: \(oldValue) (\(getStopsDescription(oldValue)))")
-        print("   To: \(newValue) (\(getStopsDescription(newValue)))")
-        
-        // Log API parameter that will be sent
-        if newValue < 3 {
-            print("   API Parameter: \"stop_count_max\": \(newValue)")
-        } else {
-            print("   API Parameter: No stop_count_max (show all)")
+        // Departure time filter
+        if departureTimeRange != 0...1440 {
+            let start = formatMinutesToTime(Int(departureTimeRange.lowerBound))
+            let end = formatMinutesToTime(Int(departureTimeRange.upperBound))
+            descriptions.append("Departure: \(start)-\(end)")
         }
         
-        print("🛑 ===== END STOPS FILTER CHANGE =====\n")
-    }
-    
-    // Helper to get stops description
-    private func getStopsDescription(_ maxStops: Int) -> String {
-        switch maxStops {
-        case 0: return "Direct only"
-        case 1: return "Up to 1 stop"
-        case 2: return "Up to 2 stops"
-        default: return "Any stops"
+        // ✅ NEW: Arrival time filter
+        if arrivalTimeRange != 0...1440 {
+            let start = formatMinutesToTime(Int(arrivalTimeRange.lowerBound))
+            let end = formatMinutesToTime(Int(arrivalTimeRange.upperBound))
+            descriptions.append("Arrival: \(start)-\(end)")
         }
-    }
-}
-
-// ✅ ENHANCED: Property observer for maxStops changes
-extension FilterViewModel {
-    
-    // Add this to monitor stops changes - you can add this as a computed property wrapper
-    func setMaxStops(_ newValue: Int) {
-        let oldValue = maxStops
-        maxStops = newValue
         
-        if oldValue != newValue {
-            logStopsFilterChange(from: oldValue, to: newValue)
+        // Return departure time filter (if round trip)
+        if isRoundTrip && returnDepartureTimeRange != 0...1440 {
+            let start = formatMinutesToTime(Int(returnDepartureTimeRange.lowerBound))
+            let end = formatMinutesToTime(Int(returnDepartureTimeRange.upperBound))
+            descriptions.append("Return Departure: \(start)-\(end)")
         }
+        
+        // ✅ NEW: Return arrival time filter (if round trip)
+        if isRoundTrip && returnArrivalTimeRange != 0...1440 {
+            let start = formatMinutesToTime(Int(returnArrivalTimeRange.lowerBound))
+            let end = formatMinutesToTime(Int(returnArrivalTimeRange.upperBound))
+            descriptions.append("Return Arrival: \(start)-\(end)")
+        }
+        
+        return descriptions.isEmpty ? "No time filters" : descriptions.joined(separator: ", ")
+    }
+    
+    // ✅ UPDATED: Check if time filters are active
+    func hasActiveTimeFilters() -> Bool {
+        return departureTimeRange != 0...1440 ||
+               arrivalTimeRange != 0...1440 || // ✅ NEW
+               (isRoundTrip && returnDepartureTimeRange != 0...1440) ||
+               (isRoundTrip && returnArrivalTimeRange != 0...1440) // ✅ NEW
+    }
+    
+    // ✅ UPDATED: Reset only time filters
+    func clearTimeFilters() {
+        print("\n🕐 ===== CLEAR TIME FILTERS =====")
+        print("🔄 Clearing time filters only...")
+        print("   Previous time filters: \(getTimeFilterDescription())")
+        
+        departureTimeRange = 0...1440
+        arrivalTimeRange = 0...1440 // ✅ NEW
+        returnDepartureTimeRange = 0...1440
+        returnArrivalTimeRange = 0...1440 // ✅ NEW
+        
+        print("   New time filters: \(getTimeFilterDescription())")
+        print("🕐 ===== END CLEAR TIME FILTERS =====\n")
+    }
+    
+    // ✅ UPDATED: Helper to get list of active filters including new arrival time filters
+    func getActiveFiltersList() -> [String] {
+        var activeFilters: [String] = []
+        
+        if selectedSortOption != .best {
+            activeFilters.append("Sort: \(selectedSortOption.rawValue)")
+        }
+        
+        if departureTimeRange != 0...1440 {
+            let start = formatMinutesToTime(Int(departureTimeRange.lowerBound))
+            let end = formatMinutesToTime(Int(departureTimeRange.upperBound))
+            activeFilters.append("Departure time: \(start)-\(end)")
+        }
+        
+        // ✅ NEW: Arrival time filter
+        if arrivalTimeRange != 0...1440 {
+            let start = formatMinutesToTime(Int(arrivalTimeRange.lowerBound))
+            let end = formatMinutesToTime(Int(arrivalTimeRange.upperBound))
+            activeFilters.append("Arrival time: \(start)-\(end)")
+        }
+        
+        if isRoundTrip && returnDepartureTimeRange != 0...1440 {
+            let start = formatMinutesToTime(Int(returnDepartureTimeRange.lowerBound))
+            let end = formatMinutesToTime(Int(returnDepartureTimeRange.upperBound))
+            activeFilters.append("Return departure time: \(start)-\(end)")
+        }
+        
+        // ✅ NEW: Return arrival time filter
+        if isRoundTrip && returnArrivalTimeRange != 0...1440 {
+            let start = formatMinutesToTime(Int(returnArrivalTimeRange.lowerBound))
+            let end = formatMinutesToTime(Int(returnArrivalTimeRange.upperBound))
+            activeFilters.append("Return arrival time: \(start)-\(end)")
+        }
+        
+        if maxDuration < 1440 {
+            let hours = Int(maxDuration / 60)
+            let minutes = Int(maxDuration.truncatingRemainder(dividingBy: 60))
+            activeFilters.append("Max duration: \(hours)h \(minutes)m")
+        }
+        
+        if maxStops < 3 {
+            let stopsText = maxStops == 0 ? "Direct only" : "≤ \(maxStops) stops"
+            activeFilters.append("Stops: \(stopsText)")
+        }
+        
+        if !selectedAirlines.isEmpty {
+            activeFilters.append("Airlines: \(selectedAirlines.count) selected")
+        }
+        
+        if !excludedAirlines.isEmpty {
+            activeFilters.append("Excluded airlines: \(excludedAirlines.count)")
+        }
+        
+        if hasAPIDataLoaded && priceRange != originalAPIMinPrice...originalAPIMaxPrice {
+            activeFilters.append("Price: ₹\(Int(priceRange.lowerBound))-₹\(Int(priceRange.upperBound))")
+        }
+        
+        return activeFilters
+    }
+    
+    // ✅ Helper to format minutes to time
+    private func formatMinutesToTime(_ minutes: Int) -> String {
+        let hours = minutes / 60
+        let mins = minutes % 60
+        return String(format: "%02d:%02d", hours, mins)
     }
 }

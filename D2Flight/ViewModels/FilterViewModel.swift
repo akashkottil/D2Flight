@@ -8,13 +8,35 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Supporting Models (defined first to avoid scope issues)
+enum SortOption: String, CaseIterable {
+    case best = "Best"
+    case cheapest = "Cheapest"
+    case quickest = "Quickest"
+    case earliest = "Earliest"
+    
+    var displayName: String {
+        return self.rawValue
+    }
+}
+
+struct AirlineOption: Identifiable {
+    let id = UUID()
+    let code: String
+    let name: String
+    let logo: String
+    let price: Double
+}
+
 class FilterViewModel: ObservableObject {
     // Sort options
     @Published var selectedSortOption: SortOption = .best
     
-    // Time filters (in minutes from midnight)
+    // ✅ UPDATED: Separate time filters for departure and arrival
     @Published var departureTimeRange: ClosedRange<Double> = 0...1440 // 24 hours in minutes
-    @Published var returnTimeRange: ClosedRange<Double> = 0...1440
+    @Published var arrivalTimeRange: ClosedRange<Double> = 0...1440 // 24 hours in minutes
+    @Published var returnDepartureTimeRange: ClosedRange<Double> = 0...1440
+    @Published var returnArrivalTimeRange: ClosedRange<Double> = 0...1440
     
     // Duration filters (in minutes)
     @Published var maxDuration: Double = 1440 // 24 hours
@@ -58,7 +80,9 @@ class FilterViewModel: ObservableObject {
         // Set default values
         selectedSortOption = .best
         departureTimeRange = 0...1440
-        returnTimeRange = 0...1440
+        arrivalTimeRange = 0...1440 // ✅ NEW
+        returnDepartureTimeRange = 0...1440
+        returnArrivalTimeRange = 0...1440 // ✅ NEW
         maxDuration = 1440
         selectedClass = .economy
         selectedAirlines = []
@@ -79,7 +103,6 @@ class FilterViewModel: ObservableObject {
         print("✈️ Updated available airlines: \(availableAirlines.count)")
     }
     
-    // ✅ NEW: Method to get sorted airlines for filter sheet (called only when sheet opens)
     func getSortedAirlinesForSheet() -> [AirlineOption] {
         return availableAirlines.sorted { airline1, airline2 in
             let isSelected1 = selectedAirlines.contains(airline1.code)
@@ -140,7 +163,7 @@ class FilterViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Main buildPollRequest method
+    // MARK: - ✅ UPDATED: Main buildPollRequest method with correct time parameter structure
     func buildPollRequest() -> PollRequest {
         var request = PollRequest()
         
@@ -172,48 +195,90 @@ class FilterViewModel: ObservableObject {
             request.stop_count_max = maxStops
         }
         
-        // ✅ Time range filters - only apply if ranges are modified
-        var hasTimeFilters = false
+        // ✅ UPDATED: Time range filters with correct structure
         var timeRanges: [ArrivalDepartureRange] = []
         
-        if departureTimeRange != 0...1440 {
-            hasTimeFilters = true
-            timeRanges.append(ArrivalDepartureRange(
-                arrival: TimeRange(
-                    min: Int(departureTimeRange.lowerBound),
-                    max: Int(departureTimeRange.upperBound)
-                ),
-                departure: TimeRange(
-                    min: Int(departureTimeRange.lowerBound),
-                    max: Int(departureTimeRange.upperBound)
+        // Check if any time filters are active for outbound leg
+        let hasDepartureTimeFilter = departureTimeRange != 0...1440
+        let hasArrivalTimeFilter = arrivalTimeRange != 0...1440
+        
+        if hasDepartureTimeFilter || hasArrivalTimeFilter {
+            var outboundRange = ArrivalDepartureRange(
+                arrival: TimeRange(min: 0, max: 1440), // Default arrival range
+                departure: TimeRange(min: 0, max: 1440) // Default departure range
+            )
+            
+            // Override departure if filtered
+            if hasDepartureTimeFilter {
+                outboundRange = ArrivalDepartureRange(
+                    arrival: outboundRange.arrival,
+                    departure: TimeRange(
+                        min: Int(departureTimeRange.lowerBound),
+                        max: Int(departureTimeRange.upperBound)
+                    )
                 )
-            ))
+            }
+            
+            // Override arrival if filtered
+            if hasArrivalTimeFilter {
+                outboundRange = ArrivalDepartureRange(
+                    arrival: TimeRange(
+                        min: Int(arrivalTimeRange.lowerBound),
+                        max: Int(arrivalTimeRange.upperBound)
+                    ),
+                    departure: outboundRange.departure
+                )
+            }
+            
+            timeRanges.append(outboundRange)
         }
         
         // Return leg time range (if round trip and different from default)
-        if isRoundTrip && returnTimeRange != 0...1440 {
-            hasTimeFilters = true
-            // Add return leg if not already added, or update existing one
-            if timeRanges.isEmpty {
-                // Add departure with default values and return with filtered values
-                timeRanges.append(ArrivalDepartureRange(
-                    arrival: TimeRange(min: 0, max: 1440),
-                    departure: TimeRange(min: 0, max: 1440)
-                ))
-            }
-            timeRanges.append(ArrivalDepartureRange(
-                arrival: TimeRange(
-                    min: Int(returnTimeRange.lowerBound),
-                    max: Int(returnTimeRange.upperBound)
-                ),
-                departure: TimeRange(
-                    min: Int(returnTimeRange.lowerBound),
-                    max: Int(returnTimeRange.upperBound)
+        if isRoundTrip {
+            let hasReturnDepartureTimeFilter = returnDepartureTimeRange != 0...1440
+            let hasReturnArrivalTimeFilter = returnArrivalTimeRange != 0...1440
+            
+            if hasReturnDepartureTimeFilter || hasReturnArrivalTimeFilter {
+                var returnRange = ArrivalDepartureRange(
+                    arrival: TimeRange(min: 0, max: 1440), // Default arrival range
+                    departure: TimeRange(min: 0, max: 1440) // Default departure range
                 )
-            ))
+                
+                // Override departure if filtered
+                if hasReturnDepartureTimeFilter {
+                    returnRange = ArrivalDepartureRange(
+                        arrival: returnRange.arrival,
+                        departure: TimeRange(
+                            min: Int(returnDepartureTimeRange.lowerBound),
+                            max: Int(returnDepartureTimeRange.upperBound)
+                        )
+                    )
+                }
+                
+                // Override arrival if filtered
+                if hasReturnArrivalTimeFilter {
+                    returnRange = ArrivalDepartureRange(
+                        arrival: TimeRange(
+                            min: Int(returnArrivalTimeRange.lowerBound),
+                            max: Int(returnArrivalTimeRange.upperBound)
+                        ),
+                        departure: returnRange.departure
+                    )
+                }
+                
+                // If we don't have outbound time filters, add default outbound first
+                if timeRanges.isEmpty {
+                    timeRanges.append(ArrivalDepartureRange(
+                        arrival: TimeRange(min: 0, max: 1440),
+                        departure: TimeRange(min: 0, max: 1440)
+                    ))
+                }
+                
+                timeRanges.append(returnRange)
+            }
         }
         
-        if hasTimeFilters {
+        if !timeRanges.isEmpty {
             request.arrival_departure_ranges = timeRanges
         }
         
@@ -247,7 +312,12 @@ class FilterViewModel: ObservableObject {
         print("   Max Duration: \(request.duration_max ?? -1)")
         print("   Max Stops: \(request.stop_count_max ?? -1)")
         print("   Selected Airlines: \(selectedAirlines.count)")
-        print("   Time Filters: \(hasTimeFilters)")
+        print("   Time Filters: \(!timeRanges.isEmpty)")
+        if !timeRanges.isEmpty {
+            for (index, range) in timeRanges.enumerated() {
+                print("     Range \(index): Departure \(range.departure.min)-\(range.departure.max), Arrival \(range.arrival.min)-\(range.arrival.max)")
+            }
+        }
         print("   Price Min: \(request.price_min?.description ?? "not set")")
         print("   Price Max: \(request.price_max?.description ?? "not set")")
         print("   Has Filters: \(request.hasFilters())")
@@ -258,7 +328,9 @@ class FilterViewModel: ObservableObject {
     func clearFilters() {
         selectedSortOption = .best
         departureTimeRange = 0...1440
-        returnTimeRange = 0...1440
+        arrivalTimeRange = 0...1440 // ✅ NEW
+        returnDepartureTimeRange = 0...1440
+        returnArrivalTimeRange = 0...1440 // ✅ NEW
         maxDuration = 1440
         selectedClass = .economy
         selectedAirlines.removeAll()
@@ -279,35 +351,17 @@ class FilterViewModel: ObservableObject {
         return nil
     }
     
-    // Helper method to check if any filters are active
+    // ✅ UPDATED: Helper method to check if any filters are active
     func hasActiveFilters() -> Bool {
         return selectedSortOption != .best ||
                departureTimeRange != 0...1440 ||
-               returnTimeRange != 0...1440 ||
+               arrivalTimeRange != 0...1440 || // ✅ NEW
+               returnDepartureTimeRange != 0...1440 ||
+               returnArrivalTimeRange != 0...1440 || // ✅ NEW
                maxDuration < 1440 ||
                !selectedAirlines.isEmpty ||
                !excludedAirlines.isEmpty ||
                maxStops < 3 ||
                (hasAPIDataLoaded && priceRange != originalAPIMinPrice...originalAPIMaxPrice)
     }
-}
-
-// MARK: - Supporting Models
-enum SortOption: String, CaseIterable {
-    case best = "Best"
-    case cheapest = "Cheapest"
-    case quickest = "Quickest"
-    case earliest = "Earliest"
-    
-    var displayName: String {
-        return self.rawValue
-    }
-}
-
-struct AirlineOption: Identifiable {
-    let id = UUID()
-    let code: String
-    let name: String
-    let logo: String
-    let price: Double
 }

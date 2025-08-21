@@ -1,16 +1,11 @@
-//
-//  TimesFilterSheet.swift
-//  D2Flight
-//
-//  Created by Assistant on 31/05/25.
-//
-
 import SwiftUI
 
 struct TimesFilterSheet: View {
     @Binding var isPresented: Bool
     @Binding var departureTimeRange: ClosedRange<Double>
-    @Binding var returnTimeRange: ClosedRange<Double>
+    @Binding var arrivalTimeRange: ClosedRange<Double> // ✅ NEW
+    @Binding var returnDepartureTimeRange: ClosedRange<Double>
+    @Binding var returnArrivalTimeRange: ClosedRange<Double> // ✅ NEW
     let isRoundTrip: Bool
     let originCode: String
     let destinationCode: String
@@ -41,42 +36,94 @@ struct TimesFilterSheet: View {
             
             ScrollView {
                 VStack(spacing: 32) {
-                    // Departure Time Range
+                    // ✅ UPDATED: Outbound leg with departure AND arrival time filters
                     VStack(alignment: .leading, spacing: 16) {
                         Text("\(originCode) - \(destinationCode)")
                             .font(CustomFont.font(.medium, weight: .semibold))
                             .foregroundColor(.gray)
                         
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Taking off from \(originCode)")
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.black)
+                        VStack(spacing: 20) {
+                            // Departure Time Filter
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "airplane.departure")
+                                        .font(CustomFont.font(.small))
+                                        .foregroundColor(Color("Violet"))
+                                    Text("Departure time from \(originCode)")
+                                        .font(CustomFont.font(.medium, weight: .semibold))
+                                        .foregroundColor(.black)
+                                }
+                                
+                                TimeRangeSlider(
+                                    range: $departureTimeRange,
+                                    minTime: 0,
+                                    maxTime: 1440
+                                )
+                            }
                             
-                            TimeRangeSlider(
-                                range: $departureTimeRange,
-                                minTime: 0,
-                                maxTime: 1440
-                            )
+                            // ✅ NEW: Arrival Time Filter
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "airplane.arrival")
+                                        .font(CustomFont.font(.small))
+                                        .foregroundColor(Color("Violet"))
+                                    Text("Arrival time at \(destinationCode)")
+                                        .font(CustomFont.font(.medium, weight: .semibold))
+                                        .foregroundColor(.black)
+                                }
+                                
+                                TimeRangeSlider(
+                                    range: $arrivalTimeRange,
+                                    minTime: 0,
+                                    maxTime: 1440
+                                )
+                            }
                         }
                     }
                     
-                    // Return Time Range (only for round trip)
+                    // ✅ UPDATED: Return leg with departure AND arrival time filters (only for round trip)
                     if isRoundTrip {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("\(destinationCode) - \(originCode)")
                                 .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.gray)
                             
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Taking off from \(destinationCode)")
-                                    .font(CustomFont.font(.medium, weight: .semibold))
-                                    .foregroundColor(.black)
+                            VStack(spacing: 20) {
+                                // Return Departure Time Filter
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        Image(systemName: "airplane.departure")
+                                            .font(CustomFont.font(.small))
+                                            .foregroundColor(Color("Violet"))
+                                        Text("Departure time from \(destinationCode)")
+                                            .font(CustomFont.font(.medium, weight: .semibold))
+                                            .foregroundColor(.black)
+                                    }
+                                    
+                                    TimeRangeSlider(
+                                        range: $returnDepartureTimeRange,
+                                        minTime: 0,
+                                        maxTime: 1440
+                                    )
+                                }
                                 
-                                TimeRangeSlider(
-                                    range: $returnTimeRange,
-                                    minTime: 0,
-                                    maxTime: 1440
-                                )
+                                // ✅ NEW: Return Arrival Time Filter
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        Image(systemName: "airplane.arrival")
+                                            .font(CustomFont.font(.small))
+                                            .foregroundColor(Color("Violet"))
+                                        Text("Arrival time at \(originCode)")
+                                            .font(CustomFont.font(.medium, weight: .semibold))
+                                            .foregroundColor(.black)
+                                    }
+                                    
+                                    TimeRangeSlider(
+                                        range: $returnArrivalTimeRange,
+                                        minTime: 0,
+                                        maxTime: 1440
+                                    )
+                                }
                             }
                         }
                     }
@@ -99,8 +146,11 @@ struct TimesFilterSheet: View {
                         height: 56,
                         cornerRadius: 16,
                         action: {
+                            // ✅ UPDATED: Clear all time filters
                             departureTimeRange = 0...1440
-                            returnTimeRange = 0...1440
+                            arrivalTimeRange = 0...1440
+                            returnDepartureTimeRange = 0...1440
+                            returnArrivalTimeRange = 0...1440
                         }
                     )
                     
@@ -217,12 +267,13 @@ struct TimeRangeSlider: View {
     }
 }
 
-
 #Preview {
     TimesFilterSheet(
         isPresented: .constant(true),
         departureTimeRange: .constant(480...1200), // 8:00 to 20:00
-        returnTimeRange: .constant(480...1200),
+        arrivalTimeRange: .constant(480...1200), // 8:00 to 20:00
+        returnDepartureTimeRange: .constant(480...1200),
+        returnArrivalTimeRange: .constant(480...1200),
         isRoundTrip: true,
         originCode: "CCJ",
         destinationCode: "CNN",

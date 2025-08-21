@@ -183,6 +183,103 @@ struct UnifiedFilterSheet: View {
         }
     }
     
+    // ✅ UPDATED: Single timesContent with departure AND arrival time filters
+    private var timesContent: some View {
+        VStack(spacing: 32) {
+            // ✅ UPDATED: Outbound leg with departure AND arrival time filters
+            VStack(alignment: .leading, spacing: 16) {
+                Text("\(originCode) - \(destinationCode)")
+                    .font(CustomFont.font(.medium, weight: .semibold))
+                    .foregroundColor(.gray)
+                
+                VStack(spacing: 20) {
+                    // Departure Time Filter
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "airplane.departure")
+                                .font(CustomFont.font(.small))
+                                .foregroundColor(Color("Violet"))
+                            Text("Departure time from \(originCode)")
+                                .font(CustomFont.font(.medium, weight: .semibold))
+                                .foregroundColor(.black)
+                        }
+                        
+                        TimeRangeSlider(
+                            range: $filterViewModel.departureTimeRange,
+                            minTime: 0,
+                            maxTime: 1440
+                        )
+                    }
+                    
+                    // ✅ NEW: Arrival Time Filter
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "airplane.arrival")
+                                .font(CustomFont.font(.small))
+                                .foregroundColor(Color("Violet"))
+                            Text("Arrival time at \(destinationCode)")
+                                .font(CustomFont.font(.medium, weight: .semibold))
+                                .foregroundColor(.black)
+                        }
+                        
+                        TimeRangeSlider(
+                            range: $filterViewModel.arrivalTimeRange,
+                            minTime: 0,
+                            maxTime: 1440
+                        )
+                    }
+                }
+            }
+            
+            // ✅ UPDATED: Return leg with departure AND arrival time filters (only for round trip)
+            if isRoundTrip {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("\(destinationCode) - \(originCode)")
+                        .font(CustomFont.font(.medium, weight: .semibold))
+                        .foregroundColor(.gray)
+                    
+                    VStack(spacing: 20) {
+                        // Return Departure Time Filter
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "airplane.departure")
+                                    .font(CustomFont.font(.small))
+                                    .foregroundColor(Color("Violet"))
+                                Text("Departure time from \(destinationCode)")
+                                    .font(CustomFont.font(.medium, weight: .semibold))
+                                    .foregroundColor(.black)
+                            }
+                            
+                            TimeRangeSlider(
+                                range: $filterViewModel.returnDepartureTimeRange,
+                                minTime: 0,
+                                maxTime: 1440
+                            )
+                        }
+                        
+                        // ✅ NEW: Return Arrival Time Filter
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "airplane.arrival")
+                                    .font(CustomFont.font(.small))
+                                    .foregroundColor(Color("Violet"))
+                                Text("Arrival time at \(originCode)")
+                                    .font(CustomFont.font(.medium, weight: .semibold))
+                                    .foregroundColor(.black)
+                            }
+                            
+                            TimeRangeSlider(
+                                range: $filterViewModel.returnArrivalTimeRange,
+                                minTime: 0,
+                                maxTime: 1440
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     // ✅ NEW: Stops Selection Row (Similar to Sort Selection Row)
     private func stopsSelectionRow(title: String, subtitle: String, option: StopsOption, isSelected: Bool) -> some View {
         Button(action: {
@@ -228,13 +325,10 @@ struct UnifiedFilterSheet: View {
                     }
                 }
                 .padding(.vertical, 16)
-                
             }
         }
         .buttonStyle(PlainButtonStyle())
     }
-    
-    // MARK: - Existing Content Views (keeping your existing implementations)
     
     // MARK: - Sort Content
     private var sortContent: some View {
@@ -281,174 +375,129 @@ struct UnifiedFilterSheet: View {
         .buttonStyle(PlainButtonStyle())
     }
     
-    // MARK: - Times Content
-    private var timesContent: some View {
-        VStack(spacing: 32) {
-            // Departure Time Range
-            VStack(alignment: .leading, spacing: 16) {
-                Text("\(originCode) - \(destinationCode)")
-                    .font(CustomFont.font(.medium, weight: .semibold))
-                    .foregroundColor(.gray)
-                
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Taking off from \(originCode)")
-                        .font(CustomFont.font(.medium, weight: .semibold))
-                        .foregroundColor(.black)
-                    
-                    TimeRangeSlider(
-                        range: $filterViewModel.departureTimeRange,
-                        minTime: 0,
-                        maxTime: 1440
-                    )
-                }
-            }
+    // MARK: - Airlines Content
+    private var airlinesContent: some View {
+        VStack(spacing: 0) {
+            // Select All Option (always at top)
+            airlineSelectionRow(
+                name: "Select All",
+                code: "ALL",
+                price: nil,
+                logo: "",
+                isSelected: filterViewModel.selectedAirlines.count == availableAirlines.count,
+                isSelectAll: true
+            )
             
-            // Return Time Range (only for round trip)
-            if isRoundTrip {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("\(destinationCode) - \(originCode)")
-                        .font(CustomFont.font(.medium, weight: .semibold))
-                        .foregroundColor(.gray)
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Taking off from \(destinationCode)")
-                            .font(CustomFont.font(.medium, weight: .semibold))
-                            .foregroundColor(.black)
-                        
-                        TimeRangeSlider(
-                            range: $filterViewModel.returnTimeRange,
-                            minTime: 0,
-                            maxTime: 1440
-                        )
-                    }
-                }
+            // ✅ UPDATED: Use static sorting method (only sorts when sheet opens)
+            ForEach(filterViewModel.cachedSortedAirlinesForSheet, id: \.code) { airline in
+                airlineSelectionRow(
+                    name: airline.name,
+                    code: airline.code,
+                    price: airline.price,
+                    logo: airline.logo,
+                    isSelected: filterViewModel.selectedAirlines.contains(airline.code)
+                )
             }
+        }
+        .onAppear {
+            filterViewModel.cacheSortedAirlinesForSheet()
         }
     }
     
-    // MARK: - Airlines Content (keeping your existing implementation)
-    private var airlinesContent: some View {
-          VStack(spacing: 0) {
-              // Select All Option (always at top)
-              airlineSelectionRow(
-                  name: "Select All",
-                  code: "ALL",
-                  price: nil,
-                  logo: "",
-                  isSelected: filterViewModel.selectedAirlines.count == availableAirlines.count,
-                  isSelectAll: true
-              )
-              
-              // ✅ UPDATED: Use static sorting method (only sorts when sheet opens)
-              ForEach(filterViewModel.cachedSortedAirlinesForSheet, id: \.code) { airline in
-                  airlineSelectionRow(
-                      name: airline.name,
-                      code: airline.code,
-                      price: airline.price,
-                      logo: airline.logo,
-                      isSelected: filterViewModel.selectedAirlines.contains(airline.code)
-                  )
-              }
-          }
-          .onAppear {
-                  filterViewModel.cacheSortedAirlinesForSheet()
-              }
-      }
-    
     private func airlineSelectionRow(
-            name: String,
-            code: String,
-            price: Double?,
-            logo: String,
-            isSelected: Bool,
-            isSelectAll: Bool = false
-        ) -> some View {
-            Button(action: {
-                if isSelectAll {
-                    if filterViewModel.selectedAirlines.count == availableAirlines.count {
-                        // Deselect all
-                        filterViewModel.selectedAirlines.removeAll()
-                    } else {
-                        // Select all
-                        filterViewModel.selectedAirlines = Set(availableAirlines.map { $0.code })
-                    }
+        name: String,
+        code: String,
+        price: Double?,
+        logo: String,
+        isSelected: Bool,
+        isSelectAll: Bool = false
+    ) -> some View {
+        Button(action: {
+            if isSelectAll {
+                if filterViewModel.selectedAirlines.count == availableAirlines.count {
+                    // Deselect all
+                    filterViewModel.selectedAirlines.removeAll()
                 } else {
-                    if filterViewModel.selectedAirlines.contains(code) {
-                        filterViewModel.selectedAirlines.remove(code)
-                    } else {
-                        filterViewModel.selectedAirlines.insert(code)
-                    }
+                    // Select all
+                    filterViewModel.selectedAirlines = Set(availableAirlines.map { $0.code })
                 }
-            }) {
-                HStack(spacing: 16) {
-                    // Checkbox
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(isSelected ? Color("Violet") : Color.gray.opacity(0.3), lineWidth: 2)
-                            .frame(width: 20, height: 20)
-                            .background(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(isSelected ? Color("Violet") : Color.clear)
-                            )
-                        
-                        if isSelected {
-                            Image(systemName: "checkmark")
-                                .font(CustomFont.font(.small, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    
-                    // Airline Logo (only for individual airlines)
-                    if !isSelectAll {
-                        AsyncImage(url: URL(string: logo)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                        } placeholder: {
-                            // Fallback with airline initials
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.blue.opacity(0.8))
-                                .overlay(
-                                    Text(String(name.prefix(2)))
-                                        .font(CustomFont.font(.small, weight: .bold))
-                                        .foregroundColor(.white)
-                                )
-                        }
-                        .frame(width: 32, height: 32)
-                        .cornerRadius(8)
-                    }
-                    
-                    // Airline Name
-                    Text(name)
-                        .font(CustomFont.font(.medium, weight: .semibold))
-                        .foregroundColor(.black)
-                        .multilineTextAlignment(.leading)
-                    
-                    Spacer()
-                    
-                    // ✅ FIXED: Show real minimum price only if price > 0
-                    if let price = price, price > 0 {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("₹\(Int(price))")
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.black)
-                            Text("from".localized)
-                                .font(CustomFont.font(.tiny))
-                                .foregroundColor(.gray)
-                        }
-                    } else if !isSelectAll {
-                        // Show "Price varies" when no specific price is available
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("varies".localized)
-                                .font(CustomFont.font(.small, weight: .medium))
-                                .foregroundColor(.gray)
-                        }
-                    }
+            } else {
+                if filterViewModel.selectedAirlines.contains(code) {
+                    filterViewModel.selectedAirlines.remove(code)
+                } else {
+                    filterViewModel.selectedAirlines.insert(code)
                 }
-                .padding(.vertical, 16)
             }
-            .buttonStyle(PlainButtonStyle())
+        }) {
+            HStack(spacing: 16) {
+                // Checkbox
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(isSelected ? Color("Violet") : Color.gray.opacity(0.3), lineWidth: 2)
+                        .frame(width: 20, height: 20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(isSelected ? Color("Violet") : Color.clear)
+                        )
+                    
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(CustomFont.font(.small, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
+                
+                // Airline Logo (only for individual airlines)
+                if !isSelectAll {
+                    AsyncImage(url: URL(string: logo)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } placeholder: {
+                        // Fallback with airline initials
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.blue.opacity(0.8))
+                            .overlay(
+                                Text(String(name.prefix(2)))
+                                    .font(CustomFont.font(.small, weight: .bold))
+                                    .foregroundColor(.white)
+                            )
+                    }
+                    .frame(width: 32, height: 32)
+                    .cornerRadius(8)
+                }
+                
+                // Airline Name
+                Text(name)
+                    .font(CustomFont.font(.medium, weight: .semibold))
+                    .foregroundColor(.black)
+                    .multilineTextAlignment(.leading)
+                
+                Spacer()
+                
+                // ✅ FIXED: Show real minimum price only if price > 0
+                if let price = price, price > 0 {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("₹\(Int(price))")
+                            .font(CustomFont.font(.medium, weight: .semibold))
+                            .foregroundColor(.black)
+                        Text("from".localized)
+                            .font(CustomFont.font(.tiny))
+                            .foregroundColor(.gray)
+                    }
+                } else if !isSelectAll {
+                    // Show "Price varies" when no specific price is available
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("varies".localized)
+                            .font(CustomFont.font(.small, weight: .medium))
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
+            .padding(.vertical, 16)
         }
+        .buttonStyle(PlainButtonStyle())
+    }
     
     // MARK: - Duration Content
     private var durationContent: some View {
@@ -654,7 +703,9 @@ struct UnifiedFilterSheet: View {
         switch filterType {
         case .times:
             filterViewModel.departureTimeRange = 0...1440
-            filterViewModel.returnTimeRange = 0...1440
+            filterViewModel.arrivalTimeRange = 0...1440 // ✅ NEW
+            filterViewModel.returnDepartureTimeRange = 0...1440
+            filterViewModel.returnArrivalTimeRange = 0...1440 // ✅ NEW
         case .duration:
             filterViewModel.departureStopoverRange = 0...1440
             filterViewModel.departureLegRange = 0...1440
@@ -669,7 +720,99 @@ struct UnifiedFilterSheet: View {
         }
     }
     
-    // ✅ Existing DurationRangeSlider and PriceRangeSlider implementations remain the same
+    // MARK: - TimeRangeSlider Component
+    struct TimeRangeSlider: View {
+        @Binding var range: ClosedRange<Double>
+        let minTime: Double
+        let maxTime: Double
+
+        var body: some View {
+            VStack(spacing: 12) {
+                GeometryReader { geometry in
+                    let width = geometry.size.width
+                    let trackHeight: CGFloat = 20
+                    let thumbSize: CGFloat = 16
+
+                    ZStack(alignment: .leading) {
+                        // Background track
+                        RoundedRectangle(cornerRadius: trackHeight / 2)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: trackHeight)
+
+                        // Active track
+                        RoundedRectangle(cornerRadius: trackHeight / 2)
+                            .fill(Color("Violet"))
+                            .frame(
+                                width: CGFloat((range.upperBound - range.lowerBound) / (maxTime - minTime)) * width,
+                                height: trackHeight
+                            )
+                            .offset(x: CGFloat((range.lowerBound - minTime) / (maxTime - minTime)) * width)
+
+                        // Lower thumb
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: thumbSize, height: thumbSize)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color("Violet"), lineWidth: 3)
+                            )
+                            .offset(x: CGFloat((range.lowerBound - minTime) / (maxTime - minTime)) * width - thumbSize / 50)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        let location = max(0, min(Double(value.location.x), width))
+                                        let newValue = minTime + (location / width) * (maxTime - minTime)
+                                        let clampedValue = max(minTime, min(range.upperBound, newValue))
+                                        range = clampedValue...range.upperBound
+                                    }
+                            )
+
+                        // Upper thumb
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: thumbSize, height: thumbSize)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color("Violet"), lineWidth: 3)
+                            )
+                            .offset(x: CGFloat((range.upperBound - minTime) / (maxTime - minTime)) * width - thumbSize)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        let location = max(0, min(Double(value.location.x), width))
+                                        let newValue = minTime + (location / width) * (maxTime - minTime)
+                                        let clampedValue = max(range.lowerBound, min(maxTime, newValue))
+                                        range = range.lowerBound...clampedValue
+                                    }
+                            )
+                    }
+                }
+                .frame(height: 28)
+
+                // Time labels
+                HStack {
+                    Text(formatTime(range.lowerBound))
+                        .font(CustomFont.font(.small))
+                        .foregroundColor(.gray)
+
+                    Spacer()
+
+                    Text(formatTime(range.upperBound))
+                        .font(CustomFont.font(.small))
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+
+        private func formatTime(_ minutes: Double) -> String {
+            let totalMinutes = Int(minutes)
+            let hours = totalMinutes / 60
+            let mins = totalMinutes % 60
+            return String(format: "%02d:%02d", hours, mins)
+        }
+    }
+    
+    // MARK: - DurationRangeSlider Component
     struct DurationRangeSlider: View {
         @Binding var range: ClosedRange<Double>
         let minDuration: Double
@@ -767,6 +910,7 @@ struct UnifiedFilterSheet: View {
         }
     }
     
+    // MARK: - PriceRangeSlider Component
     struct PriceRangeSlider: View {
         @Binding var range: ClosedRange<Double>
         let minPrice: Double
@@ -829,11 +973,11 @@ struct UnifiedFilterSheet: View {
 
                 // Price labels
                 HStack {
-                    Text("$\(Int(range.lowerBound))")
+                    Text("₹\(Int(range.lowerBound))")
                         .font(CustomFont.font(.small))
                         .foregroundColor(.gray)
                     Spacer()
-                    Text("$\(Int(range.upperBound))")
+                    Text("₹\(Int(range.upperBound))")
                         .font(CustomFont.font(.small))
                         .foregroundColor(.gray)
                 }
@@ -846,7 +990,7 @@ struct UnifiedFilterSheet: View {
 #Preview {
     UnifiedFilterSheet(
         isPresented: .constant(true),
-        filterType: .stops, // ✅ NEW: Testing stops filter
+        filterType: .times, // ✅ Testing times filter
         filterViewModel: FilterViewModel(),
         isRoundTrip: true,
         originCode: "CCJ",
