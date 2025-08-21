@@ -308,7 +308,7 @@ struct ResultView: View {
         }
     }
     
-    // ✅ NEW: Handle edit search completion
+    // ✅ FIXED: Handle edit search completion with proper filter reset
     private func handleEditSearchCompleted(newSearchId: String, updatedParams: SearchParameters) {
         print("🔄 Handling edit search completion:")
         print("   Previous searchId: \(currentSearchId ?? "nil")")
@@ -328,6 +328,12 @@ struct ResultView: View {
         viewModel.errorMessage = nil
         viewModel.hasMoreResults = true
         viewModel.totalResultsCount = 0
+        
+        // ✅ FIXED: Reset filter state for new search (now accessible)
+        viewModel.resetFilterState() // Use the new method instead of direct access
+        headerViewModel.filterViewModel.resetFilters()
+        
+        print("🔄 Filter state reset for new search")
         
         // Start new poll with updated search ID
         viewModel.pollFlights(searchId: newSearchId)

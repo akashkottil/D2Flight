@@ -41,6 +41,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"Extensions/DateFormatter+Extensions.swift",
+				"Extensions/FilterViewModel+ClearButton.swift",
+				"Extensions/FilterViewModel+Debug.swift",
+				"Extensions/ResultViewModel+ClearButton.swift",
 				Info.plist,
 			);
 			target = 8CD5352E2DE0410900F3FD75 /* D2Flight */;
@@ -53,6 +56,9 @@
 			buildPhase = 8CD5352D2DE0410900F3FD75 /* Resources */;
 			membershipExceptions = (
 				"Extensions/DateFormatter+Extensions.swift",
+				"Extensions/FilterViewModel+ClearButton.swift",
+				"Extensions/FilterViewModel+Debug.swift",
+				"Extensions/ResultViewModel+ClearButton.swift",
 			);
 		};
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */

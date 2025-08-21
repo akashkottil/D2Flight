@@ -124,7 +124,7 @@ class FilterViewModel: ObservableObject {
         return originalAPIMaxPrice
     }
     
-    // ✅ Update method to store original API prices
+    // ✅ FIXED: Update method to store original API prices
     func updatePriceRangeFromAPI(minPrice: Double, maxPrice: Double) {
         // Store original API values for comparison
         originalAPIMinPrice = minPrice
@@ -226,27 +226,19 @@ class FilterViewModel: ObservableObject {
             request.iata_codes_exclude = Array(excludedAirlines)
         }
         
-        // ✅ CRITICAL FIX: Price filters - only apply if user has actively modified them
+        // ✅ SIMPLIFIED: Price filters - apply if user has modified from API defaults
         if hasAPIDataLoaded {
-            // Check if user has manually adjusted the price slider from its API-initialized values
-            let hasUserModifiedPriceMin = priceRange.lowerBound > getAPIMinPrice()
-            let hasUserModifiedPriceMax = priceRange.upperBound < getAPIMaxPrice()
-            
-            // Only set price_min if user has actively moved the slider above the API minimum
-            if hasUserModifiedPriceMin {
+            // Use simplified price filter detection as recommended
+            if priceRange != originalAPIMinPrice...originalAPIMaxPrice {
                 request.price_min = Int(priceRange.lowerBound)
-            }
-            
-            // Only set price_max if user has actively moved the slider below the API maximum
-            if hasUserModifiedPriceMax {
                 request.price_max = Int(priceRange.upperBound)
+                
+                print("🔧 Applying price filter:")
+                print("   API Range: ₹\(originalAPIMinPrice) - ₹\(originalAPIMaxPrice)")
+                print("   User Range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+                print("   Price Min: \(request.price_min!)")
+                print("   Price Max: \(request.price_max!)")
             }
-            
-            print("🔧 Price filter analysis:")
-            print("   API Range: ₹\(getAPIMinPrice()) - ₹\(getAPIMaxPrice())")
-            print("   Current Range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
-            print("   User modified min: \(hasUserModifiedPriceMin)")
-            print("   User modified max: \(hasUserModifiedPriceMax)")
         }
         
         // ✅ Debug logging
@@ -296,7 +288,7 @@ class FilterViewModel: ObservableObject {
                !selectedAirlines.isEmpty ||
                !excludedAirlines.isEmpty ||
                maxStops < 3 ||
-               (hasAPIDataLoaded && (priceRange.lowerBound > originalAPIMinPrice || priceRange.upperBound < originalAPIMaxPrice))
+               (hasAPIDataLoaded && priceRange != originalAPIMinPrice...originalAPIMaxPrice)
     }
 }
 
