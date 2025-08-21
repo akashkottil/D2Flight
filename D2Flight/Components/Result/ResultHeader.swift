@@ -25,7 +25,10 @@ struct ResultHeader: View {
     // ✅ NEW: Callback for edit button tap
     var onEditButtonTapped: () -> Void
     
-    // ✅ UPDATED: Initialize with edit callback
+    // ✅ NEW: Callback for clear all filters
+    var onClearAllFilters: () -> Void
+    
+    // ✅ UPDATED: Initialize with clear filters callback
     init(
         originCode: String,
         destinationCode: String,
@@ -35,7 +38,8 @@ struct ResultHeader: View {
         searchParameters: SearchParameters,
         onFiltersChanged: @escaping (PollRequest) -> Void,
         onEditSearchCompleted: @escaping (String, SearchParameters) -> Void,
-        onEditButtonTapped: @escaping () -> Void
+        onEditButtonTapped: @escaping () -> Void,
+        onClearAllFilters: @escaping () -> Void = {} // ✅ NEW: Default empty closure
     ) {
         self.originCode = originCode
         self.destinationCode = destinationCode
@@ -46,6 +50,7 @@ struct ResultHeader: View {
         self.onFiltersChanged = onFiltersChanged
         self.onEditSearchCompleted = onEditSearchCompleted
         self.onEditButtonTapped = onEditButtonTapped
+        self.onClearAllFilters = onClearAllFilters
     }
     
     var body: some View {
@@ -90,6 +95,25 @@ struct ResultHeader: View {
             // Filter Buttons
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
+                    // ✅ NEW: Clear All Filters Button (shows only when filters are active)
+                    if hasActiveFilters() {
+                        Button(action: {
+                            clearAllFilters()
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(CustomFont.font(.small))
+                                Text("Clear All")
+                            }
+                            .font(CustomFont.font(.small, weight: .semibold))
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(Color.red.opacity(0.1))
+                            .foregroundColor(.red)
+                            .cornerRadius(20)
+                        }
+                    }
+                    
                     // Sort Button
                     Button(action: {
                         selectedFilterType = .sort
@@ -107,20 +131,13 @@ struct ResultHeader: View {
                         .cornerRadius(20)
                     }
                     
-                    // Stops Filter
+                    // ✅ NEW: Stops Filter Button
                     FilterButton(
-                        title: "Stops",
+                        title: getStopsFilterTitle(),
                         isSelected: filterViewModel.maxStops < 3,
                         action: {
-                            // Cycle through stop options
-                            switch filterViewModel.maxStops {
-                            case 3: filterViewModel.maxStops = 0
-                            case 0: filterViewModel.maxStops = 1
-                            case 1: filterViewModel.maxStops = 2
-                            case 2: filterViewModel.maxStops = 3
-                            default: filterViewModel.maxStops = 3
-                            }
-                            applyFilters()
+                            selectedFilterType = .stops
+                            showUnifiedFilterSheet = true
                         }
                     )
                     
@@ -189,7 +206,7 @@ struct ResultHeader: View {
             print("   Travelers: \(travelerInfo)")
         }
         
-        // Single Unified Filter Sheet (unchanged)
+        // Single Unified Filter Sheet (updated with stops)
         .sheet(isPresented: $showUnifiedFilterSheet) {
             UnifiedFilterSheet(
                 isPresented: $showUnifiedFilterSheet,
@@ -208,7 +225,59 @@ struct ResultHeader: View {
         }
     }
     
-    // Helper to determine presentation detent - all filter sheets open to half screen
+    // ✅ NEW: Get dynamic stops filter title
+    private func getStopsFilterTitle() -> String {
+        switch filterViewModel.maxStops {
+        case 0:
+            return "Direct"
+        case 1:
+            return "1 Stop"
+        case 2:
+            return "2 Stops"
+        default:
+            return "Stops"
+        }
+    }
+    
+    // ✅ NEW: Check if any filters are active
+    private func hasActiveFilters() -> Bool {
+        return filterViewModel.selectedSortOption != .best ||
+               filterViewModel.maxStops < 3 ||
+               filterViewModel.departureTimeRange != 0...1440 ||
+               (isRoundTrip && filterViewModel.returnTimeRange != 0...1440) ||
+               filterViewModel.maxDuration < 1440 ||
+               !filterViewModel.selectedAirlines.isEmpty ||
+               filterViewModel.selectedClass != .economy ||
+               filterViewModel.priceRange.lowerBound > 0 ||
+               filterViewModel.priceRange.upperBound < 10000
+    }
+    
+    // ✅ NEW: Clear all filters functionality
+    private func clearAllFilters() {
+        print("\n🗑️ ===== CLEAR ALL FILTERS =====")
+        print("🔄 Clearing all filters and resetting to default state...")
+        
+        // Clear all filter values
+        filterViewModel.selectedSortOption = .best
+        filterViewModel.maxStops = 3 // Reset to "Any"
+        filterViewModel.departureTimeRange = 0...1440
+        filterViewModel.returnTimeRange = 0...1440
+        filterViewModel.maxDuration = 1440
+        filterViewModel.selectedAirlines.removeAll()
+        filterViewModel.excludedAirlines.removeAll()
+        filterViewModel.selectedClass = .economy
+        filterViewModel.priceRange = 0...10000
+        
+        print("✅ All filters cleared to default values")
+        print("🗑️ ===== END CLEAR ALL FILTERS =====\n")
+        
+        // Apply empty filters (this will fetch all results without filters)
+        let emptyRequest = PollRequest() // Empty request = no filters
+        onClearAllFilters() // Notify parent to handle clear
+        onFiltersChanged(emptyRequest)
+    }
+    
+    // Helper to determine presentation detent
     private func getPresentationDetents() -> Set<PresentationDetent> {
         return [.medium]
     }
@@ -265,6 +334,9 @@ struct ResultHeader: View {
         },
         onEditButtonTapped: {
             print("Edit button tapped")
+        },
+        onClearAllFilters: {
+            print("Clear all filters tapped")
         }
     )
 }

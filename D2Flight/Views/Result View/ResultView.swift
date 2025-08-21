@@ -51,6 +51,11 @@ struct ResultView: View {
                         withAnimation(.easeInOut(duration: 0.4)) {
                             showEditSearchSheet = true
                         }
+                    },
+                    // ✅ FIXED: Clear all filters callback using the correct method
+                    onClearAllFilters: {
+                        print("🗑️ Clear all filters triggered from ResultHeader")
+                        viewModel.clearAllFilters()
                     }
                 )
                 .background(Color.white)
@@ -289,8 +294,6 @@ struct ResultView: View {
                     isInitialLoad = false
                 }
             }
-            
-            
         }
         .topSheet(isPresented: $showEditSearchSheet, maxHeightRatio: 0.6) {
             EditSearchSheet(
@@ -300,7 +303,6 @@ struct ResultView: View {
                 handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
             }
         }
-
 
         // Full‐screen loader cover
         .fullScreenCover(isPresented: $showAnimatedLoader) {

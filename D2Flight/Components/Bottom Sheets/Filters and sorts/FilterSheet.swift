@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Filter Type Enum
+// MARK: - Updated Filter Type Enum
 enum FilterType {
     case sort
     case times
@@ -8,9 +8,55 @@ enum FilterType {
     case duration
     case price
     case classes
+    case stops // ✅ NEW: Added stops filter type
 }
 
-// MARK: - Unified Filter Sheet
+// MARK: - Stops Option Model (Updated)
+enum StopsOption: CaseIterable {
+    case any
+    case direct
+    case oneStop
+    case twoStops
+    
+    var title: String {
+        switch self {
+        case .any: return "Any"
+        case .direct: return "Direct"
+        case .oneStop: return "1 Stop"
+        case .twoStops: return "2 Stops"
+        }
+    }
+    
+    var subtitle: String {
+        switch self {
+        case .any: return "Show all flights"
+        case .direct: return "Non-stop flights only"
+        case .oneStop: return "Up to 1 stopover"
+        case .twoStops: return "Up to 2 stopovers"
+        }
+    }
+    
+    var maxStops: Int? {
+        switch self {
+        case .any: return nil // Will be converted to 3 in the filter
+        case .direct: return 0
+        case .oneStop: return 1
+        case .twoStops: return 2
+        }
+    }
+    
+    // Helper to convert from maxStops value back to option
+    static func fromMaxStops(_ maxStops: Int) -> StopsOption {
+        switch maxStops {
+        case 0: return .direct
+        case 1: return .oneStop
+        case 2: return .twoStops
+        default: return .any
+        }
+    }
+}
+
+// MARK: - Updated Unified Filter Sheet
 struct UnifiedFilterSheet: View {
     @Binding var isPresented: Bool
     let filterType: FilterType
@@ -98,6 +144,7 @@ struct UnifiedFilterSheet: View {
         case .duration: return "Duration"
         case .price: return "Price"
         case .classes: return "Classes"
+        case .stops: return "Stops" // ✅ NEW
         }
     }
     
@@ -117,8 +164,77 @@ struct UnifiedFilterSheet: View {
             priceContent
         case .classes:
             classesContent
+        case .stops: // ✅ NEW
+            stopsContent
         }
     }
+    
+    // ✅ NEW: Stops Content (Similar to Sort Content)
+    private var stopsContent: some View {
+        VStack(spacing: 0) {
+            ForEach(StopsOption.allCases, id: \.self) { option in
+                stopsSelectionRow(
+                    title: option.title,
+                    subtitle: option.subtitle,
+                    option: option,
+                    isSelected: StopsOption.fromMaxStops(filterViewModel.maxStops) == option
+                )
+            }
+        }
+    }
+    
+    // ✅ NEW: Stops Selection Row (Similar to Sort Selection Row)
+    private func stopsSelectionRow(title: String, subtitle: String, option: StopsOption, isSelected: Bool) -> some View {
+        Button(action: {
+            // Update the filter view model
+            if let maxStops = option.maxStops {
+                filterViewModel.maxStops = maxStops
+            } else {
+                filterViewModel.maxStops = 3 // Any stops
+            }
+            
+            print("🛑 Stops filter selected: \(title)")
+            print("   Max stops value: \(filterViewModel.maxStops)")
+        }) {
+            VStack(spacing: 0) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(title)
+                            .font(CustomFont.font(.medium, weight: .semibold))
+                            .foregroundColor(.black)
+                        
+                        Text(subtitle)
+                            .font(CustomFont.font(.small))
+                            .foregroundColor(.gray)
+                    }
+                    
+                    Spacer()
+                    
+                    // Radio button indicator (same as sort and classes)
+                    ZStack {
+                        if isSelected {
+                            Circle()
+                                .stroke(Color("Violet"), lineWidth: 6)
+                                .frame(width: 20, height: 20)
+                            
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 16, height: 16)
+                        } else {
+                            Circle()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 2)
+                                .frame(width: 20, height: 20)
+                        }
+                    }
+                }
+                .padding(.vertical, 16)
+                
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    // MARK: - Existing Content Views (keeping your existing implementations)
     
     // MARK: - Sort Content
     private var sortContent: some View {
@@ -210,7 +326,7 @@ struct UnifiedFilterSheet: View {
         }
     }
     
-    // MARK: - Airlines Content
+    // MARK: - Airlines Content (keeping your existing implementation)
     private var airlinesContent: some View {
           VStack(spacing: 0) {
               // Select All Option (always at top)
@@ -238,21 +354,6 @@ struct UnifiedFilterSheet: View {
                   filterViewModel.cacheSortedAirlinesForSheet()
               }
       }
-    
-    private func getSortedAirlines() -> [AirlineOption] {
-            return availableAirlines.sorted { airline1, airline2 in
-                let isSelected1 = filterViewModel.selectedAirlines.contains(airline1.code)
-                let isSelected2 = filterViewModel.selectedAirlines.contains(airline2.code)
-                
-                if isSelected1 && !isSelected2 {
-                    return true // Selected airlines come first
-                } else if !isSelected1 && isSelected2 {
-                    return false // Non-selected airlines come after
-                } else {
-                    return airline1.name < airline2.name // Alphabetical within each group
-                }
-            }
-        }
     
     private func airlineSelectionRow(
             name: String,
@@ -508,7 +609,7 @@ struct UnifiedFilterSheet: View {
         switch filterType {
         case .times, .duration, .price:
             return true
-        case .sort, .airlines, .classes:
+        case .sort, .airlines, .classes, .stops: // ✅ Stops uses single apply button
             return false
         }
     }
@@ -568,6 +669,7 @@ struct UnifiedFilterSheet: View {
         }
     }
     
+    // ✅ Existing DurationRangeSlider and PriceRangeSlider implementations remain the same
     struct DurationRangeSlider: View {
         @Binding var range: ClosedRange<Double>
         let minDuration: Double
@@ -604,7 +706,6 @@ struct UnifiedFilterSheet: View {
                                 Circle()
                                     .stroke(Color("Violet"), lineWidth: 3)
                             )
-    //                        .shadow(radius: 1)
                             .offset(x: CGFloat((range.lowerBound - minDuration) / (maxDuration - minDuration)) * width - thumbSize / 50)
                             .gesture(
                                 DragGesture()
@@ -745,7 +846,7 @@ struct UnifiedFilterSheet: View {
 #Preview {
     UnifiedFilterSheet(
         isPresented: .constant(true),
-        filterType: .airlines,
+        filterType: .stops, // ✅ NEW: Testing stops filter
         filterViewModel: FilterViewModel(),
         isRoundTrip: true,
         originCode: "CCJ",
