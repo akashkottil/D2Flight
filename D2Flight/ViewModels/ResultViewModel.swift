@@ -13,7 +13,7 @@ class ResultViewModel: ObservableObject {
     private var isFinalPolling: Bool = false
     
     
-    // ✅ Modified pagination properties for 30 initial + 8 per page
+    
     @Published var hasMoreResults: Bool = true
     @Published var totalResultsCount: Int = 0
     private let initialPageSize: Int = 30
@@ -458,7 +458,6 @@ class ResultViewModel: ObservableObject {
         }
         
         flightResults.append(contentsOf: newResults)
-        // ❌ Remove this line: currentPage += 1
         
         // ✅ Check next URL to determine if more results available
         hasMoreResults = (response.next != nil)
