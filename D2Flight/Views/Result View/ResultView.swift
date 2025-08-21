@@ -135,24 +135,56 @@ struct ResultView: View {
                                 }
                             }
                             
-                            // Loading indicator for pagination
+                            // ✅ UPDATED: Smart loading/completion indicator
                             if viewModel.isLoadingMore {
+                                // Show loading when actively loading more results
                                 HStack {
                                     Spacer()
                                     VStack(spacing: 8) {
                                         ProgressView()
                                             .scaleEffect(0.8)
-                                        Text("Loading more flights...")
+                                        Text("loading.more.flights".localized)
                                             .font(CustomFont.font(.small))
                                             .foregroundColor(.gray)
                                     }
                                     Spacer()
                                 }
                                 .padding(.vertical, 20)
-                            }
-                            
-                            // Cache complete indicator
-                            if !viewModel.hasMoreResults && !viewModel.flightResults.isEmpty {
+                                
+                            } else if viewModel.hasMoreResults && !viewModel.flightResults.isEmpty {
+                                // Show "Load More" option when pagination is available but not actively loading
+                                HStack {
+                                    Spacer()
+                                    VStack(spacing: 8) {
+                                        Button(action: {
+                                            viewModel.loadMoreResults()
+                                        }) {
+                                            HStack {
+                                                Text("load.more.flights".localized)
+                                                    .font(CustomFont.font(.small, weight: .semibold))
+                                                    .foregroundColor(Color("Violet"))
+                                                Image(systemName: "chevron.down")
+                                                    .font(CustomFont.font(.small))
+                                                    .foregroundColor(Color("Violet"))
+                                            }
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(Color("Violet").opacity(0.1))
+                                            )
+                                        }
+                                        
+                                        Text("Showing \(viewModel.flightResults.count) of \(viewModel.totalResultsCount) flights")
+                                            .font(CustomFont.font(.small))
+                                            .foregroundColor(.gray)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 20)
+                                
+                            } else if !viewModel.hasMoreResults && !viewModel.flightResults.isEmpty && viewModel.isCacheComplete {
+                                // ✅ ONLY show completion message when cache is complete AND no more pagination
                                 HStack {
                                     Spacer()
                                     VStack(spacing: 8) {

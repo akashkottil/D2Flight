@@ -8,6 +8,11 @@ class ResultViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var searchId: String? = nil
     
+    // ✅ NEW: Track final poll after cache complete
+    private var hasFinalPolled: Bool = false
+    private var isFinalPolling: Bool = false
+    
+    
     // ✅ Modified pagination properties for 30 initial + 8 per page
     @Published var hasMoreResults: Bool = true
     @Published var totalResultsCount: Int = 0
@@ -18,6 +23,9 @@ class ResultViewModel: ObservableObject {
     @Published var pollResponse: PollResponse? = nil
     @Published var selectedFlight: FlightResult? = nil
     @Published var totalPollCount: Int = 0
+    
+    // ✅ NEW: Expose cache status to UI
+    @Published var isCacheComplete: Bool = false
     
     // ✅ Track next URL availability
     private var nextPageURL: String? = nil
@@ -34,7 +42,6 @@ class ResultViewModel: ObservableObject {
     private let pollApi = PollApi.shared
     private var maxRetries = 10
     private var currentRetries = 0
-    private var isCacheComplete = false
     private var maxTotalPolls = 50
     private var pollStartTime: Date?
     
@@ -72,13 +79,17 @@ class ResultViewModel: ObservableObject {
     private func resetPagination() {
         hasMoreResults = true
         totalResultsCount = 0
-        isCacheComplete = false
+        self.isCacheComplete = false
         isLoadingMore = false
         totalPollCount = 0
         pollStartTime = Date()
         currentRetries = 0
         shouldContinuouslyPoll = false
         nextPageURL = nil
+        
+        // ✅ NEW: Reset final poll tracking
+        hasFinalPolled = false
+        isFinalPolling = false
         
         // Reset ads loading state for new search
         hasLoadedAds = false
@@ -125,8 +136,8 @@ class ResultViewModel: ObservableObject {
     
     private func handleInitialPollSuccess(_ response: PollResponse) {
         pollResponse = response
-            totalResultsCount = response.count
-            isCacheComplete = response.cache
+        totalResultsCount = response.count
+        self.isCacheComplete = response.cache
         
         // Store next page URL
         nextPageURL = response.next
@@ -222,7 +233,7 @@ class ResultViewModel: ObservableObject {
         }
     }
     
-    // ✅ UPDATED: Check for cache updates using current filter state
+    // ✅ UPDATED: Check for cache updates and trigger final poll when complete
     private func checkForCacheUpdates(searchId: String) {
         guard totalPollCount < maxTotalPolls else {
             print("⚠️ Reached maximum poll limit for cache updates")
@@ -262,8 +273,12 @@ class ResultViewModel: ObservableObject {
                     // Update hasMoreResults based on next URL
                     self.hasMoreResults = (response.next != nil)
                     
-                    // Continue polling if cache is still not complete
-                    if !response.cache && self.shouldContinuouslyPoll {
+                    // ✅ NEW: Trigger final comprehensive poll when cache becomes complete
+                    if !previousCacheStatus && response.cache && !self.hasFinalPolled {
+                        print("🏁 Cache just became complete! Starting final comprehensive poll...")
+                        self.performFinalComprehensivePoll(searchId: searchId)
+                    } else if !response.cache && self.shouldContinuouslyPoll {
+                        // Continue polling if cache is still not complete
                         self.startContinuousPolling()
                     }
                     
@@ -273,6 +288,100 @@ class ResultViewModel: ObservableObject {
                     if self.shouldContinuouslyPoll {
                         self.startContinuousPolling()
                     }
+                }
+            }
+        }
+    }
+    
+    // ✅ NEW: Handle final poll results - merge intelligently without disrupting UX
+    private func handleFinalPollSuccess(_ response: PollResponse) {
+        print("🎯 Final comprehensive poll completed!")
+        print("   Received \(response.results.count) flights in final poll")
+        print("   Previous count: \(flightResults.count)")
+        print("   API total count: \(response.count)")
+        
+        // Update the definitive metadata
+        totalResultsCount = response.count
+        isCacheComplete = response.cache
+        nextPageURL = response.next
+        hasMoreResults = (response.next != nil)
+        
+        // ✅ Smart merge: Add any missing flights without disrupting user's scroll position
+        let currentFlightIds = Set(flightResults.map { $0.id })
+        let newFlights = response.results.filter { !currentFlightIds.contains($0.id) }
+        
+        if !newFlights.isEmpty {
+            print("🆕 Found \(newFlights.isEmpty) new flights in final poll - adding silently")
+            
+            // Add new flights to the end to maintain user's current view
+            flightResults.append(contentsOf: newFlights)
+            
+            // Sort by price or relevance to maintain quality (optional)
+            flightResults.sort { flight1, flight2 in
+                // Sort by price, but maintain best/cheapest/fastest at top
+                if flight1.is_best && !flight2.is_best { return true }
+                if flight2.is_best && !flight1.is_best { return false }
+                if flight1.is_cheapest && !flight2.is_cheapest { return true }
+                if flight2.is_cheapest && !flight1.is_cheapest { return false }
+                if flight1.is_fastest && !flight2.is_fastest { return true }
+                if flight2.is_fastest && !flight1.is_fastest { return false }
+                return flight1.min_price < flight2.min_price
+            }
+            
+            print("✅ Silently added \(newFlights.count) flights. Total now: \(flightResults.count)")
+        } else {
+            print("✅ No new flights found - results were already complete")
+        }
+        
+        // ✅ Handle potential discrepancies in total count
+        if flightResults.count < totalResultsCount && hasMoreResults {
+            print("📊 Results count (\(flightResults.count)) < total (\(totalResultsCount))")
+            print("   Pagination still available for remaining flights")
+        } else if flightResults.count >= totalResultsCount {
+            print("🏁 All flights loaded! (\(flightResults.count)/\(totalResultsCount))")
+            hasMoreResults = false
+            nextPageURL = nil
+        }
+        
+        print("🎯 Final poll integration complete - user experience maintained")
+    }
+    
+    // ✅ NEW: Perform final comprehensive poll after cache complete to ensure no missing results
+    private func performFinalComprehensivePoll(searchId: String) {
+        guard !hasFinalPolled && !isFinalPolling else {
+            print("🚫 Final poll already completed or in progress")
+            return
+        }
+        
+        isFinalPolling = true
+        hasFinalPolled = true
+        
+        print("🎯 Starting final comprehensive poll after cache complete...")
+        print("   Current results: \(flightResults.count)")
+        print("   Expected total: \(totalResultsCount)")
+        
+        let requestToUse = isFilteredResults ? currentFilterRequest : PollRequest()
+        
+        // Poll from page 1 with a larger limit to get comprehensive results
+        pollApi.pollFlights(
+            searchId: searchId,
+            request: requestToUse,
+            page: 1,
+            limit: max(100, totalResultsCount) // Use larger limit to capture all results
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                self.isFinalPolling = false
+                
+                switch result {
+                case .success(let response):
+                    self.handleFinalPollSuccess(response)
+                    
+                case .failure(let error):
+                    print("❌ Final comprehensive poll failed: \(error)")
+                    // Don't treat this as a critical error - user still has the previous results
+                    print("   User experience maintained with existing \(self.flightResults.count) results")
                 }
             }
         }
@@ -330,7 +439,7 @@ class ResultViewModel: ObservableObject {
         
         // Update cache status and total count
         let previousTotal = totalResultsCount
-        isCacheComplete = response.cache
+        self.isCacheComplete = response.cache
         totalResultsCount = response.count
         
         // ✅ Update next page URL from response
@@ -387,9 +496,9 @@ class ResultViewModel: ObservableObject {
     // ✅ CRITICAL FIX: Apply filters method storing filter state
     func applyFilters(request: PollRequest) {
         guard let searchId = searchId else {
-            print("❌ Cannot apply filters: no searchId")
-            return
-        }
+                print("❌ Cannot apply filters: no searchId")
+                return
+            }
         
         print("🔧 Applying filters with searchId: \(searchId)")
         print("   Has filters: \(request.hasFilters())")
