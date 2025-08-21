@@ -161,22 +161,33 @@ class PollApi {
         print("🌐 ===== END CURL COMMAND =====\n")
     }
     
-    // Alternative method using next URL if the API provides full URLs
+    
+    // ✅ Updated method signature to accept filters
     func pollFlightsWithURL(
         nextURL: String,
+        request: PollRequest = PollRequest(), // ✅ Add this parameter
         completion: @escaping (Result<PollResponse, Error>) -> Void
     ) {
+        let apiParams = APIConstants.getAPIParameters()
+        
         let headers: HTTPHeaders = [
             "accept": "application/json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "country": apiParams.country,
+            "Accept-Language": apiParams.language
         ]
         
+        // ✅ Build filter parameters like the main pollFlights method
+        let parameters: [String: Any] = buildFilterParameters(from: request)
+        
         print("🔍 Polling flights with next URL: \(nextURL)")
+        print("   🌐 Language: \(apiParams.language)")
+        print("   🔧 Applied filters: \(request.hasFilters())")
         
         AF.request(
             nextURL,
             method: .post,
-            parameters: [:],
+            parameters: parameters, // ✅ Now includes filters
             encoding: JSONEncoding.default,
             headers: headers
         )
