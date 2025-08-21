@@ -19,7 +19,7 @@
 //        VStack(spacing: 0) {
 //            // Header
 //            HStack {
-//                Text("Price")
+//                Text("price".localized)
 //                    .font(CustomFont.font(.large, weight: .bold))
 //                    .foregroundColor(.black)
 //                Spacer()
@@ -43,7 +43,7 @@
 //                    // Pricing Info
 //                    VStack(alignment: .leading, spacing: 4) {
 //                        HStack {
-//                            Text("Daily  + local taxes & fees")
+//                            Text("daily.local.taxes.fees.2".localized)
 //                                .font(CustomFont.font(.regular, weight: .semibold))
 //                                .foregroundColor(.black)
 //                            Spacer()

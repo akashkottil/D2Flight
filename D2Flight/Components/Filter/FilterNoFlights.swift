@@ -4,10 +4,10 @@ struct FilterNoFlights : View {
     var body: some View {
         VStack(spacing:20){
             Image("FilterErrorImg")
-            Text("Edit filter")
+            Text("edit.filter".localized)
                 .font(CustomFont.font(.large))
                 .fontWeight(.bold)
-            Text(" Edit your filter to see more results or clear all filters.")
+            Text("edit.your.filter.to.see.more.results.or.clear.all.filters".localized)
                 .font(CustomFont.font(.large))
                 .fontWeight(.medium)
                 .foregroundColor(.gray)

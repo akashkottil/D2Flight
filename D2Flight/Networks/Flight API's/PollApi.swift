@@ -14,19 +14,32 @@ class PollApi {
         limit: Int = 30,
         completion: @escaping (Result<PollResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/poll/?search_id=\(searchId)&page=\(page)&limit=\(limit)"
+        // ✅ FIXED: Get dynamic API parameters including language
+        let apiParams = APIConstants.getAPIParameters()
+        
+        // ✅ FIXED: Add language parameter to URL
+        let url = "\(baseURL)/poll/?search_id=\(searchId)&page=\(page)&limit=\(limit)&language=\(apiParams.language)&currency=\(apiParams.currency)"
         
         let headers: HTTPHeaders = [
             "accept": "application/json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            // ✅ ADDED: Country and language headers
+            "country": apiParams.country,
+            "Accept-Language": apiParams.language
         ]
         
         // ✅ FIXED: Only send user-selected filter values
         let parameters: [String: Any] = buildFilterParameters(from: request)
         
-        print("🔍 Polling flights with search_id: \(searchId), page: \(page), limit: \(limit)")
-        print("📋 Request has filters: \(request.hasFilters())")
-        print("📋 Request parameters: \(parameters)")
+        print("🔍 Polling flights with dynamic language support:")
+        print("   Search ID: \(searchId)")
+        print("   Page: \(page), Limit: \(limit)")
+        print("   🌐 Language: \(apiParams.language)")
+        print("   💰 Currency: \(apiParams.currency)")
+        print("   🌍 Country: \(apiParams.country)")
+        print("   📋 Request has filters: \(request.hasFilters())")
+        print("   📋 Request parameters: \(parameters)")
+        print("   📡 URL: \(url)")
         
         // ✅ NEW: Print CURL command for debugging
         printCurlCommand(url: url, headers: headers, parameters: parameters)
@@ -42,7 +55,8 @@ class PollApi {
         .responseDecodable(of: PollResponse.self) { response in
             switch response.result {
             case .success(let pollResponse):
-                print("✅ Poll successful! Found \(pollResponse.results.count) flights in this batch (total: \(pollResponse.count))")
+                print("✅ Poll successful with language \(apiParams.language)!")
+                print("   Found \(pollResponse.results.count) flights in this batch (total: \(pollResponse.count))")
                 print("   Cache status: \(pollResponse.cache)")
                 print("   Next page: \(pollResponse.next != nil ? "Available" : "None")")
                 completion(.success(pollResponse))

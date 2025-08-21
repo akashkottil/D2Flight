@@ -68,7 +68,7 @@ struct UnifiedFilterSheet: View {
                 // Single Apply Button
                 VStack {
                     PrimaryButton(
-                        title: "Apply",
+                        title: "apply".localized,
                         font: CustomFont.font(.large),
                         fontWeight: .semibold,
                         textColor: .white,
@@ -331,14 +331,14 @@ struct UnifiedFilterSheet: View {
                             Text("₹\(Int(price))")
                                 .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
-                            Text("from")
+                            Text("from".localized)
                                 .font(CustomFont.font(.tiny))
                                 .foregroundColor(.gray)
                         }
                     } else if !isSelectAll {
                         // Show "Price varies" when no specific price is available
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("Varies")
+                            Text("varies".localized)
                                 .font(CustomFont.font(.small, weight: .medium))
                                 .foregroundColor(.gray)
                         }
@@ -361,7 +361,7 @@ struct UnifiedFilterSheet: View {
                 VStack(spacing: 20) {
                     // Stopover Duration
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Stopover")
+                        Text("stopover.3".localized)
                             .font(CustomFont.font(.regular, weight: .medium))
                             .foregroundColor(.black)
                         
@@ -375,7 +375,7 @@ struct UnifiedFilterSheet: View {
                     
                     // Flight Leg Duration
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Flight leg")
+                        Text("flight.leg.3".localized)
                             .font(CustomFont.font(.regular, weight: .medium))
                             .foregroundColor(.black)
                         
@@ -399,7 +399,7 @@ struct UnifiedFilterSheet: View {
                     VStack(spacing: 20) {
                         // Stopover Duration
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Stopover")
+                            Text("stopover.4".localized)
                                 .font(CustomFont.font(.regular, weight: .medium))
                                 .foregroundColor(.black)
                             
@@ -413,7 +413,7 @@ struct UnifiedFilterSheet: View {
                         
                         // Flight Leg Duration
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Flight leg")
+                            Text("flight.leg.4".localized)
                                 .font(CustomFont.font(.regular, weight: .medium))
                                 .foregroundColor(.black)
                             
@@ -436,7 +436,7 @@ struct UnifiedFilterSheet: View {
             // Pricing Info
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text("Daily  + local taxes & fees")
+                    Text("daily.local.taxes.fees".localized)
                         .font(CustomFont.font(.regular, weight: .semibold))
                         .foregroundColor(.black)
                     Spacer()

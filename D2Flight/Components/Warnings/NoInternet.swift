@@ -10,7 +10,7 @@ struct NoInternet: View {
                 .foregroundColor(.black)
                 .font(CustomFont.font(.medium))
             
-            Text("No Internet connection. Try reconnecting")
+            Text("no.internet.connection.try.reconnecting".localized)
                 .font(CustomFont.font(.regular, weight: .medium))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.leading)

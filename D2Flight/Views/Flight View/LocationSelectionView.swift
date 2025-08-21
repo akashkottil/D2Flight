@@ -174,7 +174,7 @@ struct LocationSelectionView: View {
                         VStack(spacing: 16) {
                             ProgressView()
                                 .scaleEffect(1.2)
-                            Text("Searching locations...")
+                            Text("searching.locations".localized)
                                 .font(CustomFont.font(.regular))
                                 .foregroundColor(.gray)
                         }
@@ -253,7 +253,7 @@ struct LocationSelectionView: View {
                 return viewModel.isSelectingOrigin ? "Select pick-up location" : "Select drop-off location"
             }
         } else {
-            return viewModel.isSelectingOrigin ? "Select departure location" : "Select destination location"
+            return viewModel.isSelectingOrigin ? "select.departure.location".localized : "select.destination.location".localized
         }
     }
 }

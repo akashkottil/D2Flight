@@ -8,14 +8,9 @@ struct FlightView: View {
     @State private var originLocation = ""
     @State private var destinationLocation = ""
     @State private var iataCode = ""
-    @State private var departureDate: String = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        return formatter.string(from: Date())
-    }()
     
     @State private var returnDate: String = ""
-    @State private var travelersCount = "2 Travellers, Economy"
+    @State private var travelersCount: String = ""
     
     // Passenger Sheet States
     @State private var showPassengerSheet = false
@@ -46,6 +41,10 @@ struct FlightView: View {
     @StateObject private var recentLocationsManager = RecentLocationsManager.shared
     @State private var hasPrefilled = false
     
+    @State private var departureDate: String = {
+        return LocalizedDateFormatter.formatShortDate(Date())
+    }()
+    
     // ✅ UPDATED: Remove individual notification states, use WarningManager
     @StateObject private var warningManager = WarningManager.shared
     @State private var lastNetworkStatus = true
@@ -63,7 +62,7 @@ struct FlightView: View {
                         HStack {
                             Image("HomeLogo")
                                 .frame(width: 32, height: 32)
-                            Text("Last Minute Flights")
+                            Text("Last Minute Flights".localized)
                                 .font(CustomFont.font(.large, weight: .bold))
                                 .foregroundColor(Color.white)
                         }
@@ -76,7 +75,7 @@ struct FlightView: View {
                                     isOneWay = true
                                 }
                             }) {
-                                Text("One Way")
+                                Text("one.way".localized)
                                     .foregroundColor(isOneWay ? .white : .gray)
                                     .font(CustomFont.font(.small))
                                     .fontWeight(.semibold)
@@ -99,7 +98,7 @@ struct FlightView: View {
                                     isOneWay = false
                                 }
                             }) {
-                                Text("Round Trip")
+                                Text("round.trip".localized)
                                     .foregroundColor(!isOneWay ? .white : .gray)
                                     .font(CustomFont.font(.small))
                                     .fontWeight(.semibold)
@@ -183,7 +182,7 @@ struct FlightView: View {
                        let searchParams = currentSearchParameters {
                         ResultView(searchId: validSearchId, searchParameters: searchParams)
                     } else {
-                        Text("Invalid Search Parameters")
+                        Text("invalid.search.parameters".localized)
                     }
                 }
             }
@@ -215,7 +214,8 @@ struct FlightView: View {
                     infants: $infants,
                     selectedClass: $selectedClass
                 ) { updatedTravelersText in
-                    travelersCount = updatedTravelersText
+                    // ✅ CHANGE: Use the helper function instead of raw text
+                    travelersCount = formatTravelersText(adults: adults, children: children, infants: infants, selectedClass: selectedClass)
                 }
             }
             
@@ -252,8 +252,13 @@ struct FlightView: View {
                 }
                 prefillRecentLocationsIfNeeded()
                 initializeReturnDate()
+                
+                if travelersCount.isEmpty {
+                                travelersCount = formatTravelersText(adults: adults, children: children, infants: infants, selectedClass: selectedClass)
+                            }
             }
         }
+        
     }
     
     // ✅ UPDATED: Search Handler with Universal Validation
@@ -431,9 +436,6 @@ struct FlightView: View {
     }
     
     private func calculateDefaultReturnDate() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        
         let baseDepartureDate: Date
         if let selectedDepartureDate = selectedDates.first {
             baseDepartureDate = selectedDepartureDate
@@ -442,19 +444,20 @@ struct FlightView: View {
         }
         
         let returnDate = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
-        return formatter.string(from: returnDate)
+        return LocalizedDateFormatter.formatShortDate(returnDate)
+    }
+    
+    private func formatTravelDate() -> String {
+        return LocalizedDateFormatter.formatTravelDate(from: selectedDates, isOneWay: isOneWay)
     }
     
     private func updateDateLabels() {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        
         if let firstDate = selectedDates.first {
-            departureDate = formatter.string(from: firstDate)
+            departureDate = LocalizedDateFormatter.formatShortDate(firstDate)
         }
         
         if selectedDates.count > 1, let secondDate = selectedDates.last {
-            returnDate = formatter.string(from: secondDate)
+            returnDate = LocalizedDateFormatter.formatShortDate(secondDate)
         } else {
             returnDate = calculateDefaultReturnDate()
         }
@@ -488,9 +491,25 @@ struct FlightView: View {
         recentLocationsManager.addSearchPair(origin: originLocationObj, destination: destinationLocationObj)
         print("💾 Saved popular destination search pair: \(originIATA) → \(destinationLocation.title)")
     }
+    private func formatTravelersText(adults: Int, children: Int, infants: Int, selectedClass: TravelClass) -> String {
+            let totalTravelers = adults + children + infants
+            let travelersText = totalTravelers == 1 ?
+                "\(totalTravelers) \("traveller".localized)" :
+                "\(totalTravelers) \("travellers".localized)"
+            return "\(travelersText), \(selectedClass.displayName)"
+        }
 }
 
 
+// Add this extension - you can put it at the bottom of FlightView.swift
+extension DateFormatter {
+    static func localizedDateFormatter(format: String) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        formatter.locale = Locale.current  // This enables localization
+        return formatter
+    }
+}
 
 
 

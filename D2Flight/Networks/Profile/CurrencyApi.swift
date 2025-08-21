@@ -14,19 +14,30 @@ class CurrencyApi {
     ) {
         let url = "\(baseURL)\(APIConstants.Endpoints.currencies)"
         
-        let parameters: [String: Any] = [
+        // ✅ FIXED: Get dynamic language parameters
+        let apiParams = APIConstants.getAPIParameters()
+        
+        var parameters: [String: Any] = [
             "page": page,
-            "limit": limit
+            "limit": limit,
+            // ✅ ADDED: Language parameter
+            "language": apiParams.language
         ]
+        
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept,
-            "X-CSRFTOKEN": APIConstants.CSRFTokens.profile
+            // ✅ ADDED: Language and country headers
+            "Accept-Language": apiParams.language,
+            "country": apiParams.country
         ]
         
-        print("💰 Fetching currencies from API:")
-        print("URL: \(url)")
-        print("Parameters: \(parameters)")
+        print("💰 Fetching currencies from API with dynamic language:")
+        print("   URL: \(url)")
+        print("   🌐 Language: \(apiParams.language)")
+        print("   🌍 Country: \(apiParams.country)")
+        print("   Parameters: \(parameters)")
+        print("   Headers: \(headers)")
         
         AF.request(
             url,
@@ -38,7 +49,8 @@ class CurrencyApi {
         .responseDecodable(of: CurrencyApiResponse.self) { response in
             switch response.result {
             case .success(let currencyResponse):
-                print("✅ Currencies API success! Fetched \(currencyResponse.results.count) currencies")
+                print("✅ Currencies API success with language \(apiParams.language)!")
+                print("   Fetched \(currencyResponse.results.count) currencies")
                 print("   Total count: \(currencyResponse.count)")
                 print("   Next page: \(currencyResponse.next != nil ? "Available" : "None")")
                 completion(.success(currencyResponse))
@@ -67,7 +79,8 @@ class CurrencyApi {
                         fetchPage(page + 1)
                     } else {
                         // All data fetched
-                        print("💰 Fetched all currencies: \(allCurrencies.count) total")
+                        let apiParams = APIConstants.getAPIParameters()
+                        print("💰 Fetched all currencies with language \(apiParams.language): \(allCurrencies.count) total")
                         completion(.success(allCurrencies))
                     }
                 case .failure(let error):

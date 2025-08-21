@@ -74,7 +74,7 @@ struct ResultView: View {
                     // B) Error State
                     VStack(spacing: 20) {
                         Image("SomethingErrorImg")
-                        Text("Something went wrong!")
+                        Text("something.went.wrong".localized)
                             .font(.system(size: 24, weight: .semibold))
 
                         Text(error)

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppEntryView: View {
     @State private var showSplash = true
+    @StateObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         ZStack {
@@ -19,5 +20,10 @@ struct AppEntryView: View {
                 showSplash = false
             }
         }
+        .withHotReloadOverlay() // 🆕 Add hot reload overlay support
+        // 🌐 IMPORTANT: Update environment locale when language changes
+        .environment(\.locale, Locale(identifier: localizationManager.currentLanguage))
+        // Force UI refresh when language changes
+        .id(localizationManager.currentLanguage)
     }
 }

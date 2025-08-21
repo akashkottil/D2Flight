@@ -70,7 +70,7 @@ struct ResultHeader: View {
                         .foregroundColor(.gray)
                 }
                 Spacer()
-                
+
                 // ✅ UPDATED: Edit button now triggers callback instead of top sheet
                 Button(action: {
                     onEditButtonTapped()
@@ -78,7 +78,7 @@ struct ResultHeader: View {
                     VStack(alignment: .trailing) {
                         Image("EditIcon")
                             .frame(width: 14, height: 14)
-                        Text("Edit")
+                        Text("edit".localized)
                             .font(CustomFont.font(.small))
                             .fontWeight(.semibold)
                             .foregroundColor(.black)
