@@ -96,6 +96,7 @@ struct ResultHeader: View {
                 }
             }
             .padding(.bottom, 16)
+            .padding(.horizontal)
             
             // Filter Buttons
             ScrollView(.horizontal, showsIndicators: false) {
@@ -179,7 +180,6 @@ struct ResultHeader: View {
                         }
                     )
                     
-                    // ✅ FIXED: Price Filter with proper state checking
                     FilterButton(
                         title: filterViewModel.getPriceFilterDisplayText(),
                         isSelected: filterViewModel.isPriceFilterActive(),
@@ -202,7 +202,7 @@ struct ResultHeader: View {
                 .padding(.horizontal, 16)
             }
         }
-        .padding()
+        .padding(.vertical)
         .onAppear {
             filterViewModel.isRoundTrip = isRoundTrip
             print("🎛️ ResultHeader configured with:")
@@ -222,26 +222,25 @@ struct ResultHeader: View {
                 originCode: originCode,
                 destinationCode: destinationCode,
                 availableAirlines: filterViewModel.availableAirlines,
-                minPrice: currentMinPrice, // ✅ Use dynamic values
-                maxPrice: currentMaxPrice, // ✅ Use dynamic values
-                averagePrice: currentAveragePrice, // ✅ Use dynamic values
+                // ✅ CRITICAL: Use API price data if available, fallback to provided values
+                minPrice: filterViewModel.hasAPIDataLoaded ? filterViewModel.apiMinPrice : currentMinPrice,
+                maxPrice: filterViewModel.hasAPIDataLoaded ? filterViewModel.apiMaxPrice : currentMaxPrice,
+                averagePrice: filterViewModel.hasAPIDataLoaded ?
+                    (filterViewModel.apiMinPrice + filterViewModel.apiMaxPrice) / 2 : currentAveragePrice,
                 onApply: applyFilters
             )
             .presentationDetents(getPresentationDetents())
         }
+
     }
     
-    // ✅ CRITICAL FIX: Method to update filter data from poll response
     func updateAvailableAirlines(_ pollResponse: PollResponse) {
-        print("🔧 ResultHeader: Updating airlines from poll response")
+        print("🔧 ResultHeader: Updating airlines and price data from poll response")
+        
+        // Update airlines in FilterViewModel
         filterViewModel.updateAvailableAirlines(from: pollResponse)
         
-        // ✅ CRITICAL: Update price data in FilterViewModel
-        currentMinPrice = pollResponse.min_price
-        currentMaxPrice = pollResponse.max_price
-        currentAveragePrice = (pollResponse.min_price + pollResponse.max_price) / 2
-        
-        // ✅ CRITICAL: Set price range in FilterViewModel with API data
+        // ✅ CRITICAL: Update price data in FilterViewModel with API values
         filterViewModel.updatePriceRangeFromAPI(
             minPrice: pollResponse.min_price,
             maxPrice: pollResponse.max_price
@@ -249,8 +248,9 @@ struct ResultHeader: View {
         
         print("✅ ResultHeader: Updated both airlines and price data:")
         print("   Airlines: \(filterViewModel.availableAirlines.count)")
-        print("   Price Range: ₹\(pollResponse.min_price) - ₹\(pollResponse.max_price)")
+        print("   API Price Range: ₹\(pollResponse.min_price) - ₹\(pollResponse.max_price)")
         print("   FilterViewModel hasAPIDataLoaded: \(filterViewModel.hasAPIDataLoaded)")
+        print("   Current price range: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
     }
     
     private func getStopsFilterTitle() -> String {
@@ -295,7 +295,7 @@ struct ResultHeader: View {
         filterViewModel.excludedAirlines.removeAll()
         filterViewModel.selectedClass = .economy
         
-        // ✅ CRITICAL: Reset price filter properly
+        // ✅ CRITICAL: Reset price filter to API values (not hardcoded values)
         filterViewModel.resetPriceFilter()
         
         print("✅ All filters cleared to default values")
@@ -312,7 +312,6 @@ struct ResultHeader: View {
     }
     
     private func applyFilters() {
-        // ✅ Use the enhanced buildPollRequest that includes price parameters
         let pollRequest = filterViewModel.buildPollRequest()
         onFiltersChanged(pollRequest)
         

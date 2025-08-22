@@ -1,17 +1,19 @@
 // FilterViewModel+Airlines.swift
-// Extension to handle airline filtering functionality
+// Extension to handle airline filtering functionality AND price data updates
 
 import Foundation
 import SwiftUI
 
 extension FilterViewModel {
     
-    // MARK: - Airline Management
+    // MARK: - ✅ UPDATED: Airline AND Price Management
     
     /// Update available airlines with real pricing data from poll response
+    /// ✅ CRITICAL: Also updates price range from API data
     func updateAvailableAirlines(from pollResponse: PollResponse) {
-        print("🔧 Updating available airlines from poll response")
+        print("🔧 Updating available airlines AND price data from poll response")
         print("   Airlines in response: \(pollResponse.airlines.count)")
+        print("   API Price Range: ₹\(pollResponse.min_price) - ₹\(pollResponse.max_price)")
         
         // Create a map of airline codes to minimum prices from flight results
         var airlinePrices: [String: Double] = [:]
@@ -50,8 +52,19 @@ extension FilterViewModel {
             print("   \(airline.name) (\(airline.code)): ₹\(Int(airline.price))")
         }
         
+        // ✅ CRITICAL: Update price range from API data
+        updatePriceRangeFromAPI(
+            minPrice: pollResponse.min_price,
+            maxPrice: pollResponse.max_price
+        )
+        
         // Update cached sorted airlines for sheet
         refreshCachedSortedAirlines()
+        
+        print("✅ Combined update completed:")
+        print("   Airlines: \(availableAirlines.count)")
+        print("   Price Range: ₹\(pollResponse.min_price) - ₹\(pollResponse.max_price)")
+        print("   hasAPIDataLoaded: \(hasAPIDataLoaded)")
     }
     
     /// Cache sorted airlines for the filter sheet display
@@ -187,6 +200,15 @@ extension FilterViewModel {
             let isSelected = selectedAirlines.contains(airline.code)
             print("   \(isSelected ? "✅" : "❌") \(airline.name) (\(airline.code)) - ₹\(Int(airline.price))")
         }
+        
+        print("Price Data:")
+        print("   hasAPIDataLoaded: \(hasAPIDataLoaded)")
+        print("   apiMinPrice: ₹\(apiMinPrice)")
+        print("   apiMaxPrice: ₹\(apiMaxPrice)")
+        print("   current priceRange: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+        print("   userHasModifiedPrice: \(userHasModifiedPrice)")
+        print("   isPriceFilterActive: \(isPriceFilterActive())")
+        
         print("🔍 ===== END AIRLINE DEBUG =====\n")
     }
 }

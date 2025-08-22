@@ -56,30 +56,18 @@ class FilterViewModel: ObservableObject {
     // Stop count filter
     @Published var maxStops: Int = 3
     
-    // ✅ ENHANCED: Price filters with proper state tracking
-    @Published var priceRange: ClosedRange<Double> = 0...10000
-    
-    // ✅ FIXED: Make price state properties accessible
-//    private(set) var originalAPIMinPrice: Double = 0
-//    private(set) var originalAPIMaxPrice: Double = 10000
-//    private(set) var hasAPIDataLoaded: Bool = false
-//    private(set) var userHasModifiedPrice: Bool = false
-    
-    var originalAPIMinPrice: Double {
-            return UserDefaults.standard.double(forKey: "FilterViewModel_apiMinPrice")
+    // ✅ FIXED: Price filters with proper API-based initialization
+    @Published var priceRange: ClosedRange<Double> = 0...10000 {
+        didSet {
+            print("🔧 Price range changed: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
         }
+    }
     
-    var originalAPIMaxPrice: Double {
-           return UserDefaults.standard.double(forKey: "FilterViewModel_apiMaxPrice")
-       }
-       
-       var hasAPIDataLoaded: Bool {
-           return UserDefaults.standard.bool(forKey: "FilterViewModel_hasAPIData")
-       }
-       
-       var userHasModifiedPrice: Bool {
-           return UserDefaults.standard.bool(forKey: "FilterViewModel_userModifiedPrice")
-       }
+    // ✅ NEW: Store API price data
+    @Published private(set) var apiMinPrice: Double = 0
+    @Published private(set) var apiMaxPrice: Double = 10000
+    @Published private(set) var hasAPIDataLoaded: Bool = false
+    @Published private(set) var userHasModifiedPrice: Bool = false
     
     // Trip type for conditional filtering
     var isRoundTrip: Bool = false
@@ -97,19 +85,127 @@ class FilterViewModel: ObservableObject {
     private func loadDefaultFilters() {
         // Set default values
         selectedSortOption = .best
-        departureTimeRange = 0...86400 // ✅ UPDATED: seconds
-        arrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
-        returnDepartureTimeRange = 0...86400 // ✅ UPDATED: seconds
-        returnArrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
+        departureTimeRange = 0...86400
+        arrivalTimeRange = 0...86400
+        returnDepartureTimeRange = 0...86400
+        returnArrivalTimeRange = 0...86400
         maxDuration = 1440
         selectedClass = .economy
         selectedAirlines = []
         excludedAirlines = []
         maxStops = 3
-        priceRange = 0...10000
-//        userHasModifiedPrice = false
+        // ✅ Don't set priceRange here - wait for API data
+        userHasModifiedPrice = false
+        hasAPIDataLoaded = false
     }
     
+    // MARK: - ✅ ENHANCED: Price Filter Methods
+    
+    /// Update price range when API data is received
+    func updatePriceRangeFromAPI(minPrice: Double, maxPrice: Double) {
+        print("🔧 Setting price range from API:")
+        print("   API Min Price: ₹\(minPrice)")
+        print("   API Max Price: ₹\(maxPrice)")
+        print("   Current Price Range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+        print("   Has API Data Loaded: \(hasAPIDataLoaded)")
+        print("   User Has Modified: \(userHasModifiedPrice)")
+        
+        // ✅ CRITICAL: Store API values
+        apiMinPrice = minPrice
+        apiMaxPrice = maxPrice
+        hasAPIDataLoaded = true
+        
+        // ✅ FIXED: Only update the range if user hasn't manually modified it
+        if !userHasModifiedPrice {
+            priceRange = minPrice...maxPrice
+            print("   ✅ Updated price range to API values: ₹\(minPrice) - ₹\(maxPrice)")
+        } else {
+            print("   ⚠️ Price range already modified by user, keeping current values")
+        }
+        
+        print("   Final state:")
+        print("     hasAPIDataLoaded: \(hasAPIDataLoaded)")
+        print("     userHasModifiedPrice: \(userHasModifiedPrice)")
+        print("     shouldApplyPriceFilter: \(shouldApplyPriceFilter())")
+    }
+    
+    /// Track when user manually modifies price range
+    func updatePriceRange(newRange: ClosedRange<Double>) {
+        print("🔧 User modifying price range:")
+        print("   Previous: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+        print("   New: ₹\(newRange.lowerBound) - ₹\(newRange.upperBound)")
+        
+        priceRange = newRange
+        
+        // ✅ Mark that user has modified the price
+        userHasModifiedPrice = true
+        
+        print("   ✅ Price range updated and marked as user-modified")
+        print("   shouldApplyPriceFilter: \(shouldApplyPriceFilter())")
+    }
+    
+    /// Check if price filter should be applied to API request
+    func shouldApplyPriceFilter() -> Bool {
+        guard hasAPIDataLoaded else {
+            print("🔧 Price filter check: No API data loaded")
+            return false
+        }
+        
+        let apiRange = apiMinPrice...apiMaxPrice
+        let hasChanged = priceRange != apiRange
+        
+        print("🔧 Price filter check:")
+        print("   API Range: ₹\(apiMinPrice) - ₹\(apiMaxPrice)")
+        print("   Current Range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+        print("   User Modified: \(userHasModifiedPrice)")
+        print("   Has Changed: \(hasChanged)")
+        print("   Should Apply: \(hasChanged && userHasModifiedPrice)")
+        
+        return hasChanged && userHasModifiedPrice
+    }
+    
+    /// Check if price filter is currently active for UI
+    func isPriceFilterActive() -> Bool {
+        return shouldApplyPriceFilter()
+    }
+    
+    /// Get display text for price filter button
+    func getPriceFilterDisplayText() -> String {
+        if isPriceFilterActive() {
+            return "₹\(formatPriceValue(priceRange.lowerBound)) - ₹\(formatPriceValue(priceRange.upperBound))"
+        } else {
+            return "Price"
+        }
+    }
+    
+    /// Reset price filter to API defaults
+    func resetPriceFilter() {
+        print("🗑️ Resetting price filter:")
+        print("   Previous range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
+        
+        if hasAPIDataLoaded {
+            priceRange = apiMinPrice...apiMaxPrice
+            print("   ✅ Reset to API values: ₹\(apiMinPrice) - ₹\(apiMaxPrice)")
+        } else {
+            priceRange = 0...10000
+            print("   ✅ Reset to default: ₹0 - ₹10000 (no API data)")
+        }
+        
+        // Clear user modification flag
+        userHasModifiedPrice = false
+        print("   ✅ Cleared user modification flag")
+    }
+    
+    private func formatPriceValue(_ price: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = ","
+        formatter.usesGroupingSeparator = true
+        
+        return formatter.string(from: NSNumber(value: Int(price))) ?? "\(Int(price))"
+    }
+    
+    // MARK: - Airlines Management
     
     func updateAvailableAirlines(_ airlines: [Airline]) {
         availableAirlines = airlines.map { airline in
@@ -156,122 +252,8 @@ class FilterViewModel: ObservableObject {
     
     func resetFilters() {
         loadDefaultFilters()
+        resetPriceFilter()
     }
-    
-    // MARK: - ✅ ENHANCED: Price Filter Methods
-    
-    /// Update price range when API data is received
-    func updatePriceRangeFromAPI(minPrice: Double, maxPrice: Double) {
-            print("🔧 Setting price range from API:")
-            print("   API Min Price: ₹\(minPrice)")
-            print("   API Max Price: ₹\(maxPrice)")
-            print("   Current Price Range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
-            
-            // Store original API values for comparison using UserDefaults for persistence
-            UserDefaults.standard.set(minPrice, forKey: "FilterViewModel_apiMinPrice")
-            UserDefaults.standard.set(maxPrice, forKey: "FilterViewModel_apiMaxPrice")
-            UserDefaults.standard.set(true, forKey: "FilterViewModel_hasAPIData")
-            
-            // Only update the range if user hasn't manually modified it
-            let userHasModified = UserDefaults.standard.bool(forKey: "FilterViewModel_userModifiedPrice")
-            
-            if !userHasModified {
-                priceRange = minPrice...maxPrice
-                print("   ✅ Updated price range to API values: ₹\(minPrice) - ₹\(maxPrice)")
-            } else {
-                print("   ⚠️ Price range already modified by user, keeping current values")
-            }
-            
-            // ✅ DEBUG: Print final state
-            print("   Final state:")
-            print("     hasAPIDataLoaded: \(hasAPIDataLoaded)")
-            print("     userHasModifiedPrice: \(userHasModifiedPrice)")
-            print("     shouldApplyPriceFilter: \(shouldApplyPriceFilter())")
-        }
-    
-    /// Track when user manually modifies price range
-    func updatePriceRange(newRange: ClosedRange<Double>) {
-            print("🔧 User modifying price range:")
-            print("   Previous: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
-            print("   New: ₹\(newRange.lowerBound) - ₹\(newRange.upperBound)")
-            
-            priceRange = newRange
-            
-            // ✅ Mark that user has modified the price using UserDefaults for persistence
-            UserDefaults.standard.set(true, forKey: "FilterViewModel_userModifiedPrice")
-            
-            print("   ✅ Price range updated and marked as user-modified")
-            print("   shouldApplyPriceFilter: \(shouldApplyPriceFilter())")
-        }
-    
-    /// Check if price filter should be applied to API request
-    func shouldApplyPriceFilter() -> Bool {
-            let hasAPIData = UserDefaults.standard.bool(forKey: "FilterViewModel_hasAPIData")
-            let userHasModified = UserDefaults.standard.bool(forKey: "FilterViewModel_userModifiedPrice")
-            
-            guard hasAPIData else {
-                print("🔧 Price filter check: No API data loaded")
-                return false
-            }
-            
-            let apiMinPrice = UserDefaults.standard.double(forKey: "FilterViewModel_apiMinPrice")
-            let apiMaxPrice = UserDefaults.standard.double(forKey: "FilterViewModel_apiMaxPrice")
-            let apiRange = apiMinPrice...apiMaxPrice
-            let hasChanged = priceRange != apiRange
-            
-            print("🔧 Price filter check:")
-            print("   API Range: ₹\(apiMinPrice) - ₹\(apiMaxPrice)")
-            print("   Current Range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
-            print("   User Modified: \(userHasModified)")
-            print("   Has Changed: \(hasChanged)")
-            print("   Should Apply: \(hasChanged && userHasModified)")
-            
-            return hasChanged && userHasModified
-        }
-    
-    /// Check if price filter is currently active for UI
-    func isPriceFilterActive() -> Bool {
-            return shouldApplyPriceFilter()
-        }
-    
-    /// Get display text for price filter button
-    func getPriceFilterDisplayText() -> String {
-            if isPriceFilterActive() {
-                return "₹\(formatPriceValue(priceRange.lowerBound)) - ₹\(formatPriceValue(priceRange.upperBound))"
-            } else {
-                return "Price"
-            }
-        }
-    
-    /// Reset price filter to API defaults
-    func resetPriceFilter() {
-            print("🗑️ Resetting price filter:")
-            print("   Previous range: ₹\(priceRange.lowerBound) - ₹\(priceRange.upperBound)")
-            
-            let hasAPIData = UserDefaults.standard.bool(forKey: "FilterViewModel_hasAPIData")
-            
-            if hasAPIData {
-                let apiMinPrice = UserDefaults.standard.double(forKey: "FilterViewModel_apiMinPrice")
-                let apiMaxPrice = UserDefaults.standard.double(forKey: "FilterViewModel_apiMaxPrice")
-                priceRange = apiMinPrice...apiMaxPrice
-                print("   ✅ Reset to API values: ₹\(apiMinPrice) - ₹\(apiMaxPrice)")
-            } else {
-                priceRange = 0...10000
-                print("   ✅ Reset to default: ₹0 - ₹10000")
-            }
-            
-            // Clear user modification flag
-            UserDefaults.standard.set(false, forKey: "FilterViewModel_userModifiedPrice")
-        }
-    
-    private func formatPriceValue(_ price: Double) -> String {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .decimal
-            formatter.groupingSeparator = ","
-            formatter.usesGroupingSeparator = true
-            
-            return formatter.string(from: NSNumber(value: Int(price))) ?? "\(Int(price))"
-        }
     
     // MARK: - ✅ UPDATED: Main buildPollRequest method with FIXED price filter support
     func buildPollRequest() -> PollRequest {
@@ -310,7 +292,7 @@ class FilterViewModel: ObservableObject {
             print("   ✓ Stops: ≤ \(maxStops)")
         }
         
-        // ✅ FIXED: Smart time range filters - only send what user actually selected
+        // ✅ Time range filters
         var timeRanges: [ArrivalDepartureRange] = []
         
         // Process outbound leg
@@ -318,7 +300,6 @@ class FilterViewModel: ObservableObject {
         let hasArrivalFilter = arrivalTimeRange != 0...86400
         
         if hasDepartureFilter || hasArrivalFilter {
-            // Convert to proper structure for API
             let departure = hasDepartureFilter ?
                 TimeRange(min: Int(departureTimeRange.lowerBound), max: Int(departureTimeRange.upperBound)) :
                 TimeRange(min: 0, max: 86400)
@@ -345,7 +326,6 @@ class FilterViewModel: ObservableObject {
                     TimeRange(min: Int(returnArrivalTimeRange.lowerBound), max: Int(returnArrivalTimeRange.upperBound)) :
                     TimeRange(min: 0, max: 86400)
                 
-                // If no outbound filters, add default outbound first
                 if timeRanges.isEmpty {
                     timeRanges.append(ArrivalDepartureRange(
                         arrival: TimeRange(min: 0, max: 86400),
@@ -358,12 +338,11 @@ class FilterViewModel: ObservableObject {
             }
         }
         
-        // Only set if we have actual time filters
         if !timeRanges.isEmpty {
             request.arrival_departure_ranges = timeRanges
         }
         
-        // ✅ Airline filters - only apply if airlines are selected
+        // ✅ Airline filters
         if !selectedAirlines.isEmpty {
             request.iata_codes_include = Array(selectedAirlines)
             print("   ✓ Include Airlines: \(selectedAirlines.joined(separator: ", "))")
@@ -400,19 +379,12 @@ class FilterViewModel: ObservableObject {
         return request
     }
     
-    // ✅ Helper function to format seconds to time string for debugging
-    private func formatSecondsToTime(_ seconds: Int) -> String {
-        let hours = seconds / 3600
-        let mins = (seconds % 3600) / 60
-        return String(format: "%02d:%02d", hours, mins)
-    }
-    
     func clearFilters() {
         selectedSortOption = .best
-        departureTimeRange = 0...86400 // ✅ UPDATED: seconds
-        arrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
-        returnDepartureTimeRange = 0...86400 // ✅ UPDATED: seconds
-        returnArrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
+        departureTimeRange = 0...86400
+        arrivalTimeRange = 0...86400
+        returnDepartureTimeRange = 0...86400
+        returnArrivalTimeRange = 0...86400
         maxDuration = 1440
         selectedClass = .economy
         selectedAirlines.removeAll()
@@ -425,21 +397,17 @@ class FilterViewModel: ObservableObject {
         print("🔧 All filters cleared including price modifications")
     }
     
-    private func getCurrentPollData() -> PollResponse? {
-        return nil
-    }
-    
     // ✅ UPDATED: Helper method to check if any filters are active
     func hasActiveFilters() -> Bool {
         return selectedSortOption != .best ||
-               departureTimeRange != 0...86400 || // ✅ UPDATED: seconds
-               arrivalTimeRange != 0...86400 || // ✅ UPDATED: seconds
-               returnDepartureTimeRange != 0...86400 || // ✅ UPDATED: seconds
-               returnArrivalTimeRange != 0...86400 || // ✅ UPDATED: seconds
+               departureTimeRange != 0...86400 ||
+               arrivalTimeRange != 0...86400 ||
+               returnDepartureTimeRange != 0...86400 ||
+               returnArrivalTimeRange != 0...86400 ||
                maxDuration < 1440 ||
                !selectedAirlines.isEmpty ||
                !excludedAirlines.isEmpty ||
                maxStops < 3 ||
-               isPriceFilterActive() // ✅ Use proper price filter check
+               isPriceFilterActive()
     }
 }

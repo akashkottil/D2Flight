@@ -237,41 +237,29 @@ struct ResultView: View {
             }
             // ✅ Handle poll response updates
             .onReceive(viewModel.$pollResponse) { pollResponse in
-                            if let response = pollResponse {
-                                // Log the response
-                                print("🖥️ ResultView received poll response with \(response.results.count) results")
-                                print("🖥️ Total available flights: \(response.count)")
-                                print("🖥️ Price range from API: ₹\(response.min_price) - ₹\(response.max_price)")
-                                print("🖥️ Available airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
-                                
-                                // ✅ CRITICAL FIX: Update ResultHeader with airlines AND price data
-                                if let resultHeader = getCurrentResultHeader() {
-                                    resultHeader.updateAvailableAirlines(response)
-                                    print("✅ Updated ResultHeader with API data including price range")
-                                } else {
-                                    // ✅ ALTERNATIVE: Update FilterViewModel directly if header reference not available
-                                    sharedFilterViewModel.updateAvailableAirlines(from: response)
-                                    sharedFilterViewModel.updatePriceRangeFromAPI(
-                                        minPrice: response.min_price,
-                                        maxPrice: response.max_price
-                                    )
-                                    print("✅ Updated FilterViewModel directly with API data")
-                                }
-                                
-                                // Print airlines for debugging
-                                for airline in response.airlines {
-                                    print("   - \(airline.airlineName) (\(airline.airlineIata))")
-                                }
-                                
-                                // ✅ DEBUG: Print price filter state after update
-                                print("🔍 Price filter state after API update:")
-                                print("   hasAPIDataLoaded: \(sharedFilterViewModel.hasAPIDataLoaded)")
-                                print("   originalAPIMinPrice: ₹\(sharedFilterViewModel.originalAPIMinPrice)")
-                                print("   originalAPIMaxPrice: ₹\(sharedFilterViewModel.originalAPIMaxPrice)")
-                                print("   current priceRange: ₹\(sharedFilterViewModel.priceRange.lowerBound) - ₹\(sharedFilterViewModel.priceRange.upperBound)")
-                                print("   isPriceFilterActive: \(sharedFilterViewModel.isPriceFilterActive())")
-                            }
-                        }
+                if let response = pollResponse {
+                    // Log the response
+                    print("🖥️ ResultView received poll response with \(response.results.count) results")
+                    print("🖥️ Total available flights: \(response.count)")
+                    print("🖥️ API Price range: ₹\(response.min_price) - ₹\(response.max_price)")
+                    print("🖥️ Available airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
+                    
+                    // ✅ CRITICAL FIX: Update FilterViewModel with combined airlines AND price data
+                    sharedFilterViewModel.updateAvailableAirlines(from: response)
+                    
+                    print("✅ Updated FilterViewModel with comprehensive API data:")
+                    print("   Airlines: \(sharedFilterViewModel.availableAirlines.count)")
+                    print("   Price Range: ₹\(response.min_price) - ₹\(response.max_price)")
+                    print("   hasAPIDataLoaded: \(sharedFilterViewModel.hasAPIDataLoaded)")
+                    print("   Current price range: ₹\(sharedFilterViewModel.priceRange.lowerBound) - ₹\(sharedFilterViewModel.priceRange.upperBound)")
+                    print("   Price filter active: \(sharedFilterViewModel.isPriceFilterActive())")
+                    
+                    // Print airlines for debugging
+                    for airline in response.airlines {
+                        print("   - \(airline.airlineName) (\(airline.airlineIata))")
+                    }
+                }
+            }
             // ✅ Handle flight results updates
             .onReceive(viewModel.$flightResults) { flightResults in
                 print("🖥️ ResultView received \(flightResults.count) flight results")

@@ -602,27 +602,6 @@ struct UnifiedFilterSheet: View {
     // MARK: - Price Content
     private var priceContent: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Debug info to verify API prices
-            VStack(alignment: .leading, spacing: 4) {
-                Text("🔍 Price Range Debug")
-                    .font(.caption)
-                    .foregroundColor(.blue)
-                Text("API Min Price: ₹\(Int(minPrice))")
-                    .font(.caption)
-                    .foregroundColor(.green)
-                Text("API Max Price: ₹\(Int(maxPrice))")
-                    .font(.caption)
-                    .foregroundColor(.green)
-                Text("Current Range: ₹\(Int(filterViewModel.priceRange.lowerBound)) - ₹\(Int(filterViewModel.priceRange.upperBound))")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                Text("Filter Active: \(filterViewModel.isPriceFilterActive() ? "✅ YES" : "❌ NO")")
-                    .font(.caption)
-                    .foregroundColor(filterViewModel.isPriceFilterActive() ? .green : .red)
-            }
-            .padding(8)
-            .background(Color.blue.opacity(0.1))
-            .cornerRadius(8)
             
             // Pricing Info Header
             VStack(alignment: .leading, spacing: 4) {
@@ -631,66 +610,42 @@ struct UnifiedFilterSheet: View {
                         .font(CustomFont.font(.regular, weight: .semibold))
                         .foregroundColor(.black)
                     Spacer()
-                    Image(systemName: "chevron.down")
-                        .foregroundColor(.black)
+                   
                 }
                 
-                Text("Average price is ₹\(Int(averagePrice))")
-                    .font(.system(size: 13))
-                    .foregroundColor(.gray)
+                if filterViewModel.hasAPIDataLoaded {
+                    Text("Price range: ₹\(Int(filterViewModel.apiMinPrice)) - ₹\(Int(filterViewModel.apiMaxPrice))")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                } else {
+                    Text("Average price is ₹\(Int(averagePrice))")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                }
             }
             
-            // ✅ CRITICAL: Price Slider with proper API range
+            // ✅ FIXED: Price Slider with proper API range
             PriceRangeSlider(
                 range: $filterViewModel.priceRange,
-                minPrice: minPrice, // ✅ Use API minPrice
-                maxPrice: maxPrice  // ✅ Use API maxPrice
+                minPrice: filterViewModel.hasAPIDataLoaded ? filterViewModel.apiMinPrice : minPrice,
+                maxPrice: filterViewModel.hasAPIDataLoaded ? filterViewModel.apiMaxPrice : maxPrice
             ) { newRange in
-                print("💰 User changed price range:")
+                print("💰 User changed price range in FilterSheet:")
                 print("   From: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
                 print("   To: ₹\(newRange.lowerBound) - ₹\(newRange.upperBound)")
                 filterViewModel.updatePriceRange(newRange: newRange)
             }
-            
-            // Range indicators showing API min/max
-            HStack {
-                Text("₹\(Int(minPrice))")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                Spacer()
-                Text("₹\(Int(maxPrice))")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            
-            // Status indicator
-            if filterViewModel.isPriceFilterActive() {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .font(.caption)
-                    Text("Price filter: ₹\(Int(filterViewModel.priceRange.lowerBound)) - ₹\(Int(filterViewModel.priceRange.upperBound))")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                }
-                .padding(8)
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(8)
-            }
         }
         .onAppear {
-            print("🎛️ Price filter opened:")
-            print("   API minPrice: ₹\(minPrice)")
-            print("   API maxPrice: ₹\(maxPrice)")
-            print("   Current filterViewModel.priceRange: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
-            
-            // ✅ CRITICAL: Initialize price range to API values if not set properly
-            if filterViewModel.priceRange.lowerBound < minPrice ||
-               filterViewModel.priceRange.upperBound > maxPrice ||
-               filterViewModel.priceRange == 0...10000 {
-                print("   🔧 Setting price range to API values")
-                filterViewModel.priceRange = minPrice...maxPrice
-                print("   ✅ Price range set to: ₹\(minPrice) - ₹\(maxPrice)")
+            print("🎛️ Price filter sheet opened:")
+            if filterViewModel.hasAPIDataLoaded {
+                print("   API minPrice: ₹\(filterViewModel.apiMinPrice)")
+                print("   API maxPrice: ₹\(filterViewModel.apiMaxPrice)")
+                print("   Current filterViewModel.priceRange: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
+                print("   User has modified: \(filterViewModel.userHasModifiedPrice)")
+                print("   Filter is active: \(filterViewModel.isPriceFilterActive())")
+            } else {
+                print("   ⚠️ No API data loaded - using fallback prices")
             }
         }
     }
@@ -800,7 +755,8 @@ struct UnifiedFilterSheet: View {
             filterViewModel.returnLegRange = 0...1440
             filterViewModel.maxDuration = 1440
         case .price:
-            clearPriceFilters() // ✅ Use the updated clear method
+            // ✅ CRITICAL: Reset to API values, not hardcoded values
+            filterViewModel.resetPriceFilter()
         default:
             break
         }
