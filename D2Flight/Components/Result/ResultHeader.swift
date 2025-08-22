@@ -171,14 +171,14 @@ struct ResultHeader: View {
                     )
                     
                     // Duration Filter
-                    FilterButton(
-                        title: "Duration",
-                        isSelected: filterViewModel.maxDuration < 1440,
-                        action: {
-                            selectedFilterType = .duration
-                            showUnifiedFilterSheet = true
-                        }
-                    )
+//                    FilterButton(
+//                        title: "Duration",
+//                        isSelected: filterViewModel.maxDuration < 1440,
+//                        action: {
+//                            selectedFilterType = .durationFlightSearchViewModel
+//                            showUnifiedFilterSheet = true
+//                        }
+//                    )
                     
                     FilterButton(
                         title: filterViewModel.getPriceFilterDisplayText(),
