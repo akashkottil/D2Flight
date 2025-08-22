@@ -378,7 +378,6 @@ struct UnifiedFilterSheet: View {
     // MARK: - Airlines Content
     private var airlinesContent: some View {
         VStack(spacing: 0) {
-            // Debug info (remove in production)
             if filterViewModel.availableAirlines.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "airplane")
@@ -407,8 +406,8 @@ struct UnifiedFilterSheet: View {
                     isSelectAll: true
                 )
                 
-                // Airlines sorted with selected ones at top
-                ForEach(filterViewModel.cachedSortedAirlinesForSheet, id: \.code) { airline in
+                // ✅ UPDATED: Use the improved ordering method
+                ForEach(filterViewModel.getAirlinesForSheetDisplay(), id: \.code) { airline in
                     airlineSelectionRow(
                         name: airline.name,
                         code: airline.code,
@@ -420,12 +419,15 @@ struct UnifiedFilterSheet: View {
             }
         }
         .onAppear {
-            // Refresh cached airlines when sheet appears
-            filterViewModel.refreshCachedSortedAirlines()
+            // ✅ UPDATED: Don't automatically reorder on appear
+            // Just use the existing cached ordering from last Apply
+            print("✈️ Airlines filter sheet opened")
+            print("   Using ordering from last Apply button click")
             filterViewModel.debugPrintAirlineState()
         }
     }
-    
+
+    // MARK: - Updated Airline Selection Row (Remove auto-reordering)
     private func airlineSelectionRow(
         name: String,
         code: String,
@@ -441,10 +443,9 @@ struct UnifiedFilterSheet: View {
                 filterViewModel.toggleAirlineFilter(code)
             }
             
-            // Re-cache sorted airlines after selection change (for next time sheet opens)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                filterViewModel.refreshCachedSortedAirlines()
-            }
+            // ✅ REMOVED: Don't reorder immediately on selection
+            // The ordering will only update when Apply is clicked
+            
         }) {
             HStack(spacing: 16) {
                 // Checkbox
@@ -471,7 +472,6 @@ struct UnifiedFilterSheet: View {
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                     } placeholder: {
-                        // Fallback with airline initials
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.blue.opacity(0.8))
                             .overlay(
@@ -492,7 +492,7 @@ struct UnifiedFilterSheet: View {
                 
                 Spacer()
                 
-                // Price (only for individual airlines with valid price)
+                // Price
                 if let price = price, price > 0, !isSelectAll {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("₹\(Int(price))")
@@ -503,7 +503,6 @@ struct UnifiedFilterSheet: View {
                             .foregroundColor(.gray)
                     }
                 } else if !isSelectAll && (price == nil || price == 0) {
-                    // Show "Price varies" when no specific price is available
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("varies".localized)
                             .font(CustomFont.font(.small, weight: .medium))

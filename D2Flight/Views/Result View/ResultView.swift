@@ -8,6 +8,7 @@ enum ContentType {
 
 struct ResultView: View {
     @StateObject private var viewModel = ResultViewModel()
+    @StateObject private var sharedFilterViewModel = FilterViewModel()
     @StateObject private var headerViewModel = ResultHeaderViewModel()
     @State private var selectedFlight: FlightResult? = nil
     @State private var navigateToDetails = false
@@ -33,15 +34,16 @@ struct ResultView: View {
                 // MARK: 1) Fixed Top Filter Bar with Edit Functionality
                 ResultHeader(
                     originCode: currentSearchParameters.originCode,
-                    destinationCode: currentSearchParameters.destinationCode,
-                    isRoundTrip: currentSearchParameters.isRoundTrip,
-                    travelDate: currentSearchParameters.formattedTravelDate,
-                    travelerInfo: currentSearchParameters.formattedTravelerInfo,
-                    searchParameters: currentSearchParameters,
-                    onFiltersChanged: { pollRequest in
-                        print("🔧 Applying filters from ResultHeader")
-                        viewModel.applyFilters(request: pollRequest)
-                    },
+                                        destinationCode: currentSearchParameters.destinationCode,
+                                        isRoundTrip: currentSearchParameters.isRoundTrip,
+                                        travelDate: currentSearchParameters.formattedTravelDate,
+                                        travelerInfo: currentSearchParameters.formattedTravelerInfo,
+                                        searchParameters: currentSearchParameters,
+                                        filterViewModel: sharedFilterViewModel, // ✅ PASS SHARED INSTANCE
+                                        onFiltersChanged: { pollRequest in
+                                            print("🔧 Applying filters from ResultHeader")
+                                            viewModel.applyFilters(request: pollRequest)
+                                        },
                     onEditSearchCompleted: { newSearchId, updatedParams in
                         print("🔄 Edit search completed - New searchId: \(newSearchId)")
                         handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
@@ -244,6 +246,14 @@ struct ResultView: View {
                     // Update header with poll data
                     headerViewModel.updatePollData(response)
                     print("✅ Updated ResultHeader with API data")
+                    
+                    // ✅ FIX: Update shared FilterViewModel with airlines
+                                   sharedFilterViewModel.updateAvailableAirlines(from: response)
+                                   
+                                   // Print airlines for debugging
+                                   for airline in response.airlines {
+                                       print("   - \(airline.airlineName) (\(airline.airlineIata))")
+                                   }
                 }
             }
             // ✅ Handle flight results updates

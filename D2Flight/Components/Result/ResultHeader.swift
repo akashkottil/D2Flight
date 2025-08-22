@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ResultHeader: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var filterViewModel = FilterViewModel()
+    @ObservedObject var filterViewModel: FilterViewModel
     
     // Sheet presentation states - now using single sheet with filter type
     @State private var showUnifiedFilterSheet = false
@@ -36,6 +36,7 @@ struct ResultHeader: View {
         travelDate: String,
         travelerInfo: String,
         searchParameters: SearchParameters,
+        filterViewModel: FilterViewModel,
         onFiltersChanged: @escaping (PollRequest) -> Void,
         onEditSearchCompleted: @escaping (String, SearchParameters) -> Void,
         onEditButtonTapped: @escaping () -> Void,
@@ -47,6 +48,7 @@ struct ResultHeader: View {
         self.travelDate = travelDate
         self.travelerInfo = travelerInfo
         self.searchParameters = searchParameters
+        self.filterViewModel = filterViewModel
         self.onFiltersChanged = onFiltersChanged
         self.onEditSearchCompleted = onEditSearchCompleted
         self.onEditButtonTapped = onEditButtonTapped
@@ -310,40 +312,3 @@ struct ResultHeader: View {
     }
 }
 
-// MARK: - Preview with Sample Data
-#Preview {
-    let sampleParams = SearchParameters(
-        originCode: "KCH",
-        destinationCode: "LON",
-        originName: "Kochi",
-        destinationName: "London",
-        isRoundTrip: true,
-        departureDate: Date(),
-        returnDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()),
-        adults: 2,
-        children: 0,
-        infants: 0,
-        selectedClass: .business
-    )
-    
-    ResultHeader(
-        originCode: "KCH",
-        destinationCode: "LON",
-        isRoundTrip: true,
-        travelDate: "Wed 17 Oct - Mon 24 Oct",
-        travelerInfo: "2 Travelers, Business",
-        searchParameters: sampleParams,
-        onFiltersChanged: { _ in
-            print("Filter applied")
-        },
-        onEditSearchCompleted: { searchId, params in
-            print("Edit completed: \(searchId)")
-        },
-        onEditButtonTapped: {
-            print("Edit button tapped")
-        },
-        onClearAllFilters: {
-            print("Clear all filters tapped")
-        }
-    )
-}
