@@ -144,10 +144,10 @@ struct ResultHeader: View {
                     // Time Filter
                     FilterButton(
                         title: "Time",
-                        isSelected: filterViewModel.departureTimeRange != 0...1440 ||
-                                   filterViewModel.arrivalTimeRange != 0...1440 || // ✅ NEW
-                                   (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...1440) ||
-                                   (isRoundTrip && filterViewModel.returnArrivalTimeRange != 0...1440), // ✅ NEW
+                        isSelected: filterViewModel.departureTimeRange != 0...86400 ||
+                                   filterViewModel.arrivalTimeRange != 0...86400 ||
+                                   (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...86400) ||
+                                   (isRoundTrip && filterViewModel.returnArrivalTimeRange != 0...86400),
                         action: {
                             selectedFilterType = .times
                             showUnifiedFilterSheet = true
@@ -245,10 +245,10 @@ struct ResultHeader: View {
     private func hasActiveFilters() -> Bool {
         return filterViewModel.selectedSortOption != .best ||
                filterViewModel.maxStops < 3 ||
-               filterViewModel.departureTimeRange != 0...1440 ||
-               filterViewModel.arrivalTimeRange != 0...1440 || // ✅ NEW
-               (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...1440) ||
-               (isRoundTrip && filterViewModel.returnArrivalTimeRange != 0...1440) || // ✅ NEW
+               filterViewModel.departureTimeRange != 0...86400 ||
+               filterViewModel.arrivalTimeRange != 0...86400 ||
+               (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...86400) ||
+               (isRoundTrip && filterViewModel.returnArrivalTimeRange != 0...86400) ||
                filterViewModel.maxDuration < 1440 ||
                !filterViewModel.selectedAirlines.isEmpty ||
                filterViewModel.selectedClass != .economy ||
@@ -261,13 +261,13 @@ struct ResultHeader: View {
         print("\n🗑️ ===== CLEAR ALL FILTERS =====")
         print("🔄 Clearing all filters and resetting to default state...")
         
-        // Clear all filter values
+        // Clear all filter values to proper defaults
         filterViewModel.selectedSortOption = .best
         filterViewModel.maxStops = 3 // Reset to "Any"
-        filterViewModel.departureTimeRange = 0...1440
-        filterViewModel.arrivalTimeRange = 0...1440 // ✅ NEW
-        filterViewModel.returnDepartureTimeRange = 0...1440
-        filterViewModel.returnArrivalTimeRange = 0...1440 // ✅ NEW
+        filterViewModel.departureTimeRange = 0...86400 // ✅ FIXED: Use seconds
+        filterViewModel.arrivalTimeRange = 0...86400 // ✅ FIXED: Use seconds
+        filterViewModel.returnDepartureTimeRange = 0...86400 // ✅ FIXED: Use seconds
+        filterViewModel.returnArrivalTimeRange = 0...86400 // ✅ FIXED: Use seconds
         filterViewModel.maxDuration = 1440
         filterViewModel.selectedAirlines.removeAll()
         filterViewModel.excludedAirlines.removeAll()

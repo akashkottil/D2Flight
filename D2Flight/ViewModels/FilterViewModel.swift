@@ -163,7 +163,7 @@ class FilterViewModel: ObservableObject {
         }
     }
     
-    // MARK: - ✅ UPDATED: Main buildPollRequest method with correct time parameter structure
+    // MARK: - ✅ UPDATED: Main buildPollRequest method with FIXED time parameter structure
     func buildPollRequest() -> PollRequest {
         var request = PollRequest()
         
@@ -195,78 +195,49 @@ class FilterViewModel: ObservableObject {
             request.stop_count_max = maxStops
         }
         
-        // ✅ UPDATED: Time range filters with correct structure (using seconds)
+        // ✅ FIXED: Smart time range filters - only send what user actually selected
         var timeRanges: [ArrivalDepartureRange] = []
         
-        // Check if any time filters are active for outbound leg
-        let hasDepartureTimeFilter = departureTimeRange != 0...86400
-        let hasArrivalTimeFilter = arrivalTimeRange != 0...86400
+        // Process outbound leg
+        let hasDepartureFilter = departureTimeRange != 0...86400
+        let hasArrivalFilter = arrivalTimeRange != 0...86400
         
-        if hasDepartureTimeFilter || hasArrivalTimeFilter {
-            var outboundRange = ArrivalDepartureRange(
-                arrival: TimeRange(min: 0, max: 86400), // Default arrival range in seconds
-                departure: TimeRange(min: 0, max: 86400) // Default departure range in seconds
-            )
+        if hasDepartureFilter || hasArrivalFilter {
+            // Convert to proper structure for API
+            let departure = hasDepartureFilter ?
+                TimeRange(min: Int(departureTimeRange.lowerBound), max: Int(departureTimeRange.upperBound)) :
+                TimeRange(min: 0, max: 86400)
             
-            // Override departure if filtered
-            if hasDepartureTimeFilter {
-                outboundRange = ArrivalDepartureRange(
-                    arrival: outboundRange.arrival,
-                    departure: TimeRange(
-                        min: Int(departureTimeRange.lowerBound),
-                        max: Int(departureTimeRange.upperBound)
-                    )
-                )
+            let arrival = hasArrivalFilter ?
+                TimeRange(min: Int(arrivalTimeRange.lowerBound), max: Int(arrivalTimeRange.upperBound)) :
+                TimeRange(min: 0, max: 86400)
+            
+            timeRanges.append(ArrivalDepartureRange(arrival: arrival, departure: departure))
+            
+            print("🕐 Outbound time filter:")
+            if hasDepartureFilter {
+                print("   ✓ Departure: \(formatSecondsToTime(Int(departureTimeRange.lowerBound))) - \(formatSecondsToTime(Int(departureTimeRange.upperBound)))")
             }
-            
-            // Override arrival if filtered
-            if hasArrivalTimeFilter {
-                outboundRange = ArrivalDepartureRange(
-                    arrival: TimeRange(
-                        min: Int(arrivalTimeRange.lowerBound),
-                        max: Int(arrivalTimeRange.upperBound)
-                    ),
-                    departure: outboundRange.departure
-                )
+            if hasArrivalFilter {
+                print("   ✓ Arrival: \(formatSecondsToTime(Int(arrivalTimeRange.lowerBound))) - \(formatSecondsToTime(Int(arrivalTimeRange.upperBound)))")
             }
-            
-            timeRanges.append(outboundRange)
         }
         
-        // Return leg time range (if round trip and different from default)
+        // Process return leg (if round trip)
         if isRoundTrip {
-            let hasReturnDepartureTimeFilter = returnDepartureTimeRange != 0...86400
-            let hasReturnArrivalTimeFilter = returnArrivalTimeRange != 0...86400
+            let hasReturnDepartureFilter = returnDepartureTimeRange != 0...86400
+            let hasReturnArrivalFilter = returnArrivalTimeRange != 0...86400
             
-            if hasReturnDepartureTimeFilter || hasReturnArrivalTimeFilter {
-                var returnRange = ArrivalDepartureRange(
-                    arrival: TimeRange(min: 0, max: 86400), // Default arrival range in seconds
-                    departure: TimeRange(min: 0, max: 86400) // Default departure range in seconds
-                )
+            if hasReturnDepartureFilter || hasReturnArrivalFilter {
+                let returnDeparture = hasReturnDepartureFilter ?
+                    TimeRange(min: Int(returnDepartureTimeRange.lowerBound), max: Int(returnDepartureTimeRange.upperBound)) :
+                    TimeRange(min: 0, max: 86400)
                 
-                // Override departure if filtered
-                if hasReturnDepartureTimeFilter {
-                    returnRange = ArrivalDepartureRange(
-                        arrival: returnRange.arrival,
-                        departure: TimeRange(
-                            min: Int(returnDepartureTimeRange.lowerBound),
-                            max: Int(returnDepartureTimeRange.upperBound)
-                        )
-                    )
-                }
+                let returnArrival = hasReturnArrivalFilter ?
+                    TimeRange(min: Int(returnArrivalTimeRange.lowerBound), max: Int(returnArrivalTimeRange.upperBound)) :
+                    TimeRange(min: 0, max: 86400)
                 
-                // Override arrival if filtered
-                if hasReturnArrivalTimeFilter {
-                    returnRange = ArrivalDepartureRange(
-                        arrival: TimeRange(
-                            min: Int(returnArrivalTimeRange.lowerBound),
-                            max: Int(returnArrivalTimeRange.upperBound)
-                        ),
-                        departure: returnRange.departure
-                    )
-                }
-                
-                // If we don't have outbound time filters, add default outbound first
+                // If no outbound filters, add default outbound first
                 if timeRanges.isEmpty {
                     timeRanges.append(ArrivalDepartureRange(
                         arrival: TimeRange(min: 0, max: 86400),
@@ -274,10 +245,19 @@ class FilterViewModel: ObservableObject {
                     ))
                 }
                 
-                timeRanges.append(returnRange)
+                timeRanges.append(ArrivalDepartureRange(arrival: returnArrival, departure: returnDeparture))
+                
+                print("🕐 Return time filter:")
+                if hasReturnDepartureFilter {
+                    print("   ✓ Return Departure: \(formatSecondsToTime(Int(returnDepartureTimeRange.lowerBound))) - \(formatSecondsToTime(Int(returnDepartureTimeRange.upperBound)))")
+                }
+                if hasReturnArrivalFilter {
+                    print("   ✓ Return Arrival: \(formatSecondsToTime(Int(returnArrivalTimeRange.lowerBound))) - \(formatSecondsToTime(Int(returnArrivalTimeRange.upperBound)))")
+                }
             }
         }
         
+        // Only set if we have actual time filters
         if !timeRanges.isEmpty {
             request.arrival_departure_ranges = timeRanges
         }
@@ -323,6 +303,13 @@ class FilterViewModel: ObservableObject {
         print("   Has Filters: \(request.hasFilters())")
         
         return request
+    }
+    
+    // ✅ Helper function to format seconds to time string for debugging
+    private func formatSecondsToTime(_ seconds: Int) -> String {
+        let hours = seconds / 3600
+        let mins = (seconds % 3600) / 60
+        return String(format: "%02d:%02d", hours, mins)
     }
     
     func clearFilters() {
