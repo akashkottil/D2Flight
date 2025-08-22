@@ -1,8 +1,6 @@
-
-
 import SwiftUI
 
-struct FixedPriceRangeSlider: View {
+struct EnhancedPriceRangeSlider: View {
     @Binding var range: ClosedRange<Double>
     let minPrice: Double
     let maxPrice: Double
@@ -167,5 +165,27 @@ struct FixedPriceRangeSlider: View {
         formatter.usesGroupingSeparator = true
         
         return formatter.string(from: NSNumber(value: Int(price))) ?? "\(Int(price))"
+    }
+}
+
+#Preview {
+    @State var range: ClosedRange<Double> = 1000...5000
+    
+    return VStack {
+        Text("Enhanced Price Range Slider")
+            .font(.title2)
+            .padding()
+        
+        EnhancedPriceRangeSlider(
+            range: $range,
+            minPrice: 0,
+            maxPrice: 10000
+        ) { newRange in
+            print("Price range changed: ₹\(newRange.lowerBound) - ₹\(newRange.upperBound)")
+        }
+        .padding()
+        
+        Text("Current Range: ₹\(Int(range.lowerBound)) - ₹\(Int(range.upperBound))")
+            .padding()
     }
 }

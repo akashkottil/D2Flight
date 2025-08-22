@@ -2,14 +2,14 @@
 //  FilterSheet+PriceUpdates.swift
 //  D2Flight
 //
-//  Extension to update FilterSheet with enhanced price functionality
+//  Fixed extension to provide enhanced price functionality for FilterSheet
 //
 
 import SwiftUI
 
 extension UnifiedFilterSheet {
     
-    // ✅ UPDATED: Enhanced price content with proper change tracking
+    // ✅ FIXED: Enhanced price content with proper binding and method access
     var enhancedPriceContent: some View {
         VStack(alignment: .leading, spacing: 24) {
             // Pricing Info Header
@@ -28,6 +28,7 @@ extension UnifiedFilterSheet {
                     .font(.caption)
                     .foregroundColor(.gray)
                 
+                // ✅ FIXED: Use proper method call instead of dynamic member
                 if filterViewModel.isPriceFilterActive() {
                     HStack {
                         Image(systemName: "slider.horizontal.3")
@@ -41,7 +42,7 @@ extension UnifiedFilterSheet {
                 }
             }
             
-            // ✅ CRITICAL: Enhanced Price Slider with proper change tracking
+            // ✅ FIXED: Enhanced Price Slider with proper change tracking
             EnhancedPriceRangeSlider(
                 range: Binding(
                     get: { filterViewModel.priceRange },
@@ -57,7 +58,7 @@ extension UnifiedFilterSheet {
                 print("🔧 Price range changed in FilterSheet:")
                 print("   New range: ₹\(newRange.lowerBound) - ₹\(newRange.upperBound)")
                 
-                // Use the extension method to properly track the change
+                // ✅ FIXED: Use the correct method name
                 filterViewModel.updatePriceRange(newRange: newRange)
             }
             
@@ -80,9 +81,10 @@ extension UnifiedFilterSheet {
         }
     }
     
-    // ✅ UPDATED: Enhanced clear filters for price
+    // ✅ FIXED: Enhanced clear filters for price
     func clearPriceFilters() {
         print("🗑️ Clearing price filters in FilterSheet")
+        // ✅ FIXED: Use proper method call instead of dynamic member
         filterViewModel.resetPriceFilter()
     }
 }
@@ -102,4 +104,3 @@ extension UnifiedFilterSheet {
      clearPriceFilters()
  
  */
-

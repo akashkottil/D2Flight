@@ -5,8 +5,8 @@ struct ResultHeader: View {
     @ObservedObject var filterViewModel: FilterViewModel
     
     // Sheet presentation states - now using single sheet with filter type
-    @State private var showUnifiedFilterSheet = false
-    @State private var selectedFilterType: FilterType = .sort
+    @State  var showUnifiedFilterSheet = false
+    @State  var selectedFilterType: FilterType = .sort
     
     // Dynamic trip and result data
     let originCode: String
