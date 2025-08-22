@@ -596,10 +596,35 @@ struct UnifiedFilterSheet: View {
         }
     }
     
+    
+    
+    
     // MARK: - Price Content
     private var priceContent: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Pricing Info
+            // Debug info to verify API prices
+            VStack(alignment: .leading, spacing: 4) {
+                Text("🔍 Price Range Debug")
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                Text("API Min Price: ₹\(Int(minPrice))")
+                    .font(.caption)
+                    .foregroundColor(.green)
+                Text("API Max Price: ₹\(Int(maxPrice))")
+                    .font(.caption)
+                    .foregroundColor(.green)
+                Text("Current Range: ₹\(Int(filterViewModel.priceRange.lowerBound)) - ₹\(Int(filterViewModel.priceRange.upperBound))")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                Text("Filter Active: \(filterViewModel.isPriceFilterActive() ? "✅ YES" : "❌ NO")")
+                    .font(.caption)
+                    .foregroundColor(filterViewModel.isPriceFilterActive() ? .green : .red)
+            }
+            .padding(8)
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(8)
+            
+            // Pricing Info Header
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text("daily.local.taxes.fees".localized)
@@ -615,12 +640,58 @@ struct UnifiedFilterSheet: View {
                     .foregroundColor(.gray)
             }
             
-            // Price Slider
+            // ✅ CRITICAL: Price Slider with proper API range
             PriceRangeSlider(
                 range: $filterViewModel.priceRange,
-                minPrice: minPrice,
-                maxPrice: maxPrice
-            )
+                minPrice: minPrice, // ✅ Use API minPrice
+                maxPrice: maxPrice  // ✅ Use API maxPrice
+            ) { newRange in
+                print("💰 User changed price range:")
+                print("   From: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
+                print("   To: ₹\(newRange.lowerBound) - ₹\(newRange.upperBound)")
+                filterViewModel.updatePriceRange(newRange: newRange)
+            }
+            
+            // Range indicators showing API min/max
+            HStack {
+                Text("₹\(Int(minPrice))")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                Spacer()
+                Text("₹\(Int(maxPrice))")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            
+            // Status indicator
+            if filterViewModel.isPriceFilterActive() {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                    Text("Price filter: ₹\(Int(filterViewModel.priceRange.lowerBound)) - ₹\(Int(filterViewModel.priceRange.upperBound))")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                }
+                .padding(8)
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(8)
+            }
+        }
+        .onAppear {
+            print("🎛️ Price filter opened:")
+            print("   API minPrice: ₹\(minPrice)")
+            print("   API maxPrice: ₹\(maxPrice)")
+            print("   Current filterViewModel.priceRange: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
+            
+            // ✅ CRITICAL: Initialize price range to API values if not set properly
+            if filterViewModel.priceRange.lowerBound < minPrice ||
+               filterViewModel.priceRange.upperBound > maxPrice ||
+               filterViewModel.priceRange == 0...10000 {
+                print("   🔧 Setting price range to API values")
+                filterViewModel.priceRange = minPrice...maxPrice
+                print("   ✅ Price range set to: ₹\(minPrice) - ₹\(maxPrice)")
+            }
         }
     }
     
@@ -718,19 +789,18 @@ struct UnifiedFilterSheet: View {
     private func clearFilters() {
         switch filterType {
         case .times:
-            filterViewModel.departureTimeRange = 0...86400 // ✅ UPDATED: seconds
-            filterViewModel.arrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
-            filterViewModel.returnDepartureTimeRange = 0...86400 // ✅ UPDATED: seconds
-            filterViewModel.returnArrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
+            filterViewModel.departureTimeRange = 0...86400
+            filterViewModel.arrivalTimeRange = 0...86400
+            filterViewModel.returnDepartureTimeRange = 0...86400
+            filterViewModel.returnArrivalTimeRange = 0...86400
         case .duration:
             filterViewModel.departureStopoverRange = 0...1440
             filterViewModel.departureLegRange = 0...1440
             filterViewModel.returnStopoverRange = 0...1440
             filterViewModel.returnLegRange = 0...1440
-            // Reset max duration to API max value
             filterViewModel.maxDuration = 1440
         case .price:
-            filterViewModel.priceRange = minPrice...maxPrice
+            clearPriceFilters() // ✅ Use the updated clear method
         default:
             break
         }
@@ -932,6 +1002,19 @@ struct UnifiedFilterSheet: View {
         @Binding var range: ClosedRange<Double>
         let minPrice: Double
         let maxPrice: Double
+        let onPriceChanged: ((ClosedRange<Double>) -> Void)?
+        
+        init(
+            range: Binding<ClosedRange<Double>>,
+            minPrice: Double,
+            maxPrice: Double,
+            onPriceChanged: ((ClosedRange<Double>) -> Void)? = nil
+        ) {
+            self._range = range
+            self.minPrice = minPrice
+            self.maxPrice = maxPrice
+            self.onPriceChanged = onPriceChanged
+        }
 
         var body: some View {
             VStack(spacing: 12) {
@@ -941,10 +1024,12 @@ struct UnifiedFilterSheet: View {
                     let thumbSize: CGFloat = 16
 
                     ZStack(alignment: .leading) {
+                        // Background track - EXACTLY like DurationRangeSlider
                         RoundedRectangle(cornerRadius: trackHeight / 2)
                             .fill(Color.gray.opacity(0.3))
                             .frame(height: trackHeight)
 
+                        // Selected range (active track) - EXACTLY like DurationRangeSlider
                         RoundedRectangle(cornerRadius: trackHeight / 2)
                             .fill(Color("Violet"))
                             .frame(
@@ -953,11 +1038,14 @@ struct UnifiedFilterSheet: View {
                             )
                             .offset(x: CGFloat((range.lowerBound - minPrice) / (maxPrice - minPrice)) * width)
 
-                        // Lower thumb
+                        // Lower thumb - EXACTLY like DurationRangeSlider
                         Circle()
                             .fill(Color.white)
                             .frame(width: thumbSize, height: thumbSize)
-                            .overlay(Circle().stroke(Color("Violet"), lineWidth: 3))
+                            .overlay(
+                                Circle()
+                                    .stroke(Color("Violet"), lineWidth: 3)
+                            )
                             .offset(x: CGFloat((range.lowerBound - minPrice) / (maxPrice - minPrice)) * width - thumbSize / 50)
                             .gesture(
                                 DragGesture()
@@ -967,14 +1055,20 @@ struct UnifiedFilterSheet: View {
                                         let clampedValue = max(minPrice, min(range.upperBound, newValue))
                                         range = clampedValue...range.upperBound
                                     }
+                                    .onEnded { _ in
+                                        onPriceChanged?(range)
+                                    }
                             )
 
-                        // Upper thumb
+                        // Upper thumb - EXACTLY like DurationRangeSlider
                         Circle()
                             .fill(Color.white)
                             .frame(width: thumbSize, height: thumbSize)
-                            .overlay(Circle().stroke(Color("Violet"), lineWidth: 3))
-                            .offset(x: CGFloat((range.upperBound - minPrice) / (maxPrice - minPrice)) * width - thumbSize)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color("Violet"), lineWidth: 3)
+                            )
+                            .offset(x: CGFloat((range.upperBound - minPrice) / (maxPrice - minPrice)) * width - thumbSize )
                             .gesture(
                                 DragGesture()
                                     .onChanged { value in
@@ -983,24 +1077,33 @@ struct UnifiedFilterSheet: View {
                                         let clampedValue = max(range.lowerBound, min(maxPrice, newValue))
                                         range = range.lowerBound...clampedValue
                                     }
+                                    .onEnded { _ in
+                                        onPriceChanged?(range)
+                                    }
                             )
                     }
                 }
                 .frame(height: 28)
 
-                // Price labels
+                // Price labels - Same format as DurationRangeSlider
                 HStack {
-                    Text("₹\(Int(range.lowerBound))")
+                    Text("₹\(formatPrice(range.lowerBound))")
                         .font(CustomFont.font(.small))
                         .foregroundColor(.gray)
                     Spacer()
-                    Text("₹\(Int(range.upperBound))")
+                    Text("₹\(formatPrice(range.upperBound))")
                         .font(CustomFont.font(.small))
                         .foregroundColor(.gray)
                 }
             }
         }
+
+        // Format price like duration formatting
+        private func formatPrice(_ price: Double) -> String {
+            return "\(Int(price))"
+        }
     }
+
 }
 
 // MARK: - Preview

@@ -5,8 +5,8 @@ struct ResultHeader: View {
     @ObservedObject var filterViewModel: FilterViewModel
     
     // Sheet presentation states - now using single sheet with filter type
-    @State  var showUnifiedFilterSheet = false
-    @State  var selectedFilterType: FilterType = .sort
+    @State var showUnifiedFilterSheet = false
+    @State var selectedFilterType: FilterType = .sort
     
     // Dynamic trip and result data
     let originCode: String
@@ -19,16 +19,20 @@ struct ResultHeader: View {
     // Callback for applying filters
     var onFiltersChanged: (PollRequest) -> Void
     
-    // ✅ NEW: Callback for edit search completion
+    // Callback for edit search completion
     var onEditSearchCompleted: (String, SearchParameters) -> Void
     
-    // ✅ NEW: Callback for edit button tap
+    // Callback for edit button tap
     var onEditButtonTapped: () -> Void
     
-    // ✅ NEW: Callback for clear all filters
+    // Callback for clear all filters
     var onClearAllFilters: () -> Void
     
-    // ✅ UPDATED: Initialize with clear filters callback
+    // ✅ FIXED: Store current API price data
+    @State private var currentMinPrice: Double = 0
+    @State private var currentMaxPrice: Double = 10000
+    @State private var currentAveragePrice: Double = 500
+    
     init(
         originCode: String,
         destinationCode: String,
@@ -40,7 +44,7 @@ struct ResultHeader: View {
         onFiltersChanged: @escaping (PollRequest) -> Void,
         onEditSearchCompleted: @escaping (String, SearchParameters) -> Void,
         onEditButtonTapped: @escaping () -> Void,
-        onClearAllFilters: @escaping () -> Void = {} // ✅ NEW: Default empty closure
+        onClearAllFilters: @escaping () -> Void = {}
     ) {
         self.originCode = originCode
         self.destinationCode = destinationCode
@@ -60,7 +64,7 @@ struct ResultHeader: View {
             // Header Section
             HStack {
                 Button(action: {
-                    dismiss() // Navigate back to previous screen
+                    dismiss()
                 }) {
                     Image("BlackArrow")
                         .padding(.trailing, 10)
@@ -78,7 +82,6 @@ struct ResultHeader: View {
                 }
                 Spacer()
 
-                // ✅ UPDATED: Edit button now triggers callback instead of top sheet
                 Button(action: {
                     onEditButtonTapped()
                 }) {
@@ -97,7 +100,7 @@ struct ResultHeader: View {
             // Filter Buttons
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    // ✅ NEW: Clear All Filters Button (shows only when filters are active)
+                    // Clear All Filters Button (shows only when filters are active)
                     if hasActiveFilters() {
                         Button(action: {
                             clearAllFilters()
@@ -133,7 +136,7 @@ struct ResultHeader: View {
                         .cornerRadius(20)
                     }
                     
-                    // ✅ NEW: Stops Filter Button
+                    // Stops Filter Button
                     FilterButton(
                         title: getStopsFilterTitle(),
                         isSelected: filterViewModel.maxStops < 3,
@@ -176,11 +179,10 @@ struct ResultHeader: View {
                         }
                     )
                     
-                    // Price Filter
+                    // ✅ FIXED: Price Filter with proper state checking
                     FilterButton(
-                        title: "Price",
-                        isSelected: filterViewModel.priceRange.lowerBound > 0 ||
-                                   filterViewModel.priceRange.upperBound < 10000,
+                        title: filterViewModel.getPriceFilterDisplayText(),
+                        isSelected: filterViewModel.isPriceFilterActive(),
                         action: {
                             selectedFilterType = .price
                             showUnifiedFilterSheet = true
@@ -210,7 +212,7 @@ struct ResultHeader: View {
             print("   Travelers: \(travelerInfo)")
         }
         
-        // Single Unified Filter Sheet (updated with stops)
+        // Single Unified Filter Sheet
         .sheet(isPresented: $showUnifiedFilterSheet) {
             UnifiedFilterSheet(
                 isPresented: $showUnifiedFilterSheet,
@@ -219,17 +221,38 @@ struct ResultHeader: View {
                 isRoundTrip: isRoundTrip,
                 originCode: originCode,
                 destinationCode: destinationCode,
-                availableAirlines: filterViewModel.availableAirlines, // ✅ Pass actual airlines
-                minPrice: 0,
-                maxPrice: 10000,
-                averagePrice: 500,
+                availableAirlines: filterViewModel.availableAirlines,
+                minPrice: currentMinPrice, // ✅ Use dynamic values
+                maxPrice: currentMaxPrice, // ✅ Use dynamic values
+                averagePrice: currentAveragePrice, // ✅ Use dynamic values
                 onApply: applyFilters
             )
             .presentationDetents(getPresentationDetents())
         }
     }
     
-    // ✅ NEW: Get dynamic stops filter title
+    // ✅ CRITICAL FIX: Method to update filter data from poll response
+    func updateAvailableAirlines(_ pollResponse: PollResponse) {
+        print("🔧 ResultHeader: Updating airlines from poll response")
+        filterViewModel.updateAvailableAirlines(from: pollResponse)
+        
+        // ✅ CRITICAL: Update price data in FilterViewModel
+        currentMinPrice = pollResponse.min_price
+        currentMaxPrice = pollResponse.max_price
+        currentAveragePrice = (pollResponse.min_price + pollResponse.max_price) / 2
+        
+        // ✅ CRITICAL: Set price range in FilterViewModel with API data
+        filterViewModel.updatePriceRangeFromAPI(
+            minPrice: pollResponse.min_price,
+            maxPrice: pollResponse.max_price
+        )
+        
+        print("✅ ResultHeader: Updated both airlines and price data:")
+        print("   Airlines: \(filterViewModel.availableAirlines.count)")
+        print("   Price Range: ₹\(pollResponse.min_price) - ₹\(pollResponse.max_price)")
+        print("   FilterViewModel hasAPIDataLoaded: \(filterViewModel.hasAPIDataLoaded)")
+    }
+    
     private func getStopsFilterTitle() -> String {
         switch filterViewModel.maxStops {
         case 0:
@@ -243,7 +266,6 @@ struct ResultHeader: View {
         }
     }
     
-    // ✅ NEW: Check if any filters are active
     private func hasActiveFilters() -> Bool {
         return filterViewModel.selectedSortOption != .best ||
                filterViewModel.maxStops < 3 ||
@@ -254,43 +276,43 @@ struct ResultHeader: View {
                filterViewModel.maxDuration < 1440 ||
                !filterViewModel.selectedAirlines.isEmpty ||
                filterViewModel.selectedClass != .economy ||
-               filterViewModel.priceRange.lowerBound > 0 ||
-               filterViewModel.priceRange.upperBound < 10000
+               filterViewModel.isPriceFilterActive() // ✅ Include price filter
     }
     
-    // ✅ NEW: Clear all filters functionality
     private func clearAllFilters() {
         print("\n🗑️ ===== CLEAR ALL FILTERS =====")
         print("🔄 Clearing all filters and resetting to default state...")
         
         // Clear all filter values to proper defaults
         filterViewModel.selectedSortOption = .best
-        filterViewModel.maxStops = 3 // Reset to "Any"
-        filterViewModel.departureTimeRange = 0...86400 // ✅ FIXED: Use seconds
-        filterViewModel.arrivalTimeRange = 0...86400 // ✅ FIXED: Use seconds
-        filterViewModel.returnDepartureTimeRange = 0...86400 // ✅ FIXED: Use seconds
-        filterViewModel.returnArrivalTimeRange = 0...86400 // ✅ FIXED: Use seconds
+        filterViewModel.maxStops = 3
+        filterViewModel.departureTimeRange = 0...86400
+        filterViewModel.arrivalTimeRange = 0...86400
+        filterViewModel.returnDepartureTimeRange = 0...86400
+        filterViewModel.returnArrivalTimeRange = 0...86400
         filterViewModel.maxDuration = 1440
         filterViewModel.selectedAirlines.removeAll()
         filterViewModel.excludedAirlines.removeAll()
         filterViewModel.selectedClass = .economy
-        filterViewModel.priceRange = 0...10000
+        
+        // ✅ CRITICAL: Reset price filter properly
+        filterViewModel.resetPriceFilter()
         
         print("✅ All filters cleared to default values")
         print("🗑️ ===== END CLEAR ALL FILTERS =====\n")
         
-        // Apply empty filters (this will fetch all results without filters)
-        let emptyRequest = PollRequest() // Empty request = no filters
-        onClearAllFilters() // Notify parent to handle clear
+        // Apply empty filters
+        let emptyRequest = PollRequest()
+        onClearAllFilters()
         onFiltersChanged(emptyRequest)
     }
     
-    // Helper to determine presentation detent
     private func getPresentationDetents() -> Set<PresentationDetent> {
         return [.medium]
     }
     
     private func applyFilters() {
+        // ✅ Use the enhanced buildPollRequest that includes price parameters
         let pollRequest = filterViewModel.buildPollRequest()
         onFiltersChanged(pollRequest)
         
@@ -299,16 +321,11 @@ struct ResultHeader: View {
         print("   Max Stops: \(filterViewModel.maxStops)")
         print("   Selected Airlines: \(filterViewModel.selectedAirlines.count)")
         print("   Duration Filter: \(filterViewModel.maxDuration < 1440 ? "Active" : "Inactive")")
-        print("   Time Filter: \(filterViewModel.departureTimeRange != 0...1440 ? "Active" : "Inactive")")
-        print("   Price Filter: \(filterViewModel.priceRange != 0...10000 ? "Active" : "Inactive")")
+        print("   Time Filter: \(filterViewModel.departureTimeRange != 0...86400 ? "Active" : "Inactive")")
+        print("   Price Filter: \(filterViewModel.isPriceFilterActive() ? "Active" : "Inactive")")
+        if filterViewModel.isPriceFilterActive() {
+            print("   Price Range: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
+        }
         print("   Has Any Filters: \(pollRequest.hasFilters())")
     }
-    
-    // Method to update available airlines from poll response
-    func updateAvailableAirlines(_ pollResponse: PollResponse) {
-        print("🔧 ResultHeader: Updating airlines from poll response")
-        filterViewModel.updateAvailableAirlines(from: pollResponse)
-        print("✅ ResultHeader: Airlines updated - \(filterViewModel.availableAirlines.count) available")
-    }
 }
-

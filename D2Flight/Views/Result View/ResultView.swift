@@ -237,25 +237,41 @@ struct ResultView: View {
             }
             // ✅ Handle poll response updates
             .onReceive(viewModel.$pollResponse) { pollResponse in
-                if let response = pollResponse {
-                    // Log the response
-                    print("🖥️ ResultView received poll response with \(response.results.count) results")
-                    print("🖥️ Total available flights: \(response.count)")
-                    print("🖥️ Available airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
-                    
-                    // Update header with poll data
-                    headerViewModel.updatePollData(response)
-                    print("✅ Updated ResultHeader with API data")
-                    
-                    // ✅ FIX: Update shared FilterViewModel with airlines
-                                   sharedFilterViewModel.updateAvailableAirlines(from: response)
-                                   
-                                   // Print airlines for debugging
-                                   for airline in response.airlines {
-                                       print("   - \(airline.airlineName) (\(airline.airlineIata))")
-                                   }
-                }
-            }
+                            if let response = pollResponse {
+                                // Log the response
+                                print("🖥️ ResultView received poll response with \(response.results.count) results")
+                                print("🖥️ Total available flights: \(response.count)")
+                                print("🖥️ Price range from API: ₹\(response.min_price) - ₹\(response.max_price)")
+                                print("🖥️ Available airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
+                                
+                                // ✅ CRITICAL FIX: Update ResultHeader with airlines AND price data
+                                if let resultHeader = getCurrentResultHeader() {
+                                    resultHeader.updateAvailableAirlines(response)
+                                    print("✅ Updated ResultHeader with API data including price range")
+                                } else {
+                                    // ✅ ALTERNATIVE: Update FilterViewModel directly if header reference not available
+                                    sharedFilterViewModel.updateAvailableAirlines(from: response)
+                                    sharedFilterViewModel.updatePriceRangeFromAPI(
+                                        minPrice: response.min_price,
+                                        maxPrice: response.max_price
+                                    )
+                                    print("✅ Updated FilterViewModel directly with API data")
+                                }
+                                
+                                // Print airlines for debugging
+                                for airline in response.airlines {
+                                    print("   - \(airline.airlineName) (\(airline.airlineIata))")
+                                }
+                                
+                                // ✅ DEBUG: Print price filter state after update
+                                print("🔍 Price filter state after API update:")
+                                print("   hasAPIDataLoaded: \(sharedFilterViewModel.hasAPIDataLoaded)")
+                                print("   originalAPIMinPrice: ₹\(sharedFilterViewModel.originalAPIMinPrice)")
+                                print("   originalAPIMaxPrice: ₹\(sharedFilterViewModel.originalAPIMaxPrice)")
+                                print("   current priceRange: ₹\(sharedFilterViewModel.priceRange.lowerBound) - ₹\(sharedFilterViewModel.priceRange.upperBound)")
+                                print("   isPriceFilterActive: \(sharedFilterViewModel.isPriceFilterActive())")
+                            }
+                        }
             // ✅ Handle flight results updates
             .onReceive(viewModel.$flightResults) { flightResults in
                 print("🖥️ ResultView received \(flightResults.count) flight results")
@@ -319,6 +335,12 @@ struct ResultView: View {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
     }
+    
+    private func getCurrentResultHeader() -> ResultHeader? {
+            // Since we can't directly access the ResultHeader view,
+            // we'll update the FilterViewModel directly
+            return nil
+        }
     
     // ✅ FIXED: Handle edit search completion with proper filter reset
     private func handleEditSearchCompleted(newSearchId: String, updatedParams: SearchParameters) {
