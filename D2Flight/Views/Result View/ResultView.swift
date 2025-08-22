@@ -8,6 +8,7 @@ enum ContentType {
 
 struct ResultView: View {
     @StateObject private var viewModel = ResultViewModel()
+    @StateObject private var sharedFilterViewModel = FilterViewModel()
     @StateObject private var headerViewModel = ResultHeaderViewModel()
     @State private var selectedFlight: FlightResult? = nil
     @State private var navigateToDetails = false
@@ -33,15 +34,16 @@ struct ResultView: View {
                 // MARK: 1) Fixed Top Filter Bar with Edit Functionality
                 ResultHeader(
                     originCode: currentSearchParameters.originCode,
-                    destinationCode: currentSearchParameters.destinationCode,
-                    isRoundTrip: currentSearchParameters.isRoundTrip,
-                    travelDate: currentSearchParameters.formattedTravelDate,
-                    travelerInfo: currentSearchParameters.formattedTravelerInfo,
-                    searchParameters: currentSearchParameters,
-                    onFiltersChanged: { pollRequest in
-                        print("🔧 Applying filters from ResultHeader")
-                        viewModel.applyFilters(request: pollRequest)
-                    },
+                                        destinationCode: currentSearchParameters.destinationCode,
+                                        isRoundTrip: currentSearchParameters.isRoundTrip,
+                                        travelDate: currentSearchParameters.formattedTravelDate,
+                                        travelerInfo: currentSearchParameters.formattedTravelerInfo,
+                                        searchParameters: currentSearchParameters,
+                                        filterViewModel: sharedFilterViewModel, // ✅ PASS SHARED INSTANCE
+                                        onFiltersChanged: { pollRequest in
+                                            print("🔧 Applying filters from ResultHeader")
+                                            viewModel.applyFilters(request: pollRequest)
+                                        },
                     onEditSearchCompleted: { newSearchId, updatedParams in
                         print("🔄 Edit search completed - New searchId: \(newSearchId)")
                         handleEditSearchCompleted(newSearchId: newSearchId, updatedParams: updatedParams)
@@ -51,6 +53,11 @@ struct ResultView: View {
                         withAnimation(.easeInOut(duration: 0.4)) {
                             showEditSearchSheet = true
                         }
+                    },
+                    // ✅ FIXED: Clear all filters callback using the correct method
+                    onClearAllFilters: {
+                        print("🗑️ Clear all filters triggered from ResultHeader")
+                        viewModel.clearAllFilters()
                     }
                 )
                 .background(Color.white)
@@ -135,8 +142,9 @@ struct ResultView: View {
                                 }
                             }
                             
-                            // Loading indicator for pagination
+                            // ✅ UPDATED: Smart loading/completion indicator
                             if viewModel.isLoadingMore {
+                                // Show loading when actively loading more results
                                 HStack {
                                     Spacer()
                                     VStack(spacing: 8) {
@@ -149,10 +157,41 @@ struct ResultView: View {
                                     Spacer()
                                 }
                                 .padding(.vertical, 20)
-                            }
-                            
-                            // Cache complete indicator
-                            if !viewModel.hasMoreResults && !viewModel.flightResults.isEmpty {
+                                
+                            } else if viewModel.hasMoreResults && !viewModel.flightResults.isEmpty {
+                                // Show "Load More" option when pagination is available but not actively loading
+                                HStack {
+                                    Spacer()
+                                    VStack(spacing: 8) {
+                                        Button(action: {
+                                            viewModel.loadMoreResults()
+                                        }) {
+                                            HStack {
+                                                Text("load.more.flights".localized)
+                                                    .font(CustomFont.font(.small, weight: .semibold))
+                                                    .foregroundColor(Color("Violet"))
+                                                Image(systemName: "chevron.down")
+                                                    .font(CustomFont.font(.small))
+                                                    .foregroundColor(Color("Violet"))
+                                            }
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(Color("Violet").opacity(0.1))
+                                            )
+                                        }
+                                        
+                                        Text("Showing \(viewModel.flightResults.count) of \(viewModel.totalResultsCount) flights")
+                                            .font(CustomFont.font(.small))
+                                            .foregroundColor(.gray)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 20)
+                                
+                            } else if !viewModel.hasMoreResults && !viewModel.flightResults.isEmpty && viewModel.isCacheComplete {
+                                // ✅ ONLY show completion message when cache is complete AND no more pagination
                                 HStack {
                                     Spacer()
                                     VStack(spacing: 8) {
@@ -202,11 +241,23 @@ struct ResultView: View {
                     // Log the response
                     print("🖥️ ResultView received poll response with \(response.results.count) results")
                     print("🖥️ Total available flights: \(response.count)")
+                    print("🖥️ API Price range: ₹\(response.min_price) - ₹\(response.max_price)")
                     print("🖥️ Available airlines: \(response.airlines.map { $0.airlineName }.joined(separator: ", "))")
                     
-                    // Update header with poll data
-                    headerViewModel.updatePollData(response)
-                    print("✅ Updated ResultHeader with API data")
+                    // ✅ CRITICAL FIX: Update FilterViewModel with combined airlines AND price data
+                    sharedFilterViewModel.updateAvailableAirlines(from: response)
+                    
+                    print("✅ Updated FilterViewModel with comprehensive API data:")
+                    print("   Airlines: \(sharedFilterViewModel.availableAirlines.count)")
+                    print("   Price Range: ₹\(response.min_price) - ₹\(response.max_price)")
+                    print("   hasAPIDataLoaded: \(sharedFilterViewModel.hasAPIDataLoaded)")
+                    print("   Current price range: ₹\(sharedFilterViewModel.priceRange.lowerBound) - ₹\(sharedFilterViewModel.priceRange.upperBound)")
+                    print("   Price filter active: \(sharedFilterViewModel.isPriceFilterActive())")
+                    
+                    // Print airlines for debugging
+                    for airline in response.airlines {
+                        print("   - \(airline.airlineName) (\(airline.airlineIata))")
+                    }
                 }
             }
             // ✅ Handle flight results updates
@@ -257,8 +308,6 @@ struct ResultView: View {
                     isInitialLoad = false
                 }
             }
-            
-            
         }
         .topSheet(isPresented: $showEditSearchSheet, maxHeightRatio: 0.6) {
             EditSearchSheet(
@@ -269,14 +318,19 @@ struct ResultView: View {
             }
         }
 
-
         // Full‐screen loader cover
         .fullScreenCover(isPresented: $showAnimatedLoader) {
             AnimatedResultLoader(isVisible: $showAnimatedLoader)
         }
     }
     
-    // ✅ NEW: Handle edit search completion
+    private func getCurrentResultHeader() -> ResultHeader? {
+            // Since we can't directly access the ResultHeader view,
+            // we'll update the FilterViewModel directly
+            return nil
+        }
+    
+    // ✅ FIXED: Handle edit search completion with proper filter reset
     private func handleEditSearchCompleted(newSearchId: String, updatedParams: SearchParameters) {
         print("🔄 Handling edit search completion:")
         print("   Previous searchId: \(currentSearchId ?? "nil")")
@@ -296,6 +350,12 @@ struct ResultView: View {
         viewModel.errorMessage = nil
         viewModel.hasMoreResults = true
         viewModel.totalResultsCount = 0
+        
+        // ✅ FIXED: Reset filter state for new search (now accessible)
+        viewModel.resetFilterState() // Use the new method instead of direct access
+        headerViewModel.filterViewModel.resetFilters()
+        
+        print("🔄 Filter state reset for new search")
         
         // Start new poll with updated search ID
         viewModel.pollFlights(searchId: newSearchId)

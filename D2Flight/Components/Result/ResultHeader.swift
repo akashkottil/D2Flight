@@ -2,11 +2,11 @@ import SwiftUI
 
 struct ResultHeader: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var filterViewModel = FilterViewModel()
+    @ObservedObject var filterViewModel: FilterViewModel
     
     // Sheet presentation states - now using single sheet with filter type
-    @State private var showUnifiedFilterSheet = false
-    @State private var selectedFilterType: FilterType = .sort
+    @State var showUnifiedFilterSheet = false
+    @State var selectedFilterType: FilterType = .sort
     
     // Dynamic trip and result data
     let originCode: String
@@ -19,13 +19,20 @@ struct ResultHeader: View {
     // Callback for applying filters
     var onFiltersChanged: (PollRequest) -> Void
     
-    // ✅ NEW: Callback for edit search completion
+    // Callback for edit search completion
     var onEditSearchCompleted: (String, SearchParameters) -> Void
     
-    // ✅ NEW: Callback for edit button tap
+    // Callback for edit button tap
     var onEditButtonTapped: () -> Void
     
-    // ✅ UPDATED: Initialize with edit callback
+    // Callback for clear all filters
+    var onClearAllFilters: () -> Void
+    
+    // ✅ FIXED: Store current API price data
+    @State private var currentMinPrice: Double = 0
+    @State private var currentMaxPrice: Double = 10000
+    @State private var currentAveragePrice: Double = 500
+    
     init(
         originCode: String,
         destinationCode: String,
@@ -33,9 +40,11 @@ struct ResultHeader: View {
         travelDate: String,
         travelerInfo: String,
         searchParameters: SearchParameters,
+        filterViewModel: FilterViewModel,
         onFiltersChanged: @escaping (PollRequest) -> Void,
         onEditSearchCompleted: @escaping (String, SearchParameters) -> Void,
-        onEditButtonTapped: @escaping () -> Void
+        onEditButtonTapped: @escaping () -> Void,
+        onClearAllFilters: @escaping () -> Void = {}
     ) {
         self.originCode = originCode
         self.destinationCode = destinationCode
@@ -43,9 +52,11 @@ struct ResultHeader: View {
         self.travelDate = travelDate
         self.travelerInfo = travelerInfo
         self.searchParameters = searchParameters
+        self.filterViewModel = filterViewModel
         self.onFiltersChanged = onFiltersChanged
         self.onEditSearchCompleted = onEditSearchCompleted
         self.onEditButtonTapped = onEditButtonTapped
+        self.onClearAllFilters = onClearAllFilters
     }
     
     var body: some View {
@@ -53,7 +64,7 @@ struct ResultHeader: View {
             // Header Section
             HStack {
                 Button(action: {
-                    dismiss() // Navigate back to previous screen
+                    dismiss()
                 }) {
                     Image("BlackArrow")
                         .padding(.trailing, 10)
@@ -71,7 +82,6 @@ struct ResultHeader: View {
                 }
                 Spacer()
 
-                // ✅ UPDATED: Edit button now triggers callback instead of top sheet
                 Button(action: {
                     onEditButtonTapped()
                 }) {
@@ -86,10 +96,30 @@ struct ResultHeader: View {
                 }
             }
             .padding(.bottom, 16)
+            .padding(.horizontal)
             
             // Filter Buttons
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
+                    // Clear All Filters Button (shows only when filters are active)
+                    if hasActiveFilters() {
+                        Button(action: {
+                            clearAllFilters()
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(CustomFont.font(.small))
+                                Text("Clear All")
+                            }
+                            .font(CustomFont.font(.small, weight: .semibold))
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(Color.red.opacity(0.1))
+                            .foregroundColor(.red)
+                            .cornerRadius(20)
+                        }
+                    }
+                    
                     // Sort Button
                     Button(action: {
                         selectedFilterType = .sort
@@ -107,28 +137,23 @@ struct ResultHeader: View {
                         .cornerRadius(20)
                     }
                     
-                    // Stops Filter
+                    // Stops Filter Button
                     FilterButton(
-                        title: "Stops",
+                        title: getStopsFilterTitle(),
                         isSelected: filterViewModel.maxStops < 3,
                         action: {
-                            // Cycle through stop options
-                            switch filterViewModel.maxStops {
-                            case 3: filterViewModel.maxStops = 0
-                            case 0: filterViewModel.maxStops = 1
-                            case 1: filterViewModel.maxStops = 2
-                            case 2: filterViewModel.maxStops = 3
-                            default: filterViewModel.maxStops = 3
-                            }
-                            applyFilters()
+                            selectedFilterType = .stops
+                            showUnifiedFilterSheet = true
                         }
                     )
                     
                     // Time Filter
                     FilterButton(
                         title: "Time",
-                        isSelected: filterViewModel.departureTimeRange != 0...1440 ||
-                                   (isRoundTrip && filterViewModel.returnTimeRange != 0...1440),
+                        isSelected: filterViewModel.departureTimeRange != 0...86400 ||
+                                   filterViewModel.arrivalTimeRange != 0...86400 ||
+                                   (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...86400) ||
+                                   (isRoundTrip && filterViewModel.returnArrivalTimeRange != 0...86400),
                         action: {
                             selectedFilterType = .times
                             showUnifiedFilterSheet = true
@@ -137,8 +162,8 @@ struct ResultHeader: View {
                     
                     // Airlines Filter
                     FilterButton(
-                        title: "Airlines",
-                        isSelected: !filterViewModel.selectedAirlines.isEmpty,
+                        title: filterViewModel.getAirlineFilterDisplayText(),
+                        isSelected: filterViewModel.selectedAirlinesCount > 0,
                         action: {
                             selectedFilterType = .airlines
                             showUnifiedFilterSheet = true
@@ -146,20 +171,18 @@ struct ResultHeader: View {
                     )
                     
                     // Duration Filter
-                    FilterButton(
-                        title: "Duration",
-                        isSelected: filterViewModel.maxDuration < 1440,
-                        action: {
-                            selectedFilterType = .duration
-                            showUnifiedFilterSheet = true
-                        }
-                    )
+//                    FilterButton(
+//                        title: "Duration",
+//                        isSelected: filterViewModel.maxDuration < 1440,
+//                        action: {
+//                            selectedFilterType = .durationFlightSearchViewModel
+//                            showUnifiedFilterSheet = true
+//                        }
+//                    )
                     
-                    // Price Filter
                     FilterButton(
-                        title: "Price",
-                        isSelected: filterViewModel.priceRange.lowerBound > 0 ||
-                                   filterViewModel.priceRange.upperBound < 10000,
+                        title: filterViewModel.getPriceFilterDisplayText(),
+                        isSelected: filterViewModel.isPriceFilterActive(),
                         action: {
                             selectedFilterType = .price
                             showUnifiedFilterSheet = true
@@ -179,7 +202,7 @@ struct ResultHeader: View {
                 .padding(.horizontal, 16)
             }
         }
-        .padding()
+        .padding(.vertical)
         .onAppear {
             filterViewModel.isRoundTrip = isRoundTrip
             print("🎛️ ResultHeader configured with:")
@@ -189,7 +212,7 @@ struct ResultHeader: View {
             print("   Travelers: \(travelerInfo)")
         }
         
-        // Single Unified Filter Sheet (unchanged)
+        // Single Unified Filter Sheet
         .sheet(isPresented: $showUnifiedFilterSheet) {
             UnifiedFilterSheet(
                 isPresented: $showUnifiedFilterSheet,
@@ -199,16 +222,91 @@ struct ResultHeader: View {
                 originCode: originCode,
                 destinationCode: destinationCode,
                 availableAirlines: filterViewModel.availableAirlines,
-                minPrice: 0,
-                maxPrice: 10000,
-                averagePrice: 500,
+                // ✅ CRITICAL: Use API price data if available, fallback to provided values
+                minPrice: filterViewModel.hasAPIDataLoaded ? filterViewModel.apiMinPrice : currentMinPrice,
+                maxPrice: filterViewModel.hasAPIDataLoaded ? filterViewModel.apiMaxPrice : currentMaxPrice,
+                averagePrice: filterViewModel.hasAPIDataLoaded ?
+                    (filterViewModel.apiMinPrice + filterViewModel.apiMaxPrice) / 2 : currentAveragePrice,
                 onApply: applyFilters
             )
             .presentationDetents(getPresentationDetents())
         }
+
     }
     
-    // Helper to determine presentation detent - all filter sheets open to half screen
+    func updateAvailableAirlines(_ pollResponse: PollResponse) {
+        print("🔧 ResultHeader: Updating airlines and price data from poll response")
+        
+        // Update airlines in FilterViewModel
+        filterViewModel.updateAvailableAirlines(from: pollResponse)
+        
+        // ✅ CRITICAL: Update price data in FilterViewModel with API values
+        filterViewModel.updatePriceRangeFromAPI(
+            minPrice: pollResponse.min_price,
+            maxPrice: pollResponse.max_price
+        )
+        
+        print("✅ ResultHeader: Updated both airlines and price data:")
+        print("   Airlines: \(filterViewModel.availableAirlines.count)")
+        print("   API Price Range: ₹\(pollResponse.min_price) - ₹\(pollResponse.max_price)")
+        print("   FilterViewModel hasAPIDataLoaded: \(filterViewModel.hasAPIDataLoaded)")
+        print("   Current price range: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
+    }
+    
+    private func getStopsFilterTitle() -> String {
+        switch filterViewModel.maxStops {
+        case 0:
+            return "Direct"
+        case 1:
+            return "1 Stop"
+        case 2:
+            return "2 Stops"
+        default:
+            return "Stops"
+        }
+    }
+    
+    private func hasActiveFilters() -> Bool {
+        return filterViewModel.selectedSortOption != .best ||
+               filterViewModel.maxStops < 3 ||
+               filterViewModel.departureTimeRange != 0...86400 ||
+               filterViewModel.arrivalTimeRange != 0...86400 ||
+               (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...86400) ||
+               (isRoundTrip && filterViewModel.returnArrivalTimeRange != 0...86400) ||
+               filterViewModel.maxDuration < 1440 ||
+               !filterViewModel.selectedAirlines.isEmpty ||
+               filterViewModel.selectedClass != .economy ||
+               filterViewModel.isPriceFilterActive() // ✅ Include price filter
+    }
+    
+    private func clearAllFilters() {
+        print("\n🗑️ ===== CLEAR ALL FILTERS =====")
+        print("🔄 Clearing all filters and resetting to default state...")
+        
+        // Clear all filter values to proper defaults
+        filterViewModel.selectedSortOption = .best
+        filterViewModel.maxStops = 3
+        filterViewModel.departureTimeRange = 0...86400
+        filterViewModel.arrivalTimeRange = 0...86400
+        filterViewModel.returnDepartureTimeRange = 0...86400
+        filterViewModel.returnArrivalTimeRange = 0...86400
+        filterViewModel.maxDuration = 1440
+        filterViewModel.selectedAirlines.removeAll()
+        filterViewModel.excludedAirlines.removeAll()
+        filterViewModel.selectedClass = .economy
+        
+        // ✅ CRITICAL: Reset price filter to API values (not hardcoded values)
+        filterViewModel.resetPriceFilter()
+        
+        print("✅ All filters cleared to default values")
+        print("🗑️ ===== END CLEAR ALL FILTERS =====\n")
+        
+        // Apply empty filters
+        let emptyRequest = PollRequest()
+        onClearAllFilters()
+        onFiltersChanged(emptyRequest)
+    }
+    
     private func getPresentationDetents() -> Set<PresentationDetent> {
         return [.medium]
     }
@@ -222,49 +320,11 @@ struct ResultHeader: View {
         print("   Max Stops: \(filterViewModel.maxStops)")
         print("   Selected Airlines: \(filterViewModel.selectedAirlines.count)")
         print("   Duration Filter: \(filterViewModel.maxDuration < 1440 ? "Active" : "Inactive")")
-        print("   Time Filter: \(filterViewModel.departureTimeRange != 0...1440 ? "Active" : "Inactive")")
-        print("   Price Filter: \(filterViewModel.priceRange != 0...10000 ? "Active" : "Inactive")")
+        print("   Time Filter: \(filterViewModel.departureTimeRange != 0...86400 ? "Active" : "Inactive")")
+        print("   Price Filter: \(filterViewModel.isPriceFilterActive() ? "Active" : "Inactive")")
+        if filterViewModel.isPriceFilterActive() {
+            print("   Price Range: ₹\(filterViewModel.priceRange.lowerBound) - ₹\(filterViewModel.priceRange.upperBound)")
+        }
         print("   Has Any Filters: \(pollRequest.hasFilters())")
     }
-    
-    // Method to update available airlines from poll response
-    func updateAvailableAirlines(_ airlines: [Airline]) {
-        filterViewModel.updateAvailableAirlines(airlines)
-        print("✈️ Updated available airlines in ResultHeader: \(airlines.count) airlines")
-    }
-}
-
-// MARK: - Preview with Sample Data
-#Preview {
-    let sampleParams = SearchParameters(
-        originCode: "KCH",
-        destinationCode: "LON",
-        originName: "Kochi",
-        destinationName: "London",
-        isRoundTrip: true,
-        departureDate: Date(),
-        returnDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()),
-        adults: 2,
-        children: 0,
-        infants: 0,
-        selectedClass: .business
-    )
-    
-    ResultHeader(
-        originCode: "KCH",
-        destinationCode: "LON",
-        isRoundTrip: true,
-        travelDate: "Wed 17 Oct - Mon 24 Oct",
-        travelerInfo: "2 Travelers, Business",
-        searchParameters: sampleParams,
-        onFiltersChanged: { _ in
-            print("Filter applied")
-        },
-        onEditSearchCompleted: { searchId, params in
-            print("Edit completed: \(searchId)")
-        },
-        onEditButtonTapped: {
-            print("Edit button tapped")
-        }
-    )
 }
