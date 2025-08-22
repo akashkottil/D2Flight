@@ -16,10 +16,10 @@ extension FilterViewModel {
         
         // Reset all filter values to defaults
         selectedSortOption = .best
-        departureTimeRange = 0...1440
-        arrivalTimeRange = 0...1440 // ✅ NEW
-        returnDepartureTimeRange = 0...1440
-        returnArrivalTimeRange = 0...1440 // ✅ NEW
+        departureTimeRange = 0...86400 // ✅ UPDATED: seconds
+        arrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
+        returnDepartureTimeRange = 0...86400 // ✅ UPDATED: seconds
+        returnArrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
         maxDuration = 1440
         selectedClass = .economy
         selectedAirlines.removeAll()
@@ -77,30 +77,30 @@ extension FilterViewModel {
         var descriptions: [String] = []
         
         // Departure time filter
-        if departureTimeRange != 0...1440 {
-            let start = formatMinutesToTime(Int(departureTimeRange.lowerBound))
-            let end = formatMinutesToTime(Int(departureTimeRange.upperBound))
+        if departureTimeRange != 0...86400 { // ✅ UPDATED: seconds
+            let start = formatSecondsToTime(Int(departureTimeRange.lowerBound))
+            let end = formatSecondsToTime(Int(departureTimeRange.upperBound))
             descriptions.append("Departure: \(start)-\(end)")
         }
         
         // ✅ NEW: Arrival time filter
-        if arrivalTimeRange != 0...1440 {
-            let start = formatMinutesToTime(Int(arrivalTimeRange.lowerBound))
-            let end = formatMinutesToTime(Int(arrivalTimeRange.upperBound))
+        if arrivalTimeRange != 0...86400 { // ✅ UPDATED: seconds
+            let start = formatSecondsToTime(Int(arrivalTimeRange.lowerBound))
+            let end = formatSecondsToTime(Int(arrivalTimeRange.upperBound))
             descriptions.append("Arrival: \(start)-\(end)")
         }
         
         // Return departure time filter (if round trip)
-        if isRoundTrip && returnDepartureTimeRange != 0...1440 {
-            let start = formatMinutesToTime(Int(returnDepartureTimeRange.lowerBound))
-            let end = formatMinutesToTime(Int(returnDepartureTimeRange.upperBound))
+        if isRoundTrip && returnDepartureTimeRange != 0...86400 { // ✅ UPDATED: seconds
+            let start = formatSecondsToTime(Int(returnDepartureTimeRange.lowerBound))
+            let end = formatSecondsToTime(Int(returnDepartureTimeRange.upperBound))
             descriptions.append("Return Departure: \(start)-\(end)")
         }
         
         // ✅ NEW: Return arrival time filter (if round trip)
-        if isRoundTrip && returnArrivalTimeRange != 0...1440 {
-            let start = formatMinutesToTime(Int(returnArrivalTimeRange.lowerBound))
-            let end = formatMinutesToTime(Int(returnArrivalTimeRange.upperBound))
+        if isRoundTrip && returnArrivalTimeRange != 0...86400 { // ✅ UPDATED: seconds
+            let start = formatSecondsToTime(Int(returnArrivalTimeRange.lowerBound))
+            let end = formatSecondsToTime(Int(returnArrivalTimeRange.upperBound))
             descriptions.append("Return Arrival: \(start)-\(end)")
         }
         
@@ -109,10 +109,10 @@ extension FilterViewModel {
     
     // ✅ UPDATED: Check if time filters are active
     func hasActiveTimeFilters() -> Bool {
-        return departureTimeRange != 0...1440 ||
-               arrivalTimeRange != 0...1440 || // ✅ NEW
-               (isRoundTrip && returnDepartureTimeRange != 0...1440) ||
-               (isRoundTrip && returnArrivalTimeRange != 0...1440) // ✅ NEW
+        return departureTimeRange != 0...86400 || // ✅ UPDATED: seconds
+               arrivalTimeRange != 0...86400 || // ✅ UPDATED: seconds
+               (isRoundTrip && returnDepartureTimeRange != 0...86400) || // ✅ UPDATED: seconds
+               (isRoundTrip && returnArrivalTimeRange != 0...86400) // ✅ UPDATED: seconds
     }
     
     // ✅ UPDATED: Reset only time filters
@@ -121,10 +121,10 @@ extension FilterViewModel {
         print("🔄 Clearing time filters only...")
         print("   Previous time filters: \(getTimeFilterDescription())")
         
-        departureTimeRange = 0...1440
-        arrivalTimeRange = 0...1440 // ✅ NEW
-        returnDepartureTimeRange = 0...1440
-        returnArrivalTimeRange = 0...1440 // ✅ NEW
+        departureTimeRange = 0...86400 // ✅ UPDATED: seconds
+        arrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
+        returnDepartureTimeRange = 0...86400 // ✅ UPDATED: seconds
+        returnArrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
         
         print("   New time filters: \(getTimeFilterDescription())")
         print("🕐 ===== END CLEAR TIME FILTERS =====\n")
@@ -138,8 +138,31 @@ extension FilterViewModel {
             activeFilters.append("Sort: \(selectedSortOption.rawValue)")
         }
         
-        if departureTimeRange != 0...1440 {
-            let start = formatMinutesToTime(Int(departureTimeRange.lowerBound))
+        if departureTimeRange != 0...86400 { // ✅ UPDATED: seconds
+            let start = formatSecondsToTime(Int(departureTimeRange.lowerBound))
+            let end = formatSecondsToTime(Int(departureTimeRange.upperBound))
+            activeFilters.append("Departure time: \(start)-\(end)")
+        }
+        
+        // ✅ NEW: Arrival time filter
+        if arrivalTimeRange != 0...86400 { // ✅ UPDATED: seconds
+            let start = formatSecondsToTime(Int(arrivalTimeRange.lowerBound))
+            let end = formatSecondsToTime(Int(arrivalTimeRange.upperBound))
+            activeFilters.append("Arrival time: \(start)-\(end)")
+        }
+        
+        if isRoundTrip && returnDepartureTimeRange != 0...86400 { // ✅ UPDATED: seconds
+            let start = formatSecondsToTime(Int(returnDepartureTimeRange.lowerBound))
+            let end = formatSecondsToTime(Int(returnDepartureTimeRange.upperBound))
+            activeFilters.append("Return departure time: \(start)-\(end)")
+        }
+        
+        // ✅ NEW: Return arrival time filter
+        if isRoundTrip && returnArrivalTimeRange != 0...86400 { // ✅ UPDATED: seconds
+            let start = formatSecondsToTime(Int(returnArrivalTimeRange.lowerBound))
+            let end = formatSecondsToTime(Int(returnArrivalTimeRange.upperBound))
+            activeFilters.append("Return arrival time: \(start)-\(end)")
+        }TimeRange.lowerBound))
             let end = formatMinutesToTime(Int(departureTimeRange.upperBound))
             activeFilters.append("Departure time: \(start)-\(end)")
         }
@@ -190,10 +213,10 @@ extension FilterViewModel {
         return activeFilters
     }
     
-    // ✅ Helper to format minutes to time
-    private func formatMinutesToTime(_ minutes: Int) -> String {
-        let hours = minutes / 60
-        let mins = minutes % 60
+    // ✅ UPDATED: Helper to format seconds to time
+    private func formatSecondsToTime(_ seconds: Int) -> String {
+        let hours = seconds / 3600
+        let mins = (seconds % 3600) / 60
         return String(format: "%02d:%02d", hours, mins)
     }
 }

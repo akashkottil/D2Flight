@@ -207,7 +207,7 @@ struct UnifiedFilterSheet: View {
                         TimeRangeSlider(
                             range: $filterViewModel.departureTimeRange,
                             minTime: 0,
-                            maxTime: 1440
+                            maxTime: 86400 // ✅ UPDATED: seconds
                         )
                     }
                     
@@ -225,7 +225,7 @@ struct UnifiedFilterSheet: View {
                         TimeRangeSlider(
                             range: $filterViewModel.arrivalTimeRange,
                             minTime: 0,
-                            maxTime: 1440
+                            maxTime: 86400 // ✅ UPDATED: seconds
                         )
                     }
                 }
@@ -253,7 +253,7 @@ struct UnifiedFilterSheet: View {
                             TimeRangeSlider(
                                 range: $filterViewModel.returnDepartureTimeRange,
                                 minTime: 0,
-                                maxTime: 1440
+                                maxTime: 86400 // ✅ UPDATED: seconds
                             )
                         }
                         
@@ -271,7 +271,7 @@ struct UnifiedFilterSheet: View {
                             TimeRangeSlider(
                                 range: $filterViewModel.returnArrivalTimeRange,
                                 minTime: 0,
-                                maxTime: 1440
+                                maxTime: 86400 // ✅ UPDATED: seconds
                             )
                         }
                     }
@@ -702,10 +702,10 @@ struct UnifiedFilterSheet: View {
     private func clearFilters() {
         switch filterType {
         case .times:
-            filterViewModel.departureTimeRange = 0...1440
-            filterViewModel.arrivalTimeRange = 0...1440 // ✅ NEW
-            filterViewModel.returnDepartureTimeRange = 0...1440
-            filterViewModel.returnArrivalTimeRange = 0...1440 // ✅ NEW
+            filterViewModel.departureTimeRange = 0...86400 // ✅ UPDATED: seconds
+            filterViewModel.arrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
+            filterViewModel.returnDepartureTimeRange = 0...86400 // ✅ UPDATED: seconds
+            filterViewModel.returnArrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
         case .duration:
             filterViewModel.departureStopoverRange = 0...1440
             filterViewModel.departureLegRange = 0...1440
@@ -805,9 +805,10 @@ struct UnifiedFilterSheet: View {
         }
 
         private func formatTime(_ minutes: Double) -> String {
-            let totalMinutes = Int(minutes)
-            let hours = totalMinutes / 60
-            let mins = totalMinutes % 60
+            // ✅ UPDATED: Convert seconds to hours and minutes for display
+            let totalSeconds = Int(minutes)
+            let hours = totalSeconds / 3600
+            let mins = (totalSeconds % 3600) / 60
             return String(format: "%02d:%02d", hours, mins)
         }
     }

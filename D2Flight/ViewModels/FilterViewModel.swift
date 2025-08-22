@@ -32,11 +32,11 @@ class FilterViewModel: ObservableObject {
     // Sort options
     @Published var selectedSortOption: SortOption = .best
     
-    // ✅ UPDATED: Separate time filters for departure and arrival
-    @Published var departureTimeRange: ClosedRange<Double> = 0...1440 // 24 hours in minutes
-    @Published var arrivalTimeRange: ClosedRange<Double> = 0...1440 // 24 hours in minutes
-    @Published var returnDepartureTimeRange: ClosedRange<Double> = 0...1440
-    @Published var returnArrivalTimeRange: ClosedRange<Double> = 0...1440
+    // ✅ UPDATED: Separate time filters for departure and arrival (in seconds)
+    @Published var departureTimeRange: ClosedRange<Double> = 0...86400 // 24 hours in seconds
+    @Published var arrivalTimeRange: ClosedRange<Double> = 0...86400 // 24 hours in seconds
+    @Published var returnDepartureTimeRange: ClosedRange<Double> = 0...86400
+    @Published var returnArrivalTimeRange: ClosedRange<Double> = 0...86400
     
     // Duration filters (in minutes)
     @Published var maxDuration: Double = 1440 // 24 hours
@@ -79,10 +79,10 @@ class FilterViewModel: ObservableObject {
     private func loadDefaultFilters() {
         // Set default values
         selectedSortOption = .best
-        departureTimeRange = 0...1440
-        arrivalTimeRange = 0...1440 // ✅ NEW
-        returnDepartureTimeRange = 0...1440
-        returnArrivalTimeRange = 0...1440 // ✅ NEW
+        departureTimeRange = 0...86400 // ✅ UPDATED: seconds
+        arrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
+        returnDepartureTimeRange = 0...86400 // ✅ UPDATED: seconds
+        returnArrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
         maxDuration = 1440
         selectedClass = .economy
         selectedAirlines = []
@@ -195,17 +195,17 @@ class FilterViewModel: ObservableObject {
             request.stop_count_max = maxStops
         }
         
-        // ✅ UPDATED: Time range filters with correct structure
+        // ✅ UPDATED: Time range filters with correct structure (using seconds)
         var timeRanges: [ArrivalDepartureRange] = []
         
         // Check if any time filters are active for outbound leg
-        let hasDepartureTimeFilter = departureTimeRange != 0...1440
-        let hasArrivalTimeFilter = arrivalTimeRange != 0...1440
+        let hasDepartureTimeFilter = departureTimeRange != 0...86400
+        let hasArrivalTimeFilter = arrivalTimeRange != 0...86400
         
         if hasDepartureTimeFilter || hasArrivalTimeFilter {
             var outboundRange = ArrivalDepartureRange(
-                arrival: TimeRange(min: 0, max: 1440), // Default arrival range
-                departure: TimeRange(min: 0, max: 1440) // Default departure range
+                arrival: TimeRange(min: 0, max: 86400), // Default arrival range in seconds
+                departure: TimeRange(min: 0, max: 86400) // Default departure range in seconds
             )
             
             // Override departure if filtered
@@ -235,13 +235,13 @@ class FilterViewModel: ObservableObject {
         
         // Return leg time range (if round trip and different from default)
         if isRoundTrip {
-            let hasReturnDepartureTimeFilter = returnDepartureTimeRange != 0...1440
-            let hasReturnArrivalTimeFilter = returnArrivalTimeRange != 0...1440
+            let hasReturnDepartureTimeFilter = returnDepartureTimeRange != 0...86400
+            let hasReturnArrivalTimeFilter = returnArrivalTimeRange != 0...86400
             
             if hasReturnDepartureTimeFilter || hasReturnArrivalTimeFilter {
                 var returnRange = ArrivalDepartureRange(
-                    arrival: TimeRange(min: 0, max: 1440), // Default arrival range
-                    departure: TimeRange(min: 0, max: 1440) // Default departure range
+                    arrival: TimeRange(min: 0, max: 86400), // Default arrival range in seconds
+                    departure: TimeRange(min: 0, max: 86400) // Default departure range in seconds
                 )
                 
                 // Override departure if filtered
@@ -269,8 +269,8 @@ class FilterViewModel: ObservableObject {
                 // If we don't have outbound time filters, add default outbound first
                 if timeRanges.isEmpty {
                     timeRanges.append(ArrivalDepartureRange(
-                        arrival: TimeRange(min: 0, max: 1440),
-                        departure: TimeRange(min: 0, max: 1440)
+                        arrival: TimeRange(min: 0, max: 86400),
+                        departure: TimeRange(min: 0, max: 86400)
                     ))
                 }
                 
@@ -327,10 +327,10 @@ class FilterViewModel: ObservableObject {
     
     func clearFilters() {
         selectedSortOption = .best
-        departureTimeRange = 0...1440
-        arrivalTimeRange = 0...1440 // ✅ NEW
-        returnDepartureTimeRange = 0...1440
-        returnArrivalTimeRange = 0...1440 // ✅ NEW
+        departureTimeRange = 0...86400 // ✅ UPDATED: seconds
+        arrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
+        returnDepartureTimeRange = 0...86400 // ✅ UPDATED: seconds
+        returnArrivalTimeRange = 0...86400 // ✅ UPDATED: seconds
         maxDuration = 1440
         selectedClass = .economy
         selectedAirlines.removeAll()
@@ -354,10 +354,10 @@ class FilterViewModel: ObservableObject {
     // ✅ UPDATED: Helper method to check if any filters are active
     func hasActiveFilters() -> Bool {
         return selectedSortOption != .best ||
-               departureTimeRange != 0...1440 ||
-               arrivalTimeRange != 0...1440 || // ✅ NEW
-               returnDepartureTimeRange != 0...1440 ||
-               returnArrivalTimeRange != 0...1440 || // ✅ NEW
+               departureTimeRange != 0...86400 || // ✅ UPDATED: seconds
+               arrivalTimeRange != 0...86400 || // ✅ UPDATED: seconds
+               returnDepartureTimeRange != 0...86400 || // ✅ UPDATED: seconds
+               returnArrivalTimeRange != 0...86400 || // ✅ UPDATED: seconds
                maxDuration < 1440 ||
                !selectedAirlines.isEmpty ||
                !excludedAirlines.isEmpty ||
