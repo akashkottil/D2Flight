@@ -378,29 +378,51 @@ struct UnifiedFilterSheet: View {
     // MARK: - Airlines Content
     private var airlinesContent: some View {
         VStack(spacing: 0) {
-            // Select All Option (always at top)
-            airlineSelectionRow(
-                name: "Select All",
-                code: "ALL",
-                price: nil,
-                logo: "",
-                isSelected: filterViewModel.selectedAirlines.count == availableAirlines.count,
-                isSelectAll: true
-            )
-            
-            // ✅ UPDATED: Use static sorting method (only sorts when sheet opens)
-            ForEach(filterViewModel.cachedSortedAirlinesForSheet, id: \.code) { airline in
+            // Debug info (remove in production)
+            if filterViewModel.availableAirlines.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "airplane")
+                        .font(.system(size: 40))
+                        .foregroundColor(.gray)
+                    
+                    Text("No airlines available")
+                        .font(CustomFont.font(.medium))
+                        .foregroundColor(.gray)
+                    
+                    Text("Airlines will appear here once flight results are loaded")
+                        .font(CustomFont.font(.small))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                .padding(.vertical, 40)
+            } else {
+                // Select All Option (always at top)
                 airlineSelectionRow(
-                    name: airline.name,
-                    code: airline.code,
-                    price: airline.price,
-                    logo: airline.logo,
-                    isSelected: filterViewModel.selectedAirlines.contains(airline.code)
+                    name: "Select All",
+                    code: "ALL",
+                    price: nil,
+                    logo: "",
+                    isSelected: filterViewModel.areAllAirlinesSelected,
+                    isSelectAll: true
                 )
+                
+                // Airlines sorted with selected ones at top
+                ForEach(filterViewModel.cachedSortedAirlinesForSheet, id: \.code) { airline in
+                    airlineSelectionRow(
+                        name: airline.name,
+                        code: airline.code,
+                        price: airline.price,
+                        logo: airline.logo,
+                        isSelected: filterViewModel.isAirlineSelected(airline.code)
+                    )
+                }
             }
         }
         .onAppear {
-            filterViewModel.cacheSortedAirlinesForSheet()
+            // Refresh cached airlines when sheet appears
+            filterViewModel.refreshCachedSortedAirlines()
+            filterViewModel.debugPrintAirlineState()
         }
     }
     
@@ -414,19 +436,14 @@ struct UnifiedFilterSheet: View {
     ) -> some View {
         Button(action: {
             if isSelectAll {
-                if filterViewModel.selectedAirlines.count == availableAirlines.count {
-                    // Deselect all
-                    filterViewModel.selectedAirlines.removeAll()
-                } else {
-                    // Select all
-                    filterViewModel.selectedAirlines = Set(availableAirlines.map { $0.code })
-                }
+                filterViewModel.toggleSelectAllAirlinesFilter()
             } else {
-                if filterViewModel.selectedAirlines.contains(code) {
-                    filterViewModel.selectedAirlines.remove(code)
-                } else {
-                    filterViewModel.selectedAirlines.insert(code)
-                }
+                filterViewModel.toggleAirlineFilter(code)
+            }
+            
+            // Re-cache sorted airlines after selection change (for next time sheet opens)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                filterViewModel.refreshCachedSortedAirlines()
             }
         }) {
             HStack(spacing: 16) {
@@ -475,8 +492,8 @@ struct UnifiedFilterSheet: View {
                 
                 Spacer()
                 
-                // ✅ FIXED: Show real minimum price only if price > 0
-                if let price = price, price > 0 {
+                // Price (only for individual airlines with valid price)
+                if let price = price, price > 0, !isSelectAll {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("₹\(Int(price))")
                             .font(CustomFont.font(.medium, weight: .semibold))
@@ -485,7 +502,7 @@ struct UnifiedFilterSheet: View {
                             .font(CustomFont.font(.tiny))
                             .foregroundColor(.gray)
                     }
-                } else if !isSelectAll {
+                } else if !isSelectAll && (price == nil || price == 0) {
                     // Show "Price varies" when no specific price is available
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("varies".localized)

@@ -156,8 +156,8 @@ struct ResultHeader: View {
                     
                     // Airlines Filter
                     FilterButton(
-                        title: "Airlines",
-                        isSelected: !filterViewModel.selectedAirlines.isEmpty,
+                        title: filterViewModel.getAirlineFilterDisplayText(),
+                        isSelected: filterViewModel.selectedAirlinesCount > 0,
                         action: {
                             selectedFilterType = .airlines
                             showUnifiedFilterSheet = true
@@ -217,7 +217,7 @@ struct ResultHeader: View {
                 isRoundTrip: isRoundTrip,
                 originCode: originCode,
                 destinationCode: destinationCode,
-                availableAirlines: filterViewModel.availableAirlines,
+                availableAirlines: filterViewModel.availableAirlines, // ✅ Pass actual airlines
                 minPrice: 0,
                 maxPrice: 10000,
                 averagePrice: 500,
@@ -303,9 +303,10 @@ struct ResultHeader: View {
     }
     
     // Method to update available airlines from poll response
-    func updateAvailableAirlines(_ airlines: [Airline]) {
-        filterViewModel.updateAvailableAirlines(airlines)
-        print("✈️ Updated available airlines in ResultHeader: \(airlines.count) airlines")
+    func updateAvailableAirlines(_ pollResponse: PollResponse) {
+        print("🔧 ResultHeader: Updating airlines from poll response")
+        filterViewModel.updateAvailableAirlines(from: pollResponse)
+        print("✅ ResultHeader: Airlines updated - \(filterViewModel.availableAirlines.count) available")
     }
 }
 

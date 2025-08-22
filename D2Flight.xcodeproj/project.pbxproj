@@ -43,6 +43,7 @@
 				"Extensions/DateFormatter+Extensions.swift",
 				"Extensions/FilterViewModel+ClearButton.swift",
 				"Extensions/FilterViewModel+Debug.swift",
+				"Extensions/ResultView+AirlinesIntegration.swift",
 				"Extensions/ResultViewModel+ClearButton.swift",
 				Info.plist,
 			);
@@ -58,6 +59,7 @@
 				"Extensions/DateFormatter+Extensions.swift",
 				"Extensions/FilterViewModel+ClearButton.swift",
 				"Extensions/FilterViewModel+Debug.swift",
+				"Extensions/ResultView+AirlinesIntegration.swift",
 				"Extensions/ResultViewModel+ClearButton.swift",
 			);
 		};
