@@ -14,22 +14,41 @@ class PollApi {
         limit: Int = 30,
         completion: @escaping (Result<PollResponse, Error>) -> Void
     ) {
-        let url = "\(baseURL)/poll/?search_id=\(searchId)&page=\(page)&limit=\(limit)"
+        // ✅ FIXED: Get dynamic API parameters including language
+        let apiParams = APIConstants.getAPIParameters()
+        
+        // ✅ FIXED: Add language parameter to URL
+        let url = "\(baseURL)/poll/?search_id=\(searchId)&page=\(page)&limit=\(limit)&language=\(apiParams.language)&currency=\(apiParams.currency)"
         
         let headers: HTTPHeaders = [
             "accept": "application/json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            // ✅ ADDED: Country and language headers
+            "country": apiParams.country,
+            "Accept-Language": apiParams.language
         ]
         
         // ✅ FIXED: Only send user-selected filter values
         let parameters: [String: Any] = buildFilterParameters(from: request)
         
-        print("🔍 Polling flights with search_id: \(searchId), page: \(page), limit: \(limit)")
-        print("📋 Request has filters: \(request.hasFilters())")
-        print("📋 Request parameters: \(parameters)")
+        print("🔍 Polling flights with dynamic language support:")
+        print("   Search ID: \(searchId)")
+        print("   Page: \(page), Limit: \(limit)")
+        print("   🌐 Language: \(apiParams.language)")
+        print("   💰 Currency: \(apiParams.currency)")
+        print("   🌍 Country: \(apiParams.country)")
+        print("   📋 Request has filters: \(request.hasFilters())")
+        print("   📋 Request parameters: \(parameters)")
+        print("   📡 URL: \(url)")
         
-        // ✅ NEW: Print CURL command for debugging
-        printCurlCommand(url: url, headers: headers, parameters: parameters)
+        // ✅ ENHANCED: Print CURL command for filter debugging
+        printFilterDebugCurl(
+            url: url,
+            headers: headers,
+            parameters: parameters,
+            filterRequest: request,
+            context: "FILTER_APPLICATION"
+        )
         
         AF.request(
             url,
@@ -42,9 +61,11 @@ class PollApi {
         .responseDecodable(of: PollResponse.self) { response in
             switch response.result {
             case .success(let pollResponse):
-                print("✅ Poll successful! Found \(pollResponse.results.count) flights in this batch (total: \(pollResponse.count))")
+                print("✅ Poll successful with language \(apiParams.language)!")
+                print("   Found \(pollResponse.results.count) flights in this batch (total: \(pollResponse.count))")
                 print("   Cache status: \(pollResponse.cache)")
-                print("   Next page: \(pollResponse.next != nil ? "Available" : "None")")
+                print("   Next page available: \(pollResponse.next != nil)")
+                print("   ✅ Loaded \(pollResponse.results.count) results in INITIAL batch (target: \(limit))")
                 completion(.success(pollResponse))
             case .failure(let error):
                 print("❌ Poll failed: \(error)")
@@ -135,12 +156,56 @@ class PollApi {
         return params
     }
     
-    // ✅ NEW: Print CURL command for debugging
-    private func printCurlCommand(url: String, headers: HTTPHeaders, parameters: [String: Any]) {
-        print("\n🌐 ===== CURL COMMAND FOR DEBUGGING =====")
+    // ✅ ENHANCED: Filter-specific CURL debug printing
+    private func printFilterDebugCurl(
+        url: String,
+        headers: HTTPHeaders,
+        parameters: [String: Any],
+        filterRequest: PollRequest,
+        context: String
+    ) {
+        print("\n🐛 ===== FILTER DEBUG: \(context) =====")
+        print("🔍 FILTER ANALYSIS:")
+        print("   Has Filters: \(filterRequest.hasFilters())")
+        
+        // Detailed filter breakdown
+        if let duration = filterRequest.duration_max {
+            print("   ⏱️ Duration Filter: ≤ \(duration) minutes")
+        }
+        if let stops = filterRequest.stop_count_max {
+            print("   🛑 Stop Filter: ≤ \(stops) stops")
+        }
+        if let priceMin = filterRequest.price_min {
+            print("   💰 Price Min: ≥ ₹\(priceMin)")
+        }
+        if let priceMax = filterRequest.price_max {
+            print("   💰 Price Max: ≤ ₹\(priceMax)")
+        }
+        if let airlines = filterRequest.iata_codes_include, !airlines.isEmpty {
+            print("   ✈️ Include Airlines: \(airlines.joined(separator: ", "))")
+        }
+        if let excludeAirlines = filterRequest.iata_codes_exclude, !excludeAirlines.isEmpty {
+            print("   🚫 Exclude Airlines: \(excludeAirlines.joined(separator: ", "))")
+        }
+        if let sortBy = filterRequest.sort_by {
+            let sortOrder = filterRequest.sort_order ?? "asc"
+            print("   📊 Sort: \(sortBy) (\(sortOrder))")
+        }
+        if let timeRanges = filterRequest.arrival_departure_ranges, !timeRanges.isEmpty {
+            print("   🕐 Time Filters: \(timeRanges.count) leg(s)")
+            for (index, range) in timeRanges.enumerated() {
+                let depStart = minutesToTime(range.departure.min)
+                let depEnd = minutesToTime(range.departure.max)
+                let arrStart = minutesToTime(range.arrival.min)
+                let arrEnd = minutesToTime(range.arrival.max)
+                print("     Leg \(index + 1): Dep \(depStart)-\(depEnd), Arr \(arrStart)-\(arrEnd)")
+            }
+        }
+        
+        print("\n🌐 CURL COMMAND:")
         print("curl -X POST '\(url)' \\")
         
-        // Add headers - Fixed for Alamofire HTTPHeaders
+        // Add headers
         for header in headers {
             print("  -H '\(header.name): \(header.value)' \\")
         }
@@ -149,34 +214,69 @@ class PollApi {
         if !parameters.isEmpty {
             if let jsonData = try? JSONSerialization.data(withJSONObject: parameters, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
-                // Clean up the JSON for curl command
-                let cleanJson = jsonString
-                    .replacingOccurrences(of: "\n", with: "")
-                    .replacingOccurrences(of: "  ", with: "")
-                print("  -d '\(cleanJson)'")
+                // Pretty print JSON for readability
+                print("  -d '\\")
+                let lines = jsonString.components(separatedBy: .newlines)
+                for line in lines {
+                    print("    \(line)")
+                }
+                print("  '")
             }
         } else {
             print("  -d '{}'")
         }
-        print("🌐 ===== END CURL COMMAND =====\n")
+        
+        print("\n📋 RAW PARAMETERS JSON:")
+        if let jsonData = try? JSONSerialization.data(withJSONObject: parameters, options: .prettyPrinted),
+           let prettyJson = String(data: jsonData, encoding: .utf8) {
+            print(prettyJson)
+        }
+        
+        print("🐛 ===== END FILTER DEBUG =====\n")
     }
     
-    // Alternative method using next URL if the API provides full URLs
+    // ✅ Helper function to convert minutes to time string
+    private func minutesToTime(_ minutes: Int) -> String {
+        let hours = minutes / 60
+        let mins = minutes % 60
+        return String(format: "%02d:%02d", hours, mins)
+    }
+    
+    // ✅ Updated method signature to accept filters
     func pollFlightsWithURL(
         nextURL: String,
+        request: PollRequest = PollRequest(), // ✅ Add this parameter
         completion: @escaping (Result<PollResponse, Error>) -> Void
     ) {
+        let apiParams = APIConstants.getAPIParameters()
+        
         let headers: HTTPHeaders = [
             "accept": "application/json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "country": apiParams.country,
+            "Accept-Language": apiParams.language
         ]
         
+        // ✅ Build filter parameters like the main pollFlights method
+        let parameters: [String: Any] = buildFilterParameters(from: request)
+        
         print("🔍 Polling flights with next URL: \(nextURL)")
+        print("   🌐 Language: \(apiParams.language)")
+        print("   🔧 Applied filters: \(request.hasFilters())")
+        
+        // ✅ ENHANCED: Print CURL for pagination with filters
+        printFilterDebugCurl(
+            url: nextURL,
+            headers: headers,
+            parameters: parameters,
+            filterRequest: request,
+            context: "PAGINATION_WITH_FILTERS"
+        )
         
         AF.request(
             nextURL,
             method: .post,
-            parameters: [:],
+            parameters: parameters, // ✅ Now includes filters
             encoding: JSONEncoding.default,
             headers: headers
         )

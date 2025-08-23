@@ -31,9 +31,9 @@ struct SignInCard: View {
                     }
                 } else {
                     VStack(alignment: .leading) {
-                        Text("More offers awaits you")
+                        Text("more.offers.awaits.you".localized)
                             .font(CustomFont.font(.medium, weight: .bold))
-                        Text("Sign up and access to our exclusive deals")
+                        Text("sign.up.and.access.to.our.exclusive.deals".localized)
                             .font(CustomFont.font(.small))
                             .fontWeight(.medium)
                             .foregroundColor(Color.gray)
@@ -51,7 +51,7 @@ struct SignInCard: View {
                         print("Navigate to Account Settings")
                     }) {
                         HStack {
-                            Text("Account Settings")
+                            Text("account.settings".localized)
                                 .font(CustomFont.font(.medium, weight: .medium))
                             Spacer()
                             Image("RedArrow")
@@ -67,7 +67,7 @@ struct SignInCard: View {
                         showLoginView = true
                     }) {
                         HStack {
-                            Text("Sign in Now")
+                            Text("sign.in.now".localized)
                                 .font(CustomFont.font(.medium, weight: .medium))
                             Spacer()
                             Image("WhiteArrow")

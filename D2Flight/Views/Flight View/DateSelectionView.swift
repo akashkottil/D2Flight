@@ -11,6 +11,7 @@ struct DateSelectionView: View {
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd, MMM"
+        formatter.locale = Locale.current  // ← Add this
         return formatter
     }()
     
@@ -51,7 +52,7 @@ struct DateSelectionView: View {
 
                 
                 
-                Text("Select dates")
+                Text("select.dates".localized)
                     .font(.system(size: 20, weight: .bold))
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.trailing, 44)
@@ -63,9 +64,9 @@ struct DateSelectionView: View {
             Divider()
             
             // Weekday Headers
-            HStack(spacing: 8) { // Add spacing between each day
-                ForEach(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"], id: \.self) { day in
-                    Text(day)
+            HStack(spacing: 8) {
+                ForEach(0..<7, id: \.self) { index in
+                    Text(CalendarLocalization.getLocalizedWeekdayName(for: index))
                         .font(CustomFont.font(.regular, weight: .medium))
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity)
@@ -77,11 +78,11 @@ struct DateSelectionView: View {
                 }
             }
             .padding(.top)
-            .padding(.horizontal,20)
+            .padding(.horizontal, 20)
             
             // Calendar
             ZStack {
-                SimplifiedCalendar(
+                LocalizedSimplifiedCalendar(
                     selectedDates: $selectedDates,
                     isRoundTrip: isRoundTrip
                 )
@@ -96,7 +97,7 @@ struct DateSelectionView: View {
                             // Round trip - show both cards
                             HStack(spacing: 12) {
                                 DateCard(
-                                    title: isFromHotel ? "Check-in" : "Departure",
+                                    title: isFromHotel ? "check-in".localized : "departure".localized,
                                     dateText: formatDepartureDate(),
                                     isSelected: !selectedDates.isEmpty
                                 )
@@ -105,7 +106,7 @@ struct DateSelectionView: View {
                                     .frame(width: 16, height: 16)
                                 
                                 DateCard(
-                                    title: isFromHotel ? "Check-out" : "Return",
+                                    title: isFromHotel ? "check-out".localized : "return".localized,
                                     dateText: formatReturnDate(),
                                     isSelected: selectedDates.count > 1
                                 )
@@ -114,7 +115,7 @@ struct DateSelectionView: View {
                         } else {
                             // One way - show only departure card
                             DateCard(
-                                title: "Departure",
+                                title: "departure".localized,
                                 dateText: formatDepartureDate(),
                                 isSelected: !selectedDates.isEmpty
                             )
@@ -123,7 +124,7 @@ struct DateSelectionView: View {
                         
                         // Apply button
                         PrimaryButton(
-                            title: "Apply",
+                            title: "apply".localized,
                             font: CustomFont.font(.large),
                             fontWeight: .bold,
                             textColor: .white,
@@ -155,12 +156,12 @@ struct DateSelectionView: View {
         guard let firstDate = selectedDates.first else {
             return "Select date"
         }
-        return dateFormatter.string(from: firstDate)
+        return LocalizedDateFormatter.formatShortDateWithComma(firstDate)
     }
     
     private func formatReturnDate() -> String {
         if selectedDates.count > 1, let secondDate = selectedDates.last {
-            return dateFormatter.string(from: secondDate)
+            return LocalizedDateFormatter.formatShortDateWithComma(secondDate)
         }
         
         // Return different placeholder based on context

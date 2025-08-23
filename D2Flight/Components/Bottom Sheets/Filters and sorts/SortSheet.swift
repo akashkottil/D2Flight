@@ -16,7 +16,7 @@
 //        VStack(spacing: 0) {
 //            // Header
 //            HStack {
-//                Text("Sort")
+//                Text("sort".localized)
 //                    .font(CustomFont.font(.large, weight: .bold))
 //                    .foregroundColor(.black)
 //                Spacer()
@@ -53,7 +53,7 @@
 //            // Apply Button
 //            VStack {
 //                PrimaryButton(
-//                    title: "Apply",
+//                    title: "apply",
 //                    font: CustomFont.font(.large),
 //                    fontWeight: .semibold,
 //                    textColor: .white,

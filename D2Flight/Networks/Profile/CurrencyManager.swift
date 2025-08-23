@@ -39,10 +39,13 @@ class CurrencyManager: ObservableObject {
                     self?.errorMessage = nil
                     print("💰 Loaded \(currencyInfos.count) currencies from API")
                     
-                    // Set default selection if none exists
-                    if self?.selectedCurrency == nil {
-                        self?.setDefaultCurrency()
-                    }
+                    // 🆕 POST NOTIFICATION THAT CURRENCIES ARE LOADED
+                    NotificationCenter.default.post(name: NSNotification.Name("CurrenciesDidLoad"), object: nil)
+                    
+                    // Set default selection if none exists (remove this if using SettingsManager)
+                    // if self?.selectedCurrency == nil {
+                    //     self?.setDefaultCurrency()
+                    // }
                     
                 case .failure(let error):
                     self?.errorMessage = "Failed to load currencies: \(error.localizedDescription)"

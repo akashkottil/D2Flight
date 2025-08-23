@@ -59,7 +59,7 @@ struct PassengerSheet: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text(isFromHotel ? "Guests and Rooms" : "Traveler and Class")
+                Text(isFromHotel ? "guests.and.rooms".localized : "traveler.and.class".localized)
                     .font(CustomFont.font(.large, weight: .bold))
                     .foregroundColor(.black)
                 Spacer()
@@ -86,17 +86,17 @@ struct PassengerSheet: View {
                         // Select Class Section
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Text("Select Class")
+                                Text("select.class".localized)
                                     .font(CustomFont.font(.regular, weight: .semibold))
                                     .foregroundColor(.gray)
                                 Spacer()
                             }
                             
                             VStack(spacing: 20) {
-                                classSelectionRow(title: "Economy", class: .economy)
-                                classSelectionRow(title: "Premium Economy", class: .premiumEconomy)
-                                classSelectionRow(title: "Business", class: .business)
-                                classSelectionRow(title: "First Class", class: .firstClass)
+                                classSelectionRow(title: "economy".localized, class: .economy)
+                                classSelectionRow(title: "premium.economy".localized, class: .premiumEconomy)
+                                classSelectionRow(title: "business".localized, class: .business)
+                                classSelectionRow(title: "first.class".localized, class: .firstClass)
                             }
                         }
                     }
@@ -104,7 +104,7 @@ struct PassengerSheet: View {
                     // Select Travellers Section
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Text(isFromHotel ? "Select Guests and Rooms" : "Select Travellers")
+                            Text(isFromHotel ? "select.guests.and.rooms".localized : "select.travellers".localized)
                                         .font(CustomFont.font(.regular, weight: .semibold))
                                         .foregroundColor(.gray)
                             Spacer()
@@ -114,21 +114,21 @@ struct PassengerSheet: View {
                             if isFromHotel {
                                 // Hotel order: Rooms, Adults, Children
                                 passengerCountRow(
-                                    title: "Rooms",
-                                    subtitle: "Hotel rooms",
+                                    title: "rooms".localized,
+                                    subtitle: "hotel.rooms".localized,
                                     count: $rooms, // Use dedicated rooms binding
                                     minCount: 1
                                 )
                                 
                                 passengerCountRow(
-                                    title: "Adults",
-                                    subtitle: "Over 11",
+                                    title: "adults".localized,
+                                    subtitle: "over.11".localized,
                                     count: $adults,
                                     minCount: 1
                                 )
                                 
                                 passengerCountRow(
-                                    title: "Children",
+                                    title: "children".localized,
                                     subtitle: "2-11",
                                     count: $children,
                                     minCount: 0
@@ -136,22 +136,22 @@ struct PassengerSheet: View {
                             } else {
                                 // Flight/Rental order: Adults, Children, Infants
                                 passengerCountRow(
-                                    title: "Adults",
-                                    subtitle: "Over 11",
+                                    title: "adults".localized,
+                                    subtitle: "over.11".localized,
                                     count: $adults,
                                     minCount: 1
                                 )
                                 
                                 passengerCountRow(
-                                    title: "Children",
+                                    title: "children".localized,
                                     subtitle: "2-11",
                                     count: $children,
                                     minCount: 0
                                 )
                                 
                                 passengerCountRow(
-                                    title: "Infants",
-                                    subtitle: "Under 2",
+                                    title: "infants".localized,
+                                    subtitle: "under.2".localized,
                                     count: $infants,
                                     minCount: 0
                                 )
@@ -163,7 +163,7 @@ struct PassengerSheet: View {
                     if children > 0 {
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Text("Select Children Age")
+                                Text("select.children.age".localized)
                                     .font(CustomFont.font(.regular, weight: .semibold))
                                     .foregroundColor(.gray)
                                 Spacer()
@@ -187,7 +187,7 @@ struct PassengerSheet: View {
             // Apply Button
             VStack{
                 PrimaryButton(
-                    title: "Apply",
+                    title: "apply".localized,
                     font: CustomFont.font(.large),
                     fontWeight: .semibold,
                     textColor: .white,
@@ -196,21 +196,27 @@ struct PassengerSheet: View {
                     horizontalPadding: 24,
                     cornerRadius: 16,
                     action: {
-                        let finalText: String
-                        if isFromHotel {
-                            let totalGuests = adults + children
-                            let guestsText = "\(totalGuests) Guest\(totalGuests > 1 ? "s" : "")"
-                            let roomsText = "\(rooms) Room\(rooms > 1 ? "s" : "")"
-                            finalText = "\(guestsText), \(roomsText)"
-                        } else {
-                            let totalTravelers = adults + children + infants
-                            let travelersText = "\(totalTravelers) Traveller\(totalTravelers > 1 ? "s" : "")"
-                            finalText = "\(travelersText), \(selectedClass.displayName)"
+                            let finalText: String
+                            if isFromHotel {
+                                let totalGuests = adults + children
+                                let guestsText = totalGuests == 1 ?
+                                    "\(totalGuests) \("guest".localized)" :
+                                    "\(totalGuests) \("guests".localized)"
+                                let roomsText = rooms == 1 ?
+                                    "\(rooms) \("room".localized)" :
+                                    "\(rooms) \("rooms".localized)"
+                                finalText = "\(guestsText), \(roomsText)"
+                            } else {
+                                let totalTravelers = adults + children + infants
+                                let travelersText = totalTravelers == 1 ?
+                                    "\(totalTravelers) \("traveller".localized)" :
+                                    "\(totalTravelers) \("travellers".localized)"
+                                finalText = "\(travelersText), \(selectedClass.displayName)"
+                            }
+                            
+                            onDone(finalText)
+                            isPresented = false
                         }
-                        
-                        onDone(finalText)
-                        isPresented = false
-                    }
                 )
             }
             .padding()
@@ -378,13 +384,13 @@ enum TravelClass: String, CaseIterable {
     var displayName: String {
         switch self {
         case .economy:
-            return "Economy"
+            return "economy".localized
         case .premiumEconomy:
-            return "Premium Economy"
+            return "premium.economy".localized
         case .business:
-            return "Business"
+            return "business".localized
         case .firstClass:
-            return "First Class"
+            return "first.class".localized
         }
     }
 }

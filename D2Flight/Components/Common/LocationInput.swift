@@ -73,19 +73,19 @@ struct LocationInput: View {
     // Computed properties for dynamic text based on source
     private var originPlaceholder: String {
         if isFromHotel {
-            return "Enter Hotel Location"
+            return "enter.hotel.location".localized
         } else if isFromRental {
-            return "Enter Pick-up Location"
+            return "enter.pick-up.location".localized
         } else {
-            return "Enter Departure"
+            return "enter.departure".localized
         }
     }
     
     private var destinationPlaceholder: String {
         if isFromRental {
-            return "Enter Drop-off Location"
+            return "enter.drop-off.location".localized
         } else {
-            return "Enter Destination"
+            return "enter.destination".localized
         }
     }
     

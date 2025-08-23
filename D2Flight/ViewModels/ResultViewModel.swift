@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Alamofire
 
 class ResultViewModel: ObservableObject {
     @Published var flightResults: [FlightResult] = []
@@ -8,24 +9,29 @@ class ResultViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var searchId: String? = nil
     
-    // ✅ Modified pagination properties for 30 initial + 8 per page
+    // ✅ NEW: Track final poll after cache complete
+    private var hasFinalPolled: Bool = false
+    private var isFinalPolling: Bool = false
+    
     @Published var hasMoreResults: Bool = true
     @Published var totalResultsCount: Int = 0
-    private var currentPage: Int = 1
     private let initialPageSize: Int = 30
-    private let subsequentPageSize: Int = 8
+    private let subsequentPageSize: Int = 30
     
     // Poll response data
     @Published var pollResponse: PollResponse? = nil
     @Published var selectedFlight: FlightResult? = nil
     @Published var totalPollCount: Int = 0
     
+    // ✅ NEW: Expose cache status to UI
+    @Published var isCacheComplete: Bool = false
+    
     // ✅ Track next URL availability
     private var nextPageURL: String? = nil
     
     // ✅ CRITICAL FIX: Store current filter state
-    private var currentFilterRequest: PollRequest = PollRequest()
-    private var isFilteredResults: Bool = false
+    var currentFilterRequest: PollRequest = PollRequest()
+    var isFilteredResults: Bool = false
     
     // ✅ Ads integration properties
     @Published var adsService = HotelAdsAPIService()
@@ -35,7 +41,6 @@ class ResultViewModel: ObservableObject {
     private let pollApi = PollApi.shared
     private var maxRetries = 10
     private var currentRetries = 0
-    private var isCacheComplete = false
     private var maxTotalPolls = 50
     private var pollStartTime: Date?
     
@@ -43,6 +48,169 @@ class ResultViewModel: ObservableObject {
     private var shouldContinuouslyPoll = false
     
     init() {}
+    
+    // ✅ ADDED: Clear all filters method directly in the main class
+    func clearAllFilters() {
+        guard let searchId = searchId else {
+            print("❌ Cannot clear filters: no searchId")
+            return
+        }
+        
+        print("\n🗑️ ===== CLEAR ALL FILTERS IN RESULTVIEWMODEL =====")
+        print("🔄 Clearing all filters and reloading original results...")
+        print("   Search ID: \(searchId)")
+        print("   Previous filter state: \(isFilteredResults)")
+        print("   Previous results count: \(flightResults.count)")
+        
+        // Reset filter state
+        currentFilterRequest = PollRequest()
+        isFilteredResults = false
+        
+        // Reset pagination
+        resetPagination()
+        
+        // Enable continuous polling for unfiltered results
+        shouldContinuouslyPoll = true
+        
+        isLoading = true
+        errorMessage = nil
+        flightResults = [] // Clear existing results
+        totalPollCount += 1
+        
+        print("📡 Making clear filters poll request (poll #\(totalPollCount))")
+        print("   ✅ Using empty PollRequest (no filters)")
+        print("   ✅ Continuous polling enabled: \(shouldContinuouslyPoll)")
+        print("🗑️ ===== END CLEAR ALL FILTERS IN RESULTVIEWMODEL =====\n")
+        
+        // Make API call with empty filter request
+        pollApi.pollFlights(
+            searchId: searchId,
+            request: PollRequest(), // Empty request = no filters
+            limit: initialPageSize
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                self.isLoading = false
+                
+                switch result {
+                case .success(let response):
+                    print("\n✅ ===== CLEAR FILTERS SUCCESS DEBUG =====")
+                    print("✅ Clear filters poll successful!")
+                    print("   Original results count: \(response.count)")
+                    print("   Results in this batch: \(response.results.count)")
+                    print("   Cache status: \(response.cache)")
+                    print("   Next page available: \(response.next != nil)")
+                    print("   ✅ Showing all flights (no filters applied)")
+                    
+                    // Log sample results
+                    if !response.results.isEmpty {
+                        print("📋 Sample Results (first 3):")
+                        for (index, flight) in response.results.prefix(3).enumerated() {
+                            if let firstLeg = flight.legs.first {
+                                print("   \(index + 1). \(firstLeg.originCode) → \(firstLeg.destinationCode)")
+                                print("      Price: \(flight.formattedPrice), Duration: \(flight.formattedDuration)")
+                                print("      Stops: \(firstLeg.stopsText)")
+                            }
+                        }
+                    }
+                    print("✅ ===== END CLEAR FILTERS SUCCESS DEBUG =====\n")
+                    
+                    self.pollResponse = response
+                    self.flightResults = response.results
+                    self.totalResultsCount = response.count
+                    self.isCacheComplete = response.cache
+                    
+                    // Store next page URL
+                    self.nextPageURL = response.next
+                    self.hasMoreResults = (response.next != nil)
+                    
+                    print("   Total results now: \(self.flightResults.count)")
+                    print("   Has more results: \(self.hasMoreResults)")
+                    print("   Filter state reset: isFilteredResults = \(self.isFilteredResults)")
+                    
+                    // Start continuous polling if cache not complete
+                    if !self.isCacheComplete && self.shouldContinuouslyPoll {
+                        self.startContinuousPolling()
+                    }
+                    
+                case .failure(let error):
+                    print("\n❌ ===== CLEAR FILTERS ERROR DEBUG =====")
+                    print("❌ Clear filters poll failed: \(error)")
+                    print("   Search ID: \(searchId)")
+                    print("   Error type: \(type(of: error))")
+                    print("   Error description: \(error.localizedDescription)")
+                    print("❌ ===== END CLEAR FILTERS ERROR DEBUG =====\n")
+                    
+                    self.errorMessage = "Failed to clear filters: \(error.localizedDescription)"
+                    self.flightResults = []
+                    self.hasMoreResults = false
+                    self.nextPageURL = nil
+                    
+                    print("🔄 Keeping filter state reset despite error")
+                }
+            }
+        }
+    }
+    
+    // ✅ ADDED: Enhanced check if filters are currently active
+    func hasActiveFilters() -> Bool {
+        return isFilteredResults && currentFilterRequest.hasFilters()
+    }
+    
+    // ✅ ADDED: Get summary of active filters
+    func getActiveFiltersSummary() -> String {
+        guard hasActiveFilters() else {
+            return "No filters active"
+        }
+        
+        var summary: [String] = []
+        
+        if let stops = currentFilterRequest.stop_count_max {
+            let stopsText = stops == 0 ? "Direct only" : "≤ \(stops) stops"
+            summary.append(stopsText)
+        }
+        
+        if let duration = currentFilterRequest.duration_max {
+            summary.append("≤ \(duration/60)h")
+        }
+        
+        if let priceMin = currentFilterRequest.price_min {
+            summary.append("≥ ₹\(priceMin)")
+        }
+        
+        if let priceMax = currentFilterRequest.price_max {
+            summary.append("≤ ₹\(priceMax)")
+        }
+        
+        if let airlines = currentFilterRequest.iata_codes_include, !airlines.isEmpty {
+            summary.append("\(airlines.count) airlines")
+        }
+        
+        if let sortBy = currentFilterRequest.sort_by {
+            summary.append("Sort: \(sortBy)")
+        }
+        
+        if let timeRanges = currentFilterRequest.arrival_departure_ranges, !timeRanges.isEmpty {
+            summary.append("Time filters")
+        }
+        
+        return summary.joined(separator: ", ")
+    }
+    
+    func resetFilterState() {
+        print("\n🔄 ===== RESET FILTER STATE =====")
+        print("🔄 Resetting filter state in ResultViewModel")
+        print("   Previous state: isFilteredResults = \(isFilteredResults)")
+        print("   Previous request had filters: \(currentFilterRequest.hasFilters())")
+        
+        currentFilterRequest = PollRequest()
+        isFilteredResults = false
+        
+        print("   New state: isFilteredResults = \(isFilteredResults)")
+        print("   New request has filters: \(currentFilterRequest.hasFilters())")
+        print("🔄 ===== END RESET FILTER STATE =====\n")
+    }
     
     func pollFlights(searchId: String) {
         guard !searchId.isEmpty else {
@@ -71,16 +239,19 @@ class ResultViewModel: ObservableObject {
     }
     
     private func resetPagination() {
-        currentPage = 1
         hasMoreResults = true
         totalResultsCount = 0
-        isCacheComplete = false
+        self.isCacheComplete = false
         isLoadingMore = false
         totalPollCount = 0
         pollStartTime = Date()
         currentRetries = 0
         shouldContinuouslyPoll = false
         nextPageURL = nil
+        
+        // ✅ NEW: Reset final poll tracking
+        hasFinalPolled = false
+        isFinalPolling = false
         
         // Reset ads loading state for new search
         hasLoadedAds = false
@@ -103,14 +274,12 @@ class ResultViewModel: ObservableObject {
         // ✅ CRITICAL FIX: Use current filter state instead of empty request
         let requestToUse = isFilteredResults ? currentFilterRequest : PollRequest()
         
-        print("📄 Loading initial results - page: \(currentPage), limit: \(initialPageSize) (poll #\(totalPollCount))")
         print("   ✅ Using filter request: \(requestToUse.hasFilters())")
         print("   ✅ Using INITIAL page size: \(initialPageSize) results")
         
         pollApi.pollFlights(
             searchId: searchId,
             request: requestToUse,
-            page: currentPage,
             limit: initialPageSize
         ) { [weak self] result in
             DispatchQueue.main.async {
@@ -130,7 +299,7 @@ class ResultViewModel: ObservableObject {
     private func handleInitialPollSuccess(_ response: PollResponse) {
         pollResponse = response
         totalResultsCount = response.count
-        isCacheComplete = response.cache
+        self.isCacheComplete = response.cache
         
         // Store next page URL
         nextPageURL = response.next
@@ -157,7 +326,6 @@ class ResultViewModel: ObservableObject {
             // We have results or max retries reached
             isLoading = false
             flightResults = response.results
-            currentPage = 2 // Next page will be 2 (since we just loaded page 1)
             
             // Check next URL instead of count comparison
             hasMoreResults = (response.next != nil)
@@ -226,7 +394,7 @@ class ResultViewModel: ObservableObject {
         }
     }
     
-    // ✅ UPDATED: Check for cache updates using current filter state
+    // ✅ UPDATED: Check for cache updates and trigger final poll when complete
     private func checkForCacheUpdates(searchId: String) {
         guard totalPollCount < maxTotalPolls else {
             print("⚠️ Reached maximum poll limit for cache updates")
@@ -266,8 +434,12 @@ class ResultViewModel: ObservableObject {
                     // Update hasMoreResults based on next URL
                     self.hasMoreResults = (response.next != nil)
                     
-                    // Continue polling if cache is still not complete
-                    if !response.cache && self.shouldContinuouslyPoll {
+                    // ✅ NEW: Trigger final comprehensive poll when cache becomes complete
+                    if !previousCacheStatus && response.cache && !self.hasFinalPolled {
+                        print("🏁 Cache just became complete! Starting final comprehensive poll...")
+                        self.performFinalComprehensivePoll(searchId: searchId)
+                    } else if !response.cache && self.shouldContinuouslyPoll {
+                        // Continue polling if cache is still not complete
                         self.startContinuousPolling()
                     }
                     
@@ -282,23 +454,116 @@ class ResultViewModel: ObservableObject {
         }
     }
     
-    // ✅ CRITICAL FIX: Load more results method maintaining filter state
+    // ✅ NEW: Handle final poll results - merge intelligently without disrupting UX
+    private func handleFinalPollSuccess(_ response: PollResponse) {
+        print("🎯 Final comprehensive poll completed!")
+        print("   Received \(response.results.count) flights in final poll")
+        print("   Previous count: \(flightResults.count)")
+        print("   API total count: \(response.count)")
+        
+        // Update the definitive metadata
+        totalResultsCount = response.count
+        isCacheComplete = response.cache
+        nextPageURL = response.next
+        hasMoreResults = (response.next != nil)
+        
+        // ✅ Smart merge: Add any missing flights without disrupting user's scroll position
+        let currentFlightIds = Set(flightResults.map { $0.id })
+        let newFlights = response.results.filter { !currentFlightIds.contains($0.id) }
+        
+        if !newFlights.isEmpty {
+            print("🆕 Found \(newFlights.count) new flights in final poll - adding silently")
+            
+            // Add new flights to the end to maintain user's current view
+            flightResults.append(contentsOf: newFlights)
+            
+            // Sort by price or relevance to maintain quality (optional)
+            flightResults.sort { flight1, flight2 in
+                // Sort by price, but maintain best/cheapest/fastest at top
+                if flight1.is_best && !flight2.is_best { return true }
+                if flight2.is_best && !flight1.is_best { return false }
+                if flight1.is_cheapest && !flight2.is_cheapest { return true }
+                if flight2.is_cheapest && !flight1.is_cheapest { return false }
+                if flight1.is_fastest && !flight2.is_fastest { return true }
+                if flight2.is_fastest && !flight1.is_fastest { return false }
+                return flight1.min_price < flight2.min_price
+            }
+            
+            print("✅ Silently added \(newFlights.count) flights. Total now: \(flightResults.count)")
+        } else {
+            print("✅ No new flights found - results were already complete")
+        }
+        
+        // ✅ Handle potential discrepancies in total count
+        if flightResults.count < totalResultsCount && hasMoreResults {
+            print("📊 Results count (\(flightResults.count)) < total (\(totalResultsCount))")
+            print("   Pagination still available for remaining flights")
+        } else if flightResults.count >= totalResultsCount {
+            print("🏁 All flights loaded! (\(flightResults.count)/\(totalResultsCount))")
+            hasMoreResults = false
+            nextPageURL = nil
+        }
+        
+        print("🎯 Final poll integration complete - user experience maintained")
+    }
+    
+    // ✅ NEW: Perform final comprehensive poll after cache complete to ensure no missing results
+    private func performFinalComprehensivePoll(searchId: String) {
+        guard !hasFinalPolled && !isFinalPolling else {
+            print("🚫 Final poll already completed or in progress")
+            return
+        }
+        
+        guard !isFilteredResults else {
+                print("🚫 Skipping final poll - filters are active")
+                return
+            }
+        
+        isFinalPolling = true
+        hasFinalPolled = true
+        
+        print("🎯 Starting final comprehensive poll after cache complete...")
+        print("   Current results: \(flightResults.count)")
+        print("   Expected total: \(totalResultsCount)")
+        
+        let requestToUse = isFilteredResults ? currentFilterRequest : PollRequest()
+        
+        // Poll from page 1 with a larger limit to get comprehensive results
+        pollApi.pollFlights(
+            searchId: searchId,
+            request: requestToUse,
+            page: 1,
+            limit: max(100, totalResultsCount) // Use larger limit to capture all results
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                self.isFinalPolling = false
+                
+                switch result {
+                case .success(let response):
+                    self.handleFinalPollSuccess(response)
+                    
+                case .failure(let error):
+                    print("❌ Final comprehensive poll failed: \(error)")
+                    // Don't treat this as a critical error - user still has the previous results
+                    print("   User experience maintained with existing \(self.flightResults.count) results")
+                }
+            }
+        }
+    }
+    
+    // ✅ Fixed implementation using next URLs
     func loadMoreResults() {
         guard let searchId = searchId else {
             print("🚫 Cannot load more: no searchId")
             return
         }
         
-        // Safety check to prevent infinite polling
-        guard totalPollCount < maxTotalPolls else {
-            print("⚠️ Reached maximum poll limit (\(maxTotalPolls)), stopping pagination")
+        // ✅ NEW: Check if we have a next URL to use
+        guard let nextURL = nextPageURL else {
+            print("🚫 Cannot load more: no next URL available")
             hasMoreResults = false
-            return
-        }
-        
-        // Check if next page is available
-        guard hasMoreResults else {
-            print("🚫 Cannot load more: no next page available")
             return
         }
         
@@ -312,23 +577,31 @@ class ResultViewModel: ObservableObject {
         errorMessage = nil
         currentRetries = 0
         
-        // ✅ Use subsequentPageSize for all pagination requests
-        let pageSize = subsequentPageSize
-        
-        print("📄 Loading more results - page: \(currentPage), pageSize: \(pageSize) (poll #\(totalPollCount))")
+        print("\n📄 ===== LOAD MORE WITH FILTERS DEBUG =====")
+        print("📄 Loading more results using next URL: \(nextURL)")
         print("   Current results: \(flightResults.count)/\(totalResultsCount)")
-        print("   Next page URL available: \(nextPageURL != nil)")
-        print("   ✅ Using SUBSEQUENT page size: \(pageSize) results")
-        print("   🔧 Using filtered request: \(isFilteredResults)")
+        print("   Has filters: \(isFilteredResults)")
+        print("   Current filter request: \(currentFilterRequest.hasFilters())")
         
-        // ✅ CRITICAL FIX: Use current filter state instead of empty request
-        let requestToUse = isFilteredResults ? currentFilterRequest : PollRequest()
+        // Debug current filter state
+        if isFilteredResults {
+            print("🔧 Maintaining filter state for pagination:")
+            if let duration = currentFilterRequest.duration_max {
+                print("   ⏱️ Duration: ≤ \(duration) minutes")
+            }
+            if let stops = currentFilterRequest.stop_count_max {
+                print("   🛑 Stops: ≤ \(stops)")
+            }
+            if let airlines = currentFilterRequest.iata_codes_include, !airlines.isEmpty {
+                print("   ✈️ Airlines: \(airlines.joined(separator: ", "))")
+            }
+        }
+        print("📄 ===== END LOAD MORE DEBUG =====\n")
         
-        pollApi.pollFlights(
-            searchId: searchId,
-            request: requestToUse, // ✅ This maintains filter state
-            page: currentPage,
-            limit: pageSize
+        // ✅ Use the next URL instead of manual pagination
+        pollApi.pollFlightsWithURL(
+            nextURL: nextURL,
+            request: currentFilterRequest // ✅ Pass current filters
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -338,6 +611,12 @@ class ResultViewModel: ObservableObject {
                     self.handleLoadMoreSuccess(response)
                     
                 case .failure(let error):
+                    print("\n❌ ===== LOAD MORE ERROR DEBUG =====")
+                    print("❌ Load more failed: \(error)")
+                    print("   URL: \(nextURL)")
+                    print("   Had filters: \(self.isFilteredResults)")
+                    print("❌ ===== END LOAD MORE ERROR DEBUG =====\n")
+                    
                     self.handlePollFailure(error, isInitial: false, searchId: searchId)
                 }
             }
@@ -349,17 +628,16 @@ class ResultViewModel: ObservableObject {
         
         // Update cache status and total count
         let previousTotal = totalResultsCount
-        isCacheComplete = response.cache
+        self.isCacheComplete = response.cache
         totalResultsCount = response.count
         
-        // Update next page URL
+        // ✅ Update next page URL from response
         nextPageURL = response.next
         
         print("✅ Load more successful!")
         print("   New results count: \(response.results.count)")
         print("   Total count updated: \(previousTotal) → \(totalResultsCount)")
         print("   Next page available: \(response.next != nil)")
-        print("   ✅ Added \(response.results.count) results using page size: \(subsequentPageSize)")
         
         // Append new results to the existing results (avoid duplicates)
         let newResults = response.results.filter { newResult in
@@ -369,9 +647,8 @@ class ResultViewModel: ObservableObject {
         }
         
         flightResults.append(contentsOf: newResults)
-        currentPage += 1 // Increment page for the next request
         
-        // Check next URL to determine if more results available
+        // ✅ Check next URL to determine if more results available
         hasMoreResults = (response.next != nil)
         
         print("   Total results in list: \(flightResults.count)")
@@ -411,15 +688,57 @@ class ResultViewModel: ObservableObject {
             return
         }
         
-        print("🔧 Applying filters with searchId: \(searchId)")
-        print("   Has filters: \(request.hasFilters())")
+        // ✅ ENHANCED: Detailed filter debug logging
+        print("\n🔧 ===== APPLYING FILTERS DEBUG =====")
+        print("🔍 Filter Request Analysis:")
+        print("   Search ID: \(searchId)")
+        print("   Has Filters: \(request.hasFilters())")
+        print("   Previous Filter State: \(isFilteredResults)")
+        
+        // Log each filter type
+        if let duration = request.duration_max {
+            print("   ⏱️ Duration: ≤ \(duration) minutes (\(duration/60)h \(duration%60)m)")
+        }
+        if let stops = request.stop_count_max {
+            let stopText = stops == 0 ? "Direct only" : "≤ \(stops) stops"
+            print("   🛑 Stops: \(stopText)")
+        }
+        if let priceMin = request.price_min {
+            print("   💰 Price Min: ≥ ₹\(priceMin)")
+        }
+        if let priceMax = request.price_max {
+            print("   💰 Price Max: ≤ ₹\(priceMax)")
+        }
+        if let airlines = request.iata_codes_include, !airlines.isEmpty {
+            print("   ✈️ Include Airlines: \(airlines.joined(separator: ", "))")
+        }
+        if let excludeAirlines = request.iata_codes_exclude, !excludeAirlines.isEmpty {
+            print("   🚫 Exclude Airlines: \(excludeAirlines.joined(separator: ", "))")
+        }
+        if let sortBy = request.sort_by {
+            let sortOrder = request.sort_order ?? "asc"
+            print("   📊 Sort: \(sortBy) (\(sortOrder))")
+        }
+        if let timeRanges = request.arrival_departure_ranges, !timeRanges.isEmpty {
+            print("   🕐 Time Filters:")
+            for (index, range) in timeRanges.enumerated() {
+                let depStart = minutesToTimeString(range.departure.min)
+                let depEnd = minutesToTimeString(range.departure.max)
+                print("     Leg \(index + 1): \(depStart) - \(depEnd)")
+            }
+        }
         
         // ✅ CRITICAL FIX: Store filter state for pagination
         currentFilterRequest = request
         isFilteredResults = request.hasFilters()
         
+        print("🔧 Filter State Updated:")
+        print("   currentFilterRequest stored: ✓")
+        print("   isFilteredResults: \(isFilteredResults)")
+        
         // Stop continuous polling when applying filters
         shouldContinuouslyPoll = false
+        print("   shouldContinuouslyPoll: \(shouldContinuouslyPoll)")
         
         // Reset pagination when applying filters
         resetPagination()
@@ -433,11 +752,11 @@ class ResultViewModel: ObservableObject {
         print("📡 Making filtered poll request (poll #\(totalPollCount))")
         print("   ✅ Filter request will use INITIAL page size: \(initialPageSize)")
         print("   🔧 Storing filter state for future pagination")
+        print("🔧 ===== END APPLYING FILTERS DEBUG =====\n")
         
         pollApi.pollFlights(
             searchId: searchId,
             request: request,
-            page: currentPage,
             limit: initialPageSize
         ) { [weak self] result in
             DispatchQueue.main.async {
@@ -447,6 +766,7 @@ class ResultViewModel: ObservableObject {
                 
                 switch result {
                 case .success(let response):
+                    print("\n✅ ===== FILTER RESULTS DEBUG =====")
                     print("✅ Filter poll successful!")
                     print("   Results found: \(response.results.count)")
                     print("   Total available: \(response.count)")
@@ -454,9 +774,21 @@ class ResultViewModel: ObservableObject {
                     print("   Next page available: \(response.next != nil)")
                     print("   ✅ Filtered results loaded with INITIAL page size: \(self.initialPageSize)")
                     
+                    // Log first few results for verification
+                    if !response.results.isEmpty {
+                        print("📋 Sample Results (first 3):")
+                        for (index, flight) in response.results.prefix(3).enumerated() {
+                            if let firstLeg = flight.legs.first {
+                                print("   \(index + 1). \(firstLeg.originCode) → \(firstLeg.destinationCode)")
+                                print("      Price: \(flight.formattedPrice), Duration: \(flight.formattedDuration)")
+                                print("      Stops: \(firstLeg.stopsText)")
+                            }
+                        }
+                    }
+                    print("✅ ===== END FILTER RESULTS DEBUG =====\n")
+                    
                     self.pollResponse = response
                     self.flightResults = response.results
-                    self.currentPage = 2 // Next page will be 2
                     self.totalResultsCount = response.count
                     self.isCacheComplete = response.cache
                     
@@ -474,7 +806,18 @@ class ResultViewModel: ObservableObject {
                     // User can manually load more if needed
                     
                 case .failure(let error):
+                    print("\n❌ ===== FILTER ERROR DEBUG =====")
                     print("❌ Filter poll failed: \(error)")
+                    print("   Search ID: \(searchId)")
+                    print("   Had filters: \(request.hasFilters())")
+                    if let afError = error as? AFError {
+                        print("   AF Error: \(afError.localizedDescription)")
+                        if let underlyingError = afError.underlyingError {
+                            print("   Underlying: \(underlyingError)")
+                        }
+                    }
+                    print("❌ ===== END FILTER ERROR DEBUG =====\n")
+                    
                     self.errorMessage = "Failed to apply filters: \(error.localizedDescription)"
                     self.flightResults = []
                     self.hasMoreResults = false
@@ -483,9 +826,18 @@ class ResultViewModel: ObservableObject {
                     // ✅ Reset filter state on failure
                     self.currentFilterRequest = PollRequest()
                     self.isFilteredResults = false
+                    
+                    print("🔄 Filter state reset due to error")
                 }
             }
         }
+    }
+    
+    // ✅ Helper function to convert minutes to time string
+    private func minutesToTimeString(_ minutes: Int) -> String {
+        let hours = minutes / 60
+        let mins = minutes % 60
+        return String(format: "%02d:%02d", hours, mins)
     }
     
     // Check if we should load more results based on scroll position
@@ -525,8 +877,6 @@ class ResultViewModel: ObservableObject {
         shouldContinuouslyPoll = false
         print("🛑 Polling stopped")
     }
-    
-    
     
     // Load ads for search - integrate with existing flight search
     func loadAdsForSearch(searchParameters: SearchParameters) {
