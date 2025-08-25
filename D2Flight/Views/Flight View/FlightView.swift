@@ -229,10 +229,12 @@ struct FlightView: View {
                     .background(
                         Group {
                             if isOneWay {
-                                Color("Violet")
+                                RoundedRectangle(cornerRadius: 100)
+                                           .fill(Color("Violet"))
                                     .matchedGeometryEffect(id: "tab", in: animationNamespace)
                             } else {
-                                Color("Violet").opacity(0.15)
+                                RoundedRectangle(cornerRadius: 100)
+                                    .fill(Color("Violet").opacity(0.15))
                             }
                         }
                     )
@@ -248,10 +250,12 @@ struct FlightView: View {
                     .background(
                         Group {
                             if !isOneWay {
-                                Color("Violet")
+                                RoundedRectangle(cornerRadius: 100)
+                                            .fill(Color("Violet"))
                                     .matchedGeometryEffect(id: "tab", in: animationNamespace)
                             } else {
-                                Color("Violet").opacity(0.15)
+                                RoundedRectangle(cornerRadius: 100)
+                                            .fill(Color("Violet").opacity(0.15))
                             }
                         }
                     )

@@ -77,10 +77,12 @@ struct RentalView: View {
                                     .background(
                                         Group {
                                             if isSameDropOff {
-                                                Color("Violet")
+                                                RoundedRectangle(cornerRadius: 100)
+                                                            .fill(Color("Violet"))
                                                     .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
                                             } else {
-                                                Color("Violet").opacity(0.15)
+                                                RoundedRectangle(cornerRadius: 100)
+                                                            .fill(Color("Violet").opacity(0.15))
                                             }
                                         }
                                     )
@@ -107,10 +109,12 @@ struct RentalView: View {
                                     .background(
                                         Group {
                                             if !isSameDropOff {
-                                                Color("Violet")
+                                                RoundedRectangle(cornerRadius: 100)
+                                                            .fill(Color("Violet"))
                                                     .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
                                             } else {
-                                                Color("Violet").opacity(0.15)
+                                                RoundedRectangle(cornerRadius: 100)
+                                                            .fill(Color("Violet").opacity(0.15))
                                             }
                                         }
                                     )
