@@ -86,13 +86,13 @@ struct SearchCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 6) {
             // Location Input
             locationSection
             
             // Enhanced Date Section with Smooth Animations
             VStack(spacing: 0) {
-                HStack(spacing: 10) {
+                HStack(spacing: 6) {
                     // Departure Date - Always visible with stable identity
                     dateView(
                         label: formatSelectedDate(for: .departure),

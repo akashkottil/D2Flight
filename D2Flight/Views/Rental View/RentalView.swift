@@ -42,7 +42,7 @@ struct RentalView: View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 6) {
                         // Header
                         HStack {
                             Image("HomeLogo")
@@ -119,16 +119,17 @@ struct RentalView: View {
                         }
                         .padding(.vertical, 10)
                         
+                        
                         // Location Input Section
                         locationSection
                         
-                        HStack(spacing: 10) {
+                        
                             dateTimeView(
                                 icon: "CalenderIcon",
                                 title: isSameDropOff ? "pick-up.same.drop-off".localized : "pick-up.drop-off".localized
                             )
                             .id("datetime_selector")
-                        }
+                        
                         
                         // Search Rentals Button with validation
                         PrimaryButton(
@@ -144,7 +145,7 @@ struct RentalView: View {
                     }
                     .padding()
                     .padding(.top, 50)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 10)
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
                     

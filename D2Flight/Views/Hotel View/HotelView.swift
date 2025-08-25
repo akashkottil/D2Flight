@@ -44,7 +44,7 @@ struct HotelView: View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading,spacing: 6) {
                         // Header
                         HStack {
                             Image("HomeLogo")
@@ -112,7 +112,7 @@ struct HotelView: View {
                     }
                     .padding()
                     .padding(.top, 50)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 10)
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
                     
