@@ -279,7 +279,7 @@ struct ResultHeader: View {
                filterViewModel.isPriceFilterActive() // ✅ Include price filter
     }
     
-    private func clearAllFilters() {
+     func clearAllFilters() {
         print("\n🗑️ ===== CLEAR ALL FILTERS =====")
         print("🔄 Clearing all filters and resetting to default state...")
         

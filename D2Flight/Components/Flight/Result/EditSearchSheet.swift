@@ -507,7 +507,11 @@ struct RoundedCorner: Shape {
     }
 }
 
-
+// MARK: - Supporting Types
+enum CalendarDateType {
+    case departure
+    case `return`
+}
 
 #Preview {
     EditSearchSheet(

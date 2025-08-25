@@ -1,11 +1,10 @@
 import Foundation
-
-struct MasonryImage: Identifiable {
+struct MasonryImage: Identifiable, Equatable, Hashable {
     let id = UUID()
     let imageName: String
     let height: CGFloat
     let isRemote: Bool
-    let title: String        // Main title text
-    let subtitle: String?    // Optional subtitle text
-    let iataCode: String     // Airport/City IATA code for API calls
+    let title: String
+    let subtitle: String?
+    let iataCode: String
 }
