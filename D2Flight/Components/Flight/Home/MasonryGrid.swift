@@ -31,7 +31,7 @@ struct MasonryGrid<T: Identifiable, Content: View>: View {
 
         HStack(alignment: .top, spacing: 8) {
             ForEach(0..<columnsData.count, id: \.self) { columnIndex in
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     ForEach(columnsData[columnIndex]) { item in
                         content(item)
                     }

@@ -142,7 +142,7 @@ struct PopularLocationCard: View {
                                 endPoint: .bottom
                             )
                         )
-                        .padding(12)
+                        .padding(8)
                     }
                     .cornerRadius(10)
                     .id("overlay-\(item.imageName)")
