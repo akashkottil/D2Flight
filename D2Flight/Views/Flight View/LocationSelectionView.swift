@@ -86,13 +86,35 @@ struct LocationSelectionView: View {
             Divider()
             
             // Current Selection Display
-            LocationInput(
-                originLocation: $originLocation,
-                destinationLocation: $destinationLocation,
-                isSelectingOrigin: $viewModel.isSelectingOrigin,
-                searchText: $viewModel.searchText,
-                isFromHotel: isFromHotel
-            )
+            Group {
+                if isFromHotel {
+                    LocationInput(
+                        originLocation: $originLocation,
+                        destinationLocation: $destinationLocation,
+                        isSelectingOrigin: $viewModel.isSelectingOrigin,
+                        searchText: $viewModel.searchText,
+                        isFromHotel: true
+                    )
+                } else if isFromRental {
+                    LocationInput(
+                        originLocation: $originLocation,
+                        destinationLocation: $destinationLocation,
+                        isSelectingOrigin: $viewModel.isSelectingOrigin,
+                        searchText: $viewModel.searchText,
+                        isFromRental: true,
+                        isSameDropOff: isSameDropOff
+                    )
+                } else {
+                    // Flight / default
+                    LocationInput(
+                        originLocation: $originLocation,
+                        destinationLocation: $destinationLocation,
+                        isSelectingOrigin: $viewModel.isSelectingOrigin,
+                        searchText: $viewModel.searchText
+                    )
+                }
+            }
+
 
             Divider()
             

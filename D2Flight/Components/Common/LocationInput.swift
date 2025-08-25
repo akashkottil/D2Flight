@@ -87,8 +87,8 @@ struct LocationInput: View {
     // Visibility rules
     private var shouldShowDestination: Bool {
         if isFromHotel { return false }
-        if isFromRental && isSameDropOff { return false }
-        return true
+        if isFromRental && isSameDropOff { return false }   // <- one input for rental same-drop-off
+        return true                                          // <- two inputs otherwise
     }
     
     private var shouldShowSwapButton: Bool {
