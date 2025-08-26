@@ -87,20 +87,27 @@ class PollApi {
             print("🔧 Adding duration_max: \(duration_max)")
         }
         
-        // ✅ Stop count filter - only if user modified it
-        if let stop_count_min = request.stop_count_min {
+        // ✅ CRITICAL FIX: Exact stops filtering
+        if let stop_count_min = request.stop_count_min,
+           let stop_count_max = request.stop_count_max,
+           stop_count_min == stop_count_max {
+            // Exact stops filtering - both min and max are the same
             params["stop_count_min"] = stop_count_min
-            print("🔧 Adding stop_count_min: \(stop_count_min)")
-        }
-
-        if let stop_count_max = request.stop_count_max {
             params["stop_count_max"] = stop_count_max
-            print("🔧 Adding stop_count_max: \(stop_count_max)")
-        }
-
-        // When both min and max are same, it means exact stops
-        if let min = request.stop_count_min, let max = request.stop_count_max, min == max {
-            print("🔧 Filtering for exactly \(min) stops")
+            print("🔧 Adding EXACT stops filter: exactly \(stop_count_min) stops")
+            print("   stop_count_min: \(stop_count_min)")
+            print("   stop_count_max: \(stop_count_max)")
+            print("   This will show ONLY flights with exactly \(stop_count_min) stops")
+        } else {
+            // Fallback to individual min/max if they're different
+            if let stop_count_min = request.stop_count_min {
+                params["stop_count_min"] = stop_count_min
+                print("🔧 Adding stop_count_min: \(stop_count_min)")
+            }
+            if let stop_count_max = request.stop_count_max {
+                params["stop_count_max"] = stop_count_max
+                print("🔧 Adding stop_count_max: \(stop_count_max)")
+            }
         }
         
         // ✅ Time range filters - only if user modified them

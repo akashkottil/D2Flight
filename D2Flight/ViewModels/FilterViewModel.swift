@@ -268,22 +268,22 @@ class FilterViewModel: ObservableObject {
         
         // ✅ Sort options - always apply if not default
         if selectedSortOption != .best {
-            switch selectedSortOption {
-            case .best:
-                request.sort_by = "quality"
-                request.sort_order = "desc"
-            case .cheapest:
-                request.sort_by = "price"
-                request.sort_order = "asc"
-            case .quickest:
-                request.sort_by = "duration"
-                request.sort_order = "asc"
-            case .earliest:
-                request.sort_by = "departure"
-                request.sort_order = "asc"
-            }
-            print("   ✓ Sort: \(request.sort_by!) \(request.sort_order!)")
-        }
+                    switch selectedSortOption {
+                    case .best:
+                        request.sort_by = "quality"
+                        request.sort_order = "desc"
+                    case .cheapest:
+                        request.sort_by = "price"
+                        request.sort_order = "asc"
+                    case .quickest:
+                        request.sort_by = "duration"
+                        request.sort_order = "asc"
+                    case .earliest:
+                        request.sort_by = "departure"
+                        request.sort_order = "asc"
+                    }
+                    print("   ✓ Sort: \(request.sort_by!) \(request.sort_order!)")
+                }
         
         // ✅ Duration filter - only apply if different from default
         if maxDuration < 1440 {
@@ -291,24 +291,20 @@ class FilterViewModel: ObservableObject {
             print("   ✓ Duration: ≤ \(Int(maxDuration)) minutes")
         }
         
-        // ✅ FIXED: Stop count filter - prioritize exact stops filtering
-        if let exactStopsValue = exactStops {
-            // Use exact stops filtering (this is what we want for precise filtering)
-            if exactStopsValue == 0 {
-                request.stop_count_max = 0  // Direct flights only
-                print("   ✓ Direct flights only (0 stops)")
-            } else {
-                // For 1 stop or 2 stops, we need to use a range approach or exact match
-                // Since API might not support stop_count_exact, use creative approach
-                request.stop_count_min = exactStopsValue
-                request.stop_count_max = exactStopsValue
-                print("   ✓ Exactly \(exactStopsValue) stops")
-            }
-        } else if maxStops < 3 {
-            // Fallback to max stops for "any" option
-            request.stop_count_max = maxStops
-            print("   ✓ Max Stops: ≤ \(maxStops)")
-        }
+        if let exactStopsValue = exactStops, isExactStopsFilter {
+                    // Use exact stops filtering for precise control
+                    request.stop_count_min = exactStopsValue
+                    request.stop_count_max = exactStopsValue
+                    print("   ✅ EXACT Stops Filter: EXACTLY \(exactStopsValue) stops")
+                    print("     stop_count_min: \(exactStopsValue)")
+                    print("     stop_count_max: \(exactStopsValue)")
+                } else if maxStops < 3 {
+                    // Fallback to max stops only for "any" option or legacy support
+                    request.stop_count_max = maxStops
+                    print("   ✓ Max Stops (fallback): ≤ \(maxStops)")
+                }
+        
+        
         // ✅ Time range filters
         var timeRanges: [ArrivalDepartureRange] = []
         
