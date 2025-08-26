@@ -410,4 +410,39 @@ class FilterViewModel: ObservableObject {
                maxStops < 3 ||
                isPriceFilterActive()
     }
+    
+    func getLocalizedAirlineFilterDisplayText() -> String {
+        if selectedAirlines.isEmpty {
+            return "airlines".localized
+        } else if selectedAirlines.count == 1,
+                  let airline = getAirline(by: selectedAirlines.first!) {
+            return airline.name
+        } else {
+            return "\(selectedAirlines.count) \("airlines".localized)"
+        }
+    }
+
+    /// Get localized price filter display text
+    func getLocalizedPriceFilterDisplayText() -> String {
+        if isPriceFilterActive() {
+            return "₹\(formatPriceValue(priceRange.lowerBound)) - ₹\(formatPriceValue(priceRange.upperBound))"
+        } else {
+            return "price".localized
+        }
+    }
+}
+
+extension SortOption {
+    var localizedDisplayName: String {
+        switch self {
+        case .best:
+            return "best".localized
+        case .cheapest:
+            return "cheapest".localized
+        case .quickest:
+            return "quickest".localized
+        case .earliest:
+            return "earliest".localized
+        }
+    }
 }

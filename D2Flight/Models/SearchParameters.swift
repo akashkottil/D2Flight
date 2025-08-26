@@ -1,5 +1,8 @@
+// FILE: D2Flight/Models/SearchParameters.swift (CREATE THIS FILE)
+
 import Foundation
 
+// MARK: - SearchParameters Model
 struct SearchParameters {
     let originCode: String
     let destinationCode: String
@@ -12,53 +15,44 @@ struct SearchParameters {
     let children: Int
     let infants: Int
     let selectedClass: TravelClass
-    
-    // Computed properties for formatted display
+}
+
+// MARK: - SearchParameters Localized Extensions
+extension SearchParameters {
+    /// Returns localized formatted travel date
     var formattedTravelDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        
         if isRoundTrip, let returnDate = returnDate {
-            return "\(formatter.string(from: departureDate)) - \(formatter.string(from: returnDate))"
+            let departureString = LocalizedDateFormatter.formatShortDate(departureDate)
+            let returnString = LocalizedDateFormatter.formatShortDate(returnDate)
+            return "\(departureString) - \(returnString)"
         } else {
-            return formatter.string(from: departureDate)
+            return LocalizedDateFormatter.formatShortDate(departureDate)
         }
     }
     
+    /// Returns localized formatted traveler information
     var formattedTravelerInfo: String {
         let totalTravelers = adults + children + infants
-        let travelerText = totalTravelers == 1 ? "Traveler" : "Travelers"
-        return "\(totalTravelers) \(travelerText), \(selectedClass.displayName)"
+        let travelerText = totalTravelers == 1 ?
+            "traveller".localized :
+            "travellers".localized
+        return "\(totalTravelers) \(travelerText), \(selectedClass.localizedDisplayName)"
     }
-    
-    var routeDisplayText: String {
-        return "\(originCode) to \(destinationCode)"
-    }
-    
-    // Initialize with default values for preview/testing
-    init(
-        originCode: String = "",
-        destinationCode: String = "",
-        originName: String = "",
-        destinationName: String = "",
-        isRoundTrip: Bool = false,
-        departureDate: Date = Date(),
-        returnDate: Date? = nil,
-        adults: Int = 1,
-        children: Int = 0,
-        infants: Int = 0,
-        selectedClass: TravelClass = .economy
-    ) {
-        self.originCode = originCode
-        self.destinationCode = destinationCode
-        self.originName = originName
-        self.destinationName = destinationName
-        self.isRoundTrip = isRoundTrip
-        self.departureDate = departureDate
-        self.returnDate = returnDate
-        self.adults = adults
-        self.children = children
-        self.infants = infants
-        self.selectedClass = selectedClass
+}
+
+// MARK: - TravelClass Localized Extension
+extension TravelClass {
+    /// Returns localized display name for travel class
+    var localizedDisplayName: String {
+        switch self {
+        case .economy:
+            return "economy".localized
+        case .premiumEconomy:
+            return "premium.economy".localized
+        case .business:
+            return "business".localized
+        case .firstClass:
+            return "first.class".localized
+        }
     }
 }

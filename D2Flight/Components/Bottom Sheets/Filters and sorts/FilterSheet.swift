@@ -182,6 +182,18 @@ struct UnifiedFilterSheet: View {
             }
         }
     }
+    private func getLocalizedStopText(_ stopCount: Int) -> String {
+        switch stopCount {
+        case 0:
+            return "non.stop".localized
+        case 1:
+            return "1.stop".localized
+        case 2:
+            return "count.stops".localized.replacingOccurrences(of: "{count}", with: "2")
+        default:
+            return "any".localized
+        }
+    }
     
     // ✅ UPDATED: Single timesContent with departure AND arrival time filters
     private var timesContent: some View {
