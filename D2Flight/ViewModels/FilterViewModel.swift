@@ -70,6 +70,10 @@ class FilterViewModel: ObservableObject {
     @Published private(set) var hasAPIDataLoaded: Bool = false
     @Published private(set) var userHasModifiedPrice: Bool = false
     
+    // MARK: - NEW: Exact stops filtering
+    @Published var exactStops: Int? = nil
+    @Published var isExactStopsFilter: Bool = false
+    
     // Trip type for conditional filtering
     var isRoundTrip: Bool = false
     
@@ -287,12 +291,24 @@ class FilterViewModel: ObservableObject {
             print("   ✓ Duration: ≤ \(Int(maxDuration)) minutes")
         }
         
-        // ✅ Stop count filter - only apply if different from default
-        if maxStops < 3 {
+        // ✅ FIXED: Stop count filter - prioritize exact stops filtering
+        if let exactStopsValue = exactStops {
+            // Use exact stops filtering (this is what we want for precise filtering)
+            if exactStopsValue == 0 {
+                request.stop_count_max = 0  // Direct flights only
+                print("   ✓ Direct flights only (0 stops)")
+            } else {
+                // For 1 stop or 2 stops, we need to use a range approach or exact match
+                // Since API might not support stop_count_exact, use creative approach
+                request.stop_count_min = exactStopsValue
+                request.stop_count_max = exactStopsValue
+                print("   ✓ Exactly \(exactStopsValue) stops")
+            }
+        } else if maxStops < 3 {
+            // Fallback to max stops for "any" option
             request.stop_count_max = maxStops
-            print("   ✓ Stops: ≤ \(maxStops)")
+            print("   ✓ Max Stops: ≤ \(maxStops)")
         }
-        
         // ✅ Time range filters
         var timeRanges: [ArrivalDepartureRange] = []
         
@@ -391,7 +407,8 @@ class FilterViewModel: ObservableObject {
         selectedAirlines.removeAll()
         excludedAirlines.removeAll()
         maxStops = 3
-        
+        exactStops = nil
+        isExactStopsFilter = false
         // Reset price filter properly
         resetPriceFilter()
         

@@ -88,9 +88,19 @@ class PollApi {
         }
         
         // ✅ Stop count filter - only if user modified it
+        if let stop_count_min = request.stop_count_min {
+            params["stop_count_min"] = stop_count_min
+            print("🔧 Adding stop_count_min: \(stop_count_min)")
+        }
+
         if let stop_count_max = request.stop_count_max {
             params["stop_count_max"] = stop_count_max
             print("🔧 Adding stop_count_max: \(stop_count_max)")
+        }
+
+        // When both min and max are same, it means exact stops
+        if let min = request.stop_count_min, let max = request.stop_count_max, min == max {
+            print("🔧 Filtering for exactly \(min) stops")
         }
         
         // ✅ Time range filters - only if user modified them

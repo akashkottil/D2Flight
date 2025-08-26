@@ -25,7 +25,9 @@ extension FilterViewModel {
         selectedAirlines.removeAll()
         excludedAirlines.removeAll()
         maxStops = 3  // ✅ Reset to "Any" (3 = any stops)
-        
+        clearFilters
+        exactStops = nil
+        isExactStopsFilter = false
         // Reset price range to API values if available
         if hasAPIDataLoaded {
             priceRange = originalAPIMinPrice...originalAPIMaxPrice

@@ -31,8 +31,17 @@ enum StopsOption: CaseIterable {
         switch self {
         case .any: return "show.all.flights".localized
         case .direct: return "non.stop.flights.only".localized
-        case .oneStop: return "1.stopover".localized
-        case .twoStops: return "2.stopovers".localized
+        case .oneStop: return "exactly.1.stopover".localized  // Changed subtitle
+        case .twoStops: return "exactly.2.stopovers".localized // Changed subtitle
+        }
+    }
+    
+    var exactStops: Int? {
+        switch self {
+        case .any: return nil
+        case .direct: return 0
+        case .oneStop: return 1
+        case .twoStops: return 2
         }
     }
     
@@ -45,7 +54,17 @@ enum StopsOption: CaseIterable {
         }
     }
     
-    // Helper to convert from maxStops value back to option
+    // Helper to convert from exactStops value back to option
+    static func fromExactStops(_ stops: Int) -> StopsOption {
+        switch stops {
+        case 0: return .direct
+        case 1: return .oneStop
+        case 2: return .twoStops
+        default: return .any
+        }
+    }
+    
+    // Keep the existing helper for backward compatibility
     static func fromMaxStops(_ maxStops: Int) -> StopsOption {
         switch maxStops {
         case 0: return .direct
@@ -177,9 +196,21 @@ struct UnifiedFilterSheet: View {
                     title: option.title,
                     subtitle: option.subtitle,
                     option: option,
-                    isSelected: StopsOption.fromMaxStops(filterViewModel.maxStops) == option
+                    isSelected: getCurrentStopsSelection() == option
                 )
             }
+        }
+    }
+
+    // Add this helper function to determine current selection
+    private func getCurrentStopsSelection() -> StopsOption {
+        // ✅ FIXED: Always check exact stops first, then fall back to maxStops
+        if let exactStops = filterViewModel.exactStops {
+            return StopsOption.fromExactStops(exactStops)
+        } else if filterViewModel.maxStops == 3 {
+            return .any
+        } else {
+            return StopsOption.fromMaxStops(filterViewModel.maxStops)
         }
     }
     
@@ -296,16 +327,31 @@ struct UnifiedFilterSheet: View {
     // ✅ NEW: Stops Selection Row (Similar to Sort Selection Row)
     private func stopsSelectionRow(title: String, subtitle: String, option: StopsOption, isSelected: Bool) -> some View {
         Button(action: {
-            // Update the filter view model
-            if let maxStops = option.maxStops {
-                filterViewModel.maxStops = maxStops
-            } else {
-                filterViewModel.maxStops = 3 // Any stops
-            }
-            
-            print("🛑 Stops filter selected: \(title)")
-            print("   Max stops value: \(filterViewModel.maxStops)")
-        }) {
+                // ✅ FIXED: Use exact stops filtering logic
+                switch option {
+                case .any:
+                    filterViewModel.exactStops = nil
+                    filterViewModel.isExactStopsFilter = false
+                    filterViewModel.maxStops = 3 // Keep for backward compatibility
+                case .direct:
+                    filterViewModel.exactStops = 0
+                    filterViewModel.isExactStopsFilter = true
+                    filterViewModel.maxStops = 0
+                case .oneStop:
+                    filterViewModel.exactStops = 1
+                    filterViewModel.isExactStopsFilter = true
+                    filterViewModel.maxStops = 1
+                case .twoStops:
+                    filterViewModel.exactStops = 2
+                    filterViewModel.isExactStopsFilter = true
+                    filterViewModel.maxStops = 2
+                }
+                
+                print("🛑 Stops filter selected: \(title)")
+                print("   Exact stops value: \(filterViewModel.exactStops?.description ?? "nil")")
+                print("   Is exact filter: \(filterViewModel.isExactStopsFilter)")
+                print("   Max stops (fallback): \(filterViewModel.maxStops)")
+            }) {
             VStack(spacing: 0) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
@@ -348,7 +394,7 @@ struct UnifiedFilterSheet: View {
         VStack(spacing: 0) {
             ForEach(SortOption.allCases, id: \.self) { option in
                 sortSelectionRow(
-                    title: option.displayName,
+                    title: option.localizedDisplayName,
                     option: option,
                     isSelected: filterViewModel.selectedSortOption == option
                 )
@@ -361,7 +407,7 @@ struct UnifiedFilterSheet: View {
             filterViewModel.selectedSortOption = option
         }) {
             HStack {
-                Text(title)
+                Text(option.localizedDisplayName)
                     .font(CustomFont.font(.medium, weight: .semibold))
                     .foregroundColor(.black)
                 

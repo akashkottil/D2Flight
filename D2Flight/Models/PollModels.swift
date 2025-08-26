@@ -4,6 +4,8 @@ import Foundation
 struct PollRequest: Codable {
     var duration_max: Int?
     var stop_count_max: Int?
+    var stop_count_min: Int?
+    var stop_count_exact: Int?
     var arrival_departure_ranges: [ArrivalDepartureRange]?
     var iata_codes_exclude: [String]?
     var iata_codes_include: [String]?
@@ -18,6 +20,8 @@ struct PollRequest: Codable {
     init() {
         self.duration_max = nil
         self.stop_count_max = nil
+        self.stop_count_min = nil
+        self.stop_count_exact = nil
         self.arrival_departure_ranges = nil
         self.iata_codes_exclude = nil
         self.iata_codes_include = nil
@@ -33,6 +37,7 @@ struct PollRequest: Codable {
     init(
         duration_max: Int? = nil,
         stop_count_max: Int? = nil,
+        stop_count_min: Int? = nil,
         arrival_departure_ranges: [ArrivalDepartureRange]? = nil,
         iata_codes_exclude: [String]? = nil,
         iata_codes_include: [String]? = nil,
@@ -45,6 +50,7 @@ struct PollRequest: Codable {
     ) {
         self.duration_max = duration_max
         self.stop_count_max = stop_count_max
+        self.stop_count_min = stop_count_min
         self.arrival_departure_ranges = arrival_departure_ranges
         self.iata_codes_exclude = iata_codes_exclude
         self.iata_codes_include = iata_codes_include
@@ -60,6 +66,8 @@ struct PollRequest: Codable {
     func hasFilters() -> Bool {
         let hasDuration = duration_max != nil
         let hasStops = stop_count_max != nil
+        let hasStopsMin = stop_count_min != nil    // ✅ NEW
+        let hasExactStops = stop_count_exact != nil
         let hasTimeRanges = arrival_departure_ranges != nil && !arrival_departure_ranges!.isEmpty
         let hasExcludeAirlines = iata_codes_exclude != nil && !iata_codes_exclude!.isEmpty
         let hasIncludeAirlines = iata_codes_include != nil && !iata_codes_include!.isEmpty

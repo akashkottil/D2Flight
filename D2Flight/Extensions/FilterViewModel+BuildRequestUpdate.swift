@@ -41,9 +41,12 @@ extension FilterViewModel {
         }
         
         // Stop count filter
-        if maxStops < 3 {
+        if isExactStopsFilter && exactStops != nil {
+            request.stop_count_exact = exactStops
+            print("   ✓ Exact Stops: \(exactStops!)")
+        } else if maxStops < 3 {
             request.stop_count_max = maxStops
-            print("   ✓ Stops: ≤ \(maxStops)")
+            print("   ✓ Max Stops: ≤ \(maxStops)")
         }
         
         // Time range filters
