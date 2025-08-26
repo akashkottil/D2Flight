@@ -168,13 +168,13 @@
 "all.count.flights.loaded" = "All {count} flights loaded";
 "count.guests.count.rooms" = "{count} Guest(s), {count} Room(s)";
 "count.travelers.class" = "{count} Traveler(s), {class}";
-"su" = "Sun";
-"mo" = "Mon";
-"tu" = "Tue";
-"we" = "Wed";
-"th" = "Thu";
-"fr" = "Fri";
-"sa" = "Sat";
+"su" = "Su";
+"mo" = "Mo";
+"tu" = "Tu";
+"we" = "We";
+"th" = "Th";
+"fr" = "Fr";
+"sa" = "Sa";
 "by.creating.or.logging.into.an.account.youre.agreeing.with.our.terms.and.conditions.and.privacy.policy" = "By creating or logging into an account you're agreeing with our Terms and conditions and Privacy policy";
 "yes.keep.me.informed.with.the.latest.updates.alerts.and.offers.through.email.and.push.notifications" = "Yes, keep me informed with the latest updates, alerts, and offers through email and push notifications";
 "kochi" = "Kochi";
@@ -424,6 +424,9 @@
 "flight.ads" = "Flight Ads";
 "flight.deals.loaded.successfully" = "Flight deals loaded successfully";
 "flight.details" = "Flight Details";
+"fr" = "fr";
+"fr" = "Fr";
+"fr" = "FR";
 "fr-fr" = "fr-FR";
 "gaming" = "Gaming";
 "gb" = "gb";
@@ -525,7 +528,8 @@
 "min" = "min";
 "minus" = "minus";
 "mmmm.yyyy" = "MMMM yyyy";
-
+"mo" = "Mo";
+"mo" = "MO";
 "mozilla5.0.macintosh.intel.mac.os.x.10_15_7.applewebkit605.1.15.khtml.like.gecko.version14.1.1.safari605.1.15" = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15";
 "mp3" = "mp3";
 "ms" = "ms";
@@ -615,6 +619,8 @@
 "ru" = "RU";
 "ru" = "ru";
 "ru-ru" = "ru-RU";
+"sa" = "Sa";
+"sa" = "SA";
 "salem" = "Salem";
 "scanning.hundreds.of.airlines" = "Scanning hundreds of airlines";
 "scroll" = "scroll";
@@ -665,6 +671,7 @@
 "spice.jet" = "Spice Jet";
 "st" = "ST";
 "stops" = "Stops";
+"su" = "Su";
 "success" = "success";
 "sv" = "SV";
 "sv" = "sv";
@@ -678,7 +685,9 @@
 "taking.off.from.origincode" = "Taking off from \\(originCode)";
 "tap.to.select" = "Tap to select";
 "test" = "TEST";
-
+"th" = "Th";
+"th" = "TH";
+"th" = "th";
 "th-th" = "th-TH";
 "tickets" = "tickets";
 "time" = "Time";
@@ -693,6 +702,7 @@
 "try.again" = "Try Again";
 "try.different.locations" = "Try different locations";
 "try.searching.with.a.different.keyword" = "Try searching with a different keyword";
+"tu" = "Tu";
 "tw" = "TW";
 "ua" = "UA";
 "uk" = "UK";
@@ -718,6 +728,7 @@
 "violet" = "Violet";
 "vistara" = "Vistara";
 "vn" = "VN";
+"we" = "We";
 "wed.17.oct.-.mon.24.oct" = "Wed 17 Oct - Mon 24 Oct";
 "wifi" = "wifi";
 "window.location.hrefss" = "window\\.location(?:\\.href)?\\s*=\\s*[";
@@ -770,3 +781,24 @@
 "dec" = "Dec";
 "stop" = "stop";
 "travellers" = "Travellers";
+"update.search" = "Update Search";
+"airbus.a320.neo" = "Airbus A320 neo";
+"hide.details" = "Hide details";
+"searching.flights" = "searching flights";
+"show.all.flights" = "show all flights";
+"non.stop.flights.only" = "non stop flights only";
+"1.stop" = "1 stop";
+"2.stops" = "2 stops";
+"departure.time.from" = "departure time from";
+"arrival.time.at" = "arrival time at";
+"price.range.info" = "price range info";
+"updating.search" = "updating search";
+"any" = "any";
+"2.stopovers" = "2 stopovers";
+"1.stopover" = "1 stopover";
+"emirates" = "Emirates";
+"indigo" = "IndiGo";
+"oman.air" = "Oman Air";
+"saudia" = "SAUDIA";
+"spicejet" = "SpiceJet";
+"srilankan.airlines" = "SriLankan Airlines";

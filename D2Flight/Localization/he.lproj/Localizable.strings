@@ -141,7 +141,7 @@
 "about.us" = "אודותינו";
 "last.minute.flights" = "טיסות ברגע האחרון";
 "version.1.02" = "גרסה: 1.02";
-"welcome.to.our.flight.price.comparison.app.we.know.that.planning.a.trip.can.be.stressful.especially.when.it.comes.to.finding.the.best.deals.on.flights.thats.where.we.come.in.our.app.makes.it.easy.for.you.to.compare.prices.from.multiple.airlines.so.you.can.find.the.best.option.for.your.budget.and.schedule" = "ברוכים הבאים לאפליקציית השוואת מחירי הטיסה שלנו! אנחנו יודעים שתכנון טיול יכול להיות מלחיץ, במיוחד כשמדובר במציאת הדילים הטובים ביותר בטיסות. זה המקום שבו אנחנו נכנסים לתמונה. האפליקציה שלנו מקלה עליך להשוות מחירים ממספר חברות תעופה, כדי שתוכל למצוא את האפשרות הטובה ביותר עבור התקציב ולוח הזמנים שלך.";
+"welcome.to.our.flight.price.comparison.app.we.know.that.planning.a.trip.can.be.stressful.especially.when.it.comes.to.finding.the.best.deals.on.flights.thats.where.we.come.in.our.app.makes.it.easy.for.you.to.compare.prices.from.multiple.airlines.so.you.can.find.the.best.option.for.your.budget.and.schedule" = "ברוכים הבאים לאפליקציית השוואת מחירי הטיסה שלנו! אנחנו יודעים שתכנון טיול יכול להיות מלחיץ, במיוחד כשמדובר במציאת הדילים הטובים ביותר בטיסות. זה המקום שבו אנחנו נכנסים לתמונה. האפליקציה שלנו מקלה עליך להשוות מחירים ממספר חברות תעופה, כך שתוכל למצוא את האפשרות הטובה ביותר עבור התקציב ולוח הזמנים שלך.";
 "our.team.is.passionate.about.helping.travelers.save.money.and.have.a.great.trip.we.are.constantly.updating.our.app.with.the.latest.deals.and.features.to.make.your.search.even.easier.with.our.user-friendly.interface.and.reliable.price.comparisons.you.can.book.your.next.flight.with.confidence" = "הצוות שלנו נלהב לעזור לנוסעים לחסוך כסף ולעבור טיול נהדר. אנחנו כל הזמן מעדכנים את האפליקציה שלנו עם המבצעים והתכונות העדכניות ביותר כדי להקל על החיפוש שלך אפילו יותר. עם הממשק הידידותי שלנו והשוואת המחירים האמינה, תוכלו להזמין את הטיסה הבאה שלכם בביטחון.";
 "thank.you.for.choosing.our.app.we.hope.you.have.a.wonderful.journey" = "תודה שבחרת באפליקציה שלנו. אנו מקווים שיהיה לך מסע נפלא!";
 "first.name" = "שֵׁם פְּרַטִי";
@@ -155,7 +155,7 @@
 "select.all" = "בחר הכל";
 "stopover" = "עצירת ביניים";
 "flight.leg" = "רגל טיסה";
-"taking.off.from.airport" = "המראה מ{שדה תעופה}";
+"taking.off.from.airport" = "המראה מ{נמל תעופה}";
 "daily.local.taxes.fees" = "מיסים ועמלות יומיים + מקומיים";
 "average.price.is.price" = "המחיר הממוצע הוא {price} ₹";
 "varies" = "משתנה";
@@ -176,7 +176,7 @@
 "fr" = "Fr";
 "sa" = "סא";
 "by.creating.or.logging.into.an.account.youre.agreeing.with.our.terms.and.conditions.and.privacy.policy" = "על ידי יצירה או כניסה לחשבון אתה מסכים לתנאים וההגבלות ולמדיניות הפרטיות שלנו";
-"yes.keep.me.informed.with.the.latest.updates.alerts.and.offers.through.email.and.push.notifications" = "כן, עדכן אותי עם העדכונים, ההתראות וההצעות העדכניים ביותר באמצעות דואר אלקטרוני והודעות דחיפה";
+"yes.keep.me.informed.with.the.latest.updates.alerts.and.offers.through.email.and.push.notifications" = "כן, עדכן אותי עם העדכונים, ההתראות וההצעות האחרונים באמצעות דואר אלקטרוני והתראות דחיפה";
 "kochi" = "קוצ'י";
 "gods.own.country" = "הארץ של אלוהים";
 "sydney" = "סידני";
@@ -254,7 +254,7 @@
 "origincode.-.destinationcode" = "\\(originCode) - \\(destinationCode)";
 "origincode.to.destinationcode" = "\\(originCode) ל-\\(destinationCode)";
 "origincode-destinationcode" = "\\(originCode)-\\(destinationCode)";
-"pickuplocationname.to.dropofflocationname" = "\\(pickUpLocationName) אל \\(dropOffLocationName ??";
+"pickuplocationname.to.dropofflocationname" = "\\(pickUpLocationName) ל-\\(dropOffLocationName ??";
 "stopcount.stops" = "\\(stopCount) עצירות";
 "stringformat" = "\\(מחרוזת(פורמט:";
 "totaltravelers.travelertext.selectedclass.displayname" = "\\(totalTravelers) \\(travelerText), \\(selectedClass.displayName)";
@@ -283,7 +283,7 @@
 "api.calls.viewmodel.totalpollcount" = "קריאות API: \\(viewModel.totalPollCount)";
 "apple" = "תַפּוּחַ";
 "apple" = "תַפּוּחַ";
-"applicationjson" = "application/json";
+"applicationjson" = "אפליקציה/json";
 "apply" = "לִפְנוֹת";
 "applying.changes" = "מחיל שינויים...";
 "ar" = "ar";
@@ -366,7 +366,7 @@
 "direct" = "יָשִׁיר";
 "dk" = "DK";
 "do" = "לַעֲשׂוֹת";
-"drop-off.same.location" = "ירידה (באותו מיקום)";
+"drop-off.same.location" = "ירידה (באותו מקום)";
 "dubai" = "דובאי";
 "dxb" = "DXB";
 "e.dd.mmm" = "E dd MMM";
@@ -399,7 +399,7 @@
 "explore" = "לַחקוֹר";
 "ey" = "EY";
 "failed.to.apply.filters.error.localizeddescription" = "החלת מסננים נכשלה: \\(error.localizedDescription)";
-"failed.to.create.session.please.try.again" = "יצירת הפגישה נכשלה. אנא נסה שוב.";
+"failed.to.create.session.please.try.again" = "יצירת ההפעלה נכשלה. אנא נסה שוב.";
 "failed.to.decode.response" = "פענוח התגובה נכשל";
 "failed.to.delete.account.error.localizeddescription" = "מחיקת החשבון נכשלה: \\(error.localizedDescription)";
 "failed.to.encode.request" = "קידוד הבקשה נכשל";
@@ -408,7 +408,7 @@
 "failed.to.load.countries.error.localizeddescription" = "טעינת מדינות נכשלה: \\(error.localizedDescription)";
 "failed.to.load.currencies.error.localizeddescription" = "טעינת המטבעות נכשלה: \\(error.localizedDescription)";
 "failed.to.prepare.request.data" = "הכנת נתוני הבקשה נכשלה.";
-"failed.to.process.server.response" = "עיבוד תגובת השרת נכשל.";
+"failed.to.process.server.response" = "נכשל בעיבוד תגובת השרת.";
 "favorite.items" = "פריטים אהובים";
 "fbclid" = "fbclid";
 "featured.content" = "תוכן מומלץ";
@@ -473,7 +473,7 @@
 "infant" = "תִינוֹק";
 "inr" = "INR";
 "installed.installdate.formatter.dateformatter" = "מותקן: \\(installDate, פורמט: dateFormatter)";
-"invalid.credentials.provided" = "סופקו אישורים לא חוקיים";
+"invalid.credentials.provided" = "ניתנו אישורים לא חוקיים";
 "invalid.response" = "תגובה לא חוקית";
 "invalid.search.id" = "מזהה חיפוש לא חוקי";
 "invalid.url" = "כתובת אתר לא חוקית";
@@ -613,7 +613,7 @@
 "retry" = "נסה שוב";
 "return" = "לַחֲזוֹר";
 "ro" = "RO";
-"ro" = "רו";
+"ro" = "ro";
 "ro-ro" = "ro-RO";
 "rooms" = "חדרים";
 "ru" = "RU";
@@ -761,7 +761,7 @@
 "november" = "נוֹבֶמבֶּר";
 "december" = "דֵצֶמבֶּר";
 "mon" = "יום שני";
-"tue" = "יום שלישי";
+"tue" = "ג'";
 "wed" = "לְהִתְחַתֵן";
 "thu" = "יום ה'";
 "fri" = "שישי";
@@ -781,3 +781,24 @@
 "dec" = "דצמבר";
 "stop" = "לְהַפְסִיק";
 "travellers" = "מטיילים";
+"update.search" = "עדכן את החיפוש";
+"airbus.a320.neo" = "איירבוס A320 ניאו";
+"hide.details" = "הסתר פרטים";
+"searching.flights" = "חיפוש טיסות";
+"show.all.flights" = "להציג את כל הטיסות";
+"non.stop.flights.only" = "טיסות ללא הפסקה בלבד";
+"1.stop" = "תחנה אחת";
+"2.stops" = "2 תחנות";
+"departure.time.from" = "זמן יציאה מ";
+"arrival.time.at" = "זמן הגעה ב";
+"price.range.info" = "מידע על טווח מחירים";
+"updating.search" = "מעדכן את החיפוש";
+"any" = "כֹּל";
+"2.stopovers" = "2 עצירות ביניים";
+"1.stopover" = "תחנת ביניים אחת";
+"emirates" = "אמירות";
+"indigo" = "אִינדִיגוֹ";
+"oman.air" = "עומאן אייר";
+"saudia" = "סעודיה";
+"spicejet" = "SpiceJet";
+"srilankan.airlines" = "סרילנקן איירליינס";

@@ -76,7 +76,7 @@
 "continue.with.apple" = "ดำเนินการต่อด้วย Apple";
 "sign.in.now" = "ลงชื่อเข้าใช้ตอนนี้";
 "signing.in" = "กำลังลงชื่อเข้าใช้...";
-"more.offers.awaits.you" = "มีข้อเสนอเพิ่มเติมรอคุณอยู่";
+"more.offers.awaits.you" = "ข้อเสนอเพิ่มเติมรอคุณอยู่";
 "sign.up.and.access.to.our.exclusive.deals" = "ลงทะเบียนและเข้าถึงข้อเสนอพิเศษของเรา";
 "account.settings" = "การตั้งค่าบัญชี";
 "region" = "ภูมิภาค";
@@ -238,7 +238,7 @@
 "currency.abbreviation" = "\\(สกุลเงิน) (\\(คำย่อ))";
 "dateformatter.stringfrom.pickupdate.-.dateformatter.stringfrom.dropoffdate" = "\\(dateFormatter.string(จาก: pickUpDate)) - \\(dateFormatter.string(จาก: dropOffDate))";
 "destinationcode.-.origincode" = "\\(รหัสปลายทาง) - \\(รหัสต้นทาง)";
-"firstleg.origincode.firstleg.destinationcode" = "\\(รหัสต้นกำเนิดของ FirstLeg) → \\(รหัสปลายทางของ FirstLeg)";
+"firstleg.origincode.firstleg.destinationcode" = "\\(รหัสต้นกำเนิด firstLeg) → \\(รหัสปลายทาง firstLeg)";
 "firstsegment.airlinename.firstsegment.flightnumber" = "\\(ชื่อสายการบินส่วนแรก) \\(หมายเลขเที่ยวบินส่วนแรก)";
 "flight.providers.count.-.3.more.deal.from.intgetlowestremainingprice" = "\\(flight.providers.count - 3) ข้อเสนอเพิ่มเติมจาก ₹\\(Int(getLowestRemainingPrice()))";
 "formatteddateactualpickup.formatteddateactualdropoff" = "\\(วันที่จัดรูปแบบ(รับสินค้าจริง)) • \\(วันที่จัดรูปแบบ(รับสินค้าจริง))";
@@ -246,7 +246,7 @@
 "formatter.stringfrom.departuredate.-.formatter.stringfrom.returndate" = "\\(formatter.string(จาก: วันที่ออกเดินทาง)) - \\(formatter.string(จาก: วันที่ส่งคืน))";
 "formatter.stringfrom.firstdate.-.returndatestring" = "\\(formatter.string(จาก: firstDate)) - \\(returnDateString)";
 "getappversion.getbuildnumber" = "\\(getAppVersion()) (\\(getBuildNumber()))";
-"gueststext.roomstext" = "\\(ข้อความแขก), \\(ข้อความห้อง)";
+"gueststext.roomstext" = "\\(guestsText), \\(roomsText)";
 "hoursh.minsm" = "\\(ชั่วโมง)ชม. \\(นาที)ม.";
 "hoursh.minutesm" = "\\(ชั่วโมง)ชม. \\(นาที)ม.";
 "intprogress.100" = "\\(Int(ความคืบหน้า * 100))%";
@@ -279,7 +279,7 @@
 "allow" = "อนุญาต";
 "almost.done" = "ใกล้เสร็จแล้ว...";
 "ao" = "เอโอ";
-"api" = "เอพี";
+"api" = "เอพีไอ";
 "api.calls.viewmodel.totalpollcount" = "การเรียก API: \\(viewModel.totalPollCount)";
 "apple" = "แอปเปิล";
 "apple" = "แอปเปิล";
@@ -579,7 +579,7 @@
 "pl" = "พีแอล";
 "pl" = "พีแอล";
 "pl-pl" = "พีแอล-พีแอล";
-"please.select.a.hotel.location" = "กรุณาเลือกสถานที่ตั้งโรงแรม";
+"please.select.a.hotel.location" = "กรุณาเลือกที่ตั้งโรงแรม";
 "please.select.at.least.1.adult" = "กรุณาเลือกผู้ใหญ่อย่างน้อย 1 ท่าน";
 "please.select.at.least.1.room" = "กรุณาเลือกอย่างน้อย 1 ห้อง";
 "please.select.both.departure.and.destination.locations" = "กรุณาเลือกทั้งสถานที่ต้นทางและปลายทาง";
@@ -734,7 +734,7 @@
 "window.location.hrefss" = "หน้าต่าง\\.ตำแหน่ง(?:\\.href)?\\s*=\\s*[";
 "woosh" = "วูบ";
 "xmark" = "เอ็กซ์มาร์ค";
-"ye" = "เย่";
+"ye" = "ใช่";
 "youve.selected.countryname.would.you.like.to.switch.to.getlanguagedisplaynamesuggestedlanguage.or.keep.getlanguagedisplaynamecurrentlanguage" = "คุณเลือก \\(countryName) แล้ว คุณต้องการเปลี่ยนไปใช้ \\(getLanguageDisplayName(suggestedLanguage)) หรือคง \\(getLanguageDisplayName(currentLanguage)) ไว้หรือไม่";
 "your.recent.flight.searches.will.appear.here" = "การค้นหาเที่ยวบินล่าสุดของคุณจะปรากฏที่นี่";
 "yyyy-mm-ddthhmm" = "yyyy-MM-dd'T'HH:mm";
@@ -781,3 +781,24 @@
 "dec" = "ธันวาคม";
 "stop" = "หยุด";
 "travellers" = "นักเดินทาง";
+"update.search" = "อัปเดตการค้นหา";
+"airbus.a320.neo" = "แอร์บัส เอ320 นีโอ";
+"hide.details" = "ซ่อนรายละเอียด";
+"searching.flights" = "การค้นหาเที่ยวบิน";
+"show.all.flights" = "แสดงเที่ยวบินทั้งหมด";
+"non.stop.flights.only" = "เที่ยวบินตรงเท่านั้น";
+"1.stop" = "1 ป้าย";
+"2.stops" = "2 ป้าย";
+"departure.time.from" = "เวลาออกเดินทางจาก";
+"arrival.time.at" = "เวลาที่มาถึง";
+"price.range.info" = "ข้อมูลช่วงราคา";
+"updating.search" = "การอัปเดตการค้นหา";
+"any" = "ใดๆ";
+"2.stopovers" = "แวะพัก 2 จุด";
+"1.stopover" = "แวะพัก 1 จุด";
+"emirates" = "เอมิเรตส์";
+"indigo" = "คราม";
+"oman.air" = "โอมานแอร์";
+"saudia" = "ซาอุดีอาระเบีย";
+"spicejet" = "สไปซ์เจ็ท";
+"srilankan.airlines" = "สายการบินศรีลังกา";

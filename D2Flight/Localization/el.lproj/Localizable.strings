@@ -180,7 +180,7 @@
 "kochi" = "Κότσι";
 "gods.own.country" = "Η χώρα του Θεού";
 "sydney" = "Σίδνεϊ";
-"harbor.city" = "Λιμενική Πόλη";
+"harbor.city" = "Λιμενική πόλη";
 "milan" = "Μιλάνο";
 "fashion.capital" = "Πρωτεύουσα της μόδας";
 "berlin" = "Βερολίνο";
@@ -243,7 +243,7 @@
 "flight.providers.count.-.3.more.deal.from.intgetlowestremainingprice" = "\\(flight.providers.count - 3) ακόμη προσφορά από ₹\\(Int(getLowestRemainingPrice()))";
 "formatteddateactualpickup.formatteddateactualdropoff" = "\\(formattedDate(actualPickUp)) • \\(formattedDate(actualDropOff))";
 "formatter.stringfrom.checkindate.-.formatter.stringfrom.checkoutdate" = "\\(formatter.string(από: checkinDate)) - \\(formatter.string(από: checkoutDate))";
-"formatter.stringfrom.departuredate.-.formatter.stringfrom.returndate" = "\\(formatter.string(from: departureDate)) - \\(formatter.string(from: returnDate))";
+"formatter.stringfrom.departuredate.-.formatter.stringfrom.returndate" = "\\(formatter.string(from: DepartureDate)) - \\(formatter.string(from: returnDate))";
 "formatter.stringfrom.firstdate.-.returndatestring" = "\\(formatter.string(from: firstDate)) - \\(returnDateString)";
 "getappversion.getbuildnumber" = "\\(getAppVersion()) (\\(getBuildNumber()))";
 "gueststext.roomstext" = "\\(guestsText), \\(roomsText)";
@@ -299,7 +299,7 @@
 "authentication.configuration.error" = "Σφάλμα διαμόρφωσης ελέγχου ταυτότητας";
 "authentication.failed.error.localizeddescription" = "Ο έλεγχος ταυτότητας απέτυχε: \\(error.localizedDescription)";
 "average.price.is.intaverageprice" = "Η μέση τιμή είναι $\\(Int(μέσηΤιμή))";
-"average.price.is.intaverageprice" = "Η μέση τιμή είναι ₹\\(Int(μέση τιμή))";
+"average.price.is.intaverageprice" = "Η μέση τιμή είναι ₹\\(Int(μέσηΤιμή))";
 "be" = "ΕΙΝΑΙ";
 "bearer.bearertoken" = "Φορέας \\(bearerToken)";
 "beautiful.landscape.with.mountains" = "Όμορφο τοπίο με βουνά";
@@ -395,7 +395,7 @@
 "es-es" = "es-ES";
 "et-ee" = "et-EE";
 "etihad" = "Etihad";
-"eur" = "ευρώ";
+"eur" = "EUR";
 "explore" = "Εξερευνώ";
 "ey" = "EY";
 "failed.to.apply.filters.error.localizeddescription" = "Αποτυχία εφαρμογής φίλτρων: \\(error.localizedDescription)";
@@ -403,7 +403,7 @@
 "failed.to.decode.response" = "Απέτυχε η αποκωδικοποίηση της απάντησης";
 "failed.to.delete.account.error.localizeddescription" = "Αποτυχία διαγραφής λογαριασμού: \\(error.localizedDescription)";
 "failed.to.encode.request" = "Απέτυχε η κωδικοποίηση του αιτήματος";
-"failed.to.fetch.flights.after.maxretries.attempts.error.localizeddescription" = "Η ανάκτηση πτήσεων απέτυχε μετά από προσπάθειες \\(maxRetries): \\(error.localizedDescription)";
+"failed.to.fetch.flights.after.maxretries.attempts.error.localizeddescription" = "Απέτυχε η ανάκτηση πτήσεων μετά από προσπάθειες \\(maxRetries): \\(error.localizedDescription)";
 "failed.to.fetch.locations.error.localizeddescription" = "Η ανάκτηση τοποθεσιών απέτυχε: \\(error.localizedDescription)";
 "failed.to.load.countries.error.localizeddescription" = "Αποτυχία φόρτωσης χωρών: \\(error.localizedDescription)";
 "failed.to.load.currencies.error.localizeddescription" = "Η φόρτωση των νομισμάτων απέτυχε: \\(error.localizedDescription)";
@@ -582,7 +582,7 @@
 "please.select.a.hotel.location" = "Επιλέξτε τοποθεσία ξενοδοχείου";
 "please.select.at.least.1.adult" = "Επιλέξτε τουλάχιστον 1 ενήλικα";
 "please.select.at.least.1.room" = "Επιλέξτε τουλάχιστον 1 δωμάτιο";
-"please.select.both.departure.and.destination.locations" = "Επιλέξτε και τις τοποθεσίες αναχώρησης και προορισμού.";
+"please.select.both.departure.and.destination.locations" = "Επιλέξτε τοποθεσίες αναχώρησης και προορισμού.";
 "please.select.drop-off.location" = "Επιλέξτε τοποθεσία παράδοσης.";
 "please.select.hotel.location" = "Επιλέξτε τοποθεσία ξενοδοχείου.";
 "please.select.pick-up.location" = "Επιλέξτε τοποθεσία παραλαβής.";
@@ -737,7 +737,7 @@
 "ye" = "ΕΣΕΙΣ";
 "youve.selected.countryname.would.you.like.to.switch.to.getlanguagedisplaynamesuggestedlanguage.or.keep.getlanguagedisplaynamecurrentlanguage" = "Έχετε επιλέξει \\(countryName). Θέλετε να μεταβείτε στο \\(getLanguageDisplayName(suggestedLanguage)) ή να διατηρήσετε το \\(getLanguageDisplayName(currentLanguage));";
 "your.recent.flight.searches.will.appear.here" = "Οι πρόσφατες αναζητήσεις πτήσεων θα εμφανιστούν εδώ";
-"yyyy-mm-ddthhmm" = "εεε-ΜΜ-ηηΗΗΗ:μμ";
+"yyyy-mm-ddthhmm" = "εεεε-ΜΜ-ηηΗΗΗ:μμ";
 "yyyy-mm-ddthhmm" = "ΕΕΕΕ-ΜΜ-ΗΗΗΩ:ΜΜ";
 "za" = "ΖΑ";
 "zh-cn" = "zh-CN";
@@ -781,3 +781,24 @@
 "dec" = "Δεκ";
 "stop" = "στάση";
 "travellers" = "Ταξιδιώτες";
+"update.search" = "Ενημέρωση αναζήτησης";
+"airbus.a320.neo" = "Airbus A320 neo";
+"hide.details" = "Απόκρυψη λεπτομερειών";
+"searching.flights" = "αναζήτηση πτήσεων";
+"show.all.flights" = "εμφάνιση όλων των πτήσεων";
+"non.stop.flights.only" = "μόνο πτήσεις χωρίς στάση";
+"1.stop" = "1 στάση";
+"2.stops" = "2 στάσεις";
+"departure.time.from" = "ώρα αναχώρησης από";
+"arrival.time.at" = "ώρα άφιξης στις";
+"price.range.info" = "πληροφορίες για το εύρος τιμών";
+"updating.search" = "ενημέρωση αναζήτησης";
+"any" = "κάθε";
+"2.stopovers" = "2 στάσεις";
+"1.stopover" = "1 στάση";
+"emirates" = "Εμιράτα";
+"indigo" = "Ινδικό";
+"oman.air" = "Oman Air";
+"saudia" = "ΣΑΟΥΔΙΑ";
+"spicejet" = "SpiceJet";
+"srilankan.airlines" = "SriLankan Airlines";

@@ -1,6 +1,6 @@
 /* Auto-generated from translations.csv */
 "english" = "Swedish";
-"last.minute.flights" = "Sista minuten flyg";
+"last.minute.flights" = "Sista minuten-flyg";
 "flight.ads" = "Flygannonser";
 "flight" = "Flyg";
 "rental" = "Uthyrning";
@@ -139,7 +139,7 @@
 "search.country" = "Sök land";
 "search.currency" = "Sök valuta";
 "about.us" = "Om oss";
-"last.minute.flights" = "Sista minuten flyg";
+"last.minute.flights" = "Sista minuten-flyg";
 "version.1.02" = "Version: 1.02";
 "welcome.to.our.flight.price.comparison.app.we.know.that.planning.a.trip.can.be.stressful.especially.when.it.comes.to.finding.the.best.deals.on.flights.thats.where.we.come.in.our.app.makes.it.easy.for.you.to.compare.prices.from.multiple.airlines.so.you.can.find.the.best.option.for.your.budget.and.schedule" = "Välkommen till vår app för prisjämförelse! Vi vet att det kan vara stressigt att planera en resa, särskilt när det gäller att hitta de bästa flygerbjudandena. Det är där vi kommer in. Vår app gör det enkelt för dig att jämföra priser från flera flygbolag, så att du kan hitta det bästa alternativet för din budget och ditt schema.";
 "our.team.is.passionate.about.helping.travelers.save.money.and.have.a.great.trip.we.are.constantly.updating.our.app.with.the.latest.deals.and.features.to.make.your.search.even.easier.with.our.user-friendly.interface.and.reliable.price.comparisons.you.can.book.your.next.flight.with.confidence" = "Vårt team brinner för att hjälpa resenärer att spara pengar och ha en fantastisk resa. Vi uppdaterar ständigt vår app med de senaste erbjudandena och funktionerna för att göra din sökning ännu enklare. Med vårt användarvänliga gränssnitt och tillförlitliga prisjämförelser kan du boka ditt nästa flyg med tillförsikt.";
@@ -161,7 +161,7 @@
 "varies" = "Varierar";
 "from" = "från";
 "lets.make.sure.you.get.the.best" = "Låt oss se till att du får det bästa!";
-"allow.push.notifications.so.that.we.can.ensure.you.dont.miss.out.on.the.best.deals" = "Tillåt push-meddelanden så att vi kan se till att du inte går miste om de bästa erbjudandena.";
+"allow.push.notifications.so.that.we.can.ensure.you.dont.miss.out.on.the.best.deals" = "Tillåt push-meddelanden så att vi kan säkerställa att du inte går miste om de bästa erbjudandena.";
 "allow" = "Tillåta";
 "sponsored" = "Sponsrad";
 "ad" = "Ad";
@@ -244,7 +244,7 @@
 "formatteddateactualpickup.formatteddateactualdropoff" = "\\(formattedDate(actualPickUp)) • \\(formattedDate(actualDropOff))";
 "formatter.stringfrom.checkindate.-.formatter.stringfrom.checkoutdate" = "\\(formatter.string(från: checkinDate)) - \\(formatter.string(from: checkoutDate))";
 "formatter.stringfrom.departuredate.-.formatter.stringfrom.returndate" = "\\(formatter.string(från: avgångsdatum)) - \\(formatter.sträng(från: returdatum))";
-"formatter.stringfrom.firstdate.-.returndatestring" = "\\(formatter.string(från: firstDate)) - \\(returnDateString)";
+"formatter.stringfrom.firstdate.-.returndatestring" = "\\(formatter.string(from: firstDate)) - \\(returnDateString)";
 "getappversion.getbuildnumber" = "\\(getAppVersion()) (\\(getBuildNumber()))";
 "gueststext.roomstext" = "\\(gästerText), \\(rumsText)";
 "hoursh.minsm" = "\\(timmar)h \\(min)m";
@@ -500,9 +500,9 @@
 "krw" = "KRW";
 "kw" = "KW";
 "kz" = "KZ";
-"language.change" = "Språkbyte";
+"language.change" = "Språkändring";
 "language.updated.successfully" = "Språket har uppdaterats!";
-"last.minute.flights" = "Sista minuten flyg";
+"last.minute.flights" = "Sista minuten-flyg";
 "launch.screen" = "Startskärm";
 "lax" = "SLAPP";
 "lb" = "LB";
@@ -573,7 +573,7 @@
 "ph" = "PH";
 "photo" = "bild";
 "pick-up" = "Upphämtning";
-"pick-up.drop-off" = "Upphämtning och avlämning";
+"pick-up.drop-off" = "Hämtning & avlämning";
 "pick-up.same.drop-off" = "Upphämtning (samma avlämning)";
 "pick_up" = "pick_up";
 "pl" = "PL";
@@ -582,7 +582,7 @@
 "please.select.a.hotel.location" = "Vänligen välj en hotellplats";
 "please.select.at.least.1.adult" = "Välj minst 1 vuxen";
 "please.select.at.least.1.room" = "Välj minst 1 rum";
-"please.select.both.departure.and.destination.locations" = "Vänligen välj både avgångs- och destinationsplatser.";
+"please.select.both.departure.and.destination.locations" = "Välj både avgångs- och destinationsplatser.";
 "please.select.drop-off.location" = "Vänligen välj avlämningsplats.";
 "please.select.hotel.location" = "Vänligen välj hotellets plats.";
 "please.select.pick-up.location" = "Vänligen välj upphämtningsplats.";
@@ -608,7 +608,7 @@
 "recent.searches" = "Senaste sökningar";
 "refreshing.interface" = "Uppdaterar gränssnittet...";
 "rental" = "Uthyrning";
-"rental.search.url.generated.successfully.with.language.request.languagecode" = "Uthyrningssök-URL har skapats framgångsrikt med språket \\(request.languageCode)";
+"rental.search.url.generated.successfully.with.language.request.languagecode" = "Webbadress för hyrsökning har skapats framgångsrikt med språket \\(request.languageCode)";
 "results.viewmodel.flightresults.countviewmodel.totalresultscount" = "Resultat: \\(viewModel.flightResults.count)/\\(viewModel.totalResultsCount)";
 "retry" = "Försöka igen";
 "return" = "Återvända";
@@ -781,3 +781,24 @@
 "dec" = "dec";
 "stop" = "stopp";
 "travellers" = "Resenärer";
+"update.search" = "Uppdatera sökning";
+"airbus.a320.neo" = "Airbus A320 neo";
+"hide.details" = "Dölj detaljer";
+"searching.flights" = "letar efter flyg";
+"show.all.flights" = "visa alla flyg";
+"non.stop.flights.only" = "endast direktflyg";
+"1.stop" = "1 stopp";
+"2.stops" = "2 hållplatser";
+"departure.time.from" = "avgångstid från kl";
+"arrival.time.at" = "ankomsttid kl";
+"price.range.info" = "prisklass info";
+"updating.search" = "uppdaterar sökningen";
+"any" = "några";
+"2.stopovers" = "2 mellanlandningar";
+"1.stopover" = "1 mellanlandning";
+"emirates" = "Emirates";
+"indigo" = "Indigo";
+"oman.air" = "Oman Air";
+"saudia" = "SAUDIAN";
+"spicejet" = "SpiceJet";
+"srilankan.airlines" = "SriLankan Airlines";

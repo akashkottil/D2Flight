@@ -31,8 +31,8 @@ enum StopsOption: CaseIterable {
         switch self {
         case .any: return "show.all.flights".localized
         case .direct: return "non.stop.flights.only".localized
-        case .oneStop: return "up.to.1.stopover".localized
-        case .twoStops: return "up.to.2.stopovers".localized
+        case .oneStop: return "1.stopover".localized
+        case .twoStops: return "2.stopovers".localized
         }
     }
     
