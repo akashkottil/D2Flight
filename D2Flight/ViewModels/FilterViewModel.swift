@@ -10,15 +10,16 @@ import SwiftUI
 
 // MARK: - Supporting Models (defined first to avoid scope issues)
 enum SortOption: String, CaseIterable {
-    case best = "Best"
-    case cheapest = "Cheapest"
-    case quickest = "Quickest"
-    case earliest = "Earliest"
+    case best = "best"
+    case cheapest = "cheapest"
+    case quickest = "quickest"
+    case earliest = "earliest"
     
     var displayName: String {
         return self.rawValue
     }
 }
+
 
 struct AirlineOption: Identifiable {
     let id = UUID()

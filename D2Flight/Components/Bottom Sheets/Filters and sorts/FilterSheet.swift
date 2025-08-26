@@ -20,19 +20,19 @@ enum StopsOption: CaseIterable {
     
     var title: String {
         switch self {
-        case .any: return "Any"
-        case .direct: return "Direct"
-        case .oneStop: return "1 Stop"
-        case .twoStops: return "2 Stops"
+        case .any: return "any".localized
+        case .direct: return "direct".localized
+        case .oneStop: return "1.stop".localized
+        case .twoStops: return "2.stops".localized
         }
     }
     
     var subtitle: String {
         switch self {
-        case .any: return "Show all flights"
-        case .direct: return "Non-stop flights only"
-        case .oneStop: return "Up to 1 stopover"
-        case .twoStops: return "Up to 2 stopovers"
+        case .any: return "show.all.flights".localized
+        case .direct: return "non.stop.flights.only".localized
+        case .oneStop: return "up.to.1.stopover".localized
+        case .twoStops: return "up.to.2.stopovers".localized
         }
     }
     
@@ -138,13 +138,13 @@ struct UnifiedFilterSheet: View {
     // MARK: - Header Title
     private var headerTitle: String {
         switch filterType {
-        case .sort: return "Sort"
-        case .times: return "Times"
-        case .airlines: return "Airlines"
-        case .duration: return "Duration"
-        case .price: return "Price"
-        case .classes: return "Classes"
-        case .stops: return "Stops" // ✅ NEW
+        case .sort: return "sort".localized
+        case .times: return "times".localized
+        case .airlines: return "airlines".localized
+        case .duration: return "duration".localized
+        case .price: return "price".localized
+        case .classes: return "classes".localized
+        case .stops: return "stops".localized // ✅ NEW
         }
     }
     
@@ -182,6 +182,7 @@ struct UnifiedFilterSheet: View {
             }
         }
     }
+    
     private func getLocalizedStopText(_ stopCount: Int) -> String {
         switch stopCount {
         case 0:
@@ -211,7 +212,7 @@ struct UnifiedFilterSheet: View {
                             Image(systemName: "airplane.departure")
                                 .font(CustomFont.font(.small))
                                 .foregroundColor(Color("Violet"))
-                            Text("Departure time from \(originCode)")
+                            Text("departure.time.from".localized.replacingOccurrences(of: "{origin}", with: originCode))
                                 .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         }
@@ -229,7 +230,7 @@ struct UnifiedFilterSheet: View {
                             Image(systemName: "airplane.arrival")
                                 .font(CustomFont.font(.small))
                                 .foregroundColor(Color("Violet"))
-                            Text("Arrival time at \(destinationCode)")
+                            Text("arrival.time.at".localized.replacingOccurrences(of: "{destination}", with: destinationCode))
                                 .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         }
@@ -257,7 +258,7 @@ struct UnifiedFilterSheet: View {
                                 Image(systemName: "airplane.departure")
                                     .font(CustomFont.font(.small))
                                     .foregroundColor(Color("Violet"))
-                                Text("Departure time from \(destinationCode)")
+                                Text("departure.time.from".localized.replacingOccurrences(of: "{origin}", with: destinationCode))
                                     .font(CustomFont.font(.medium, weight: .semibold))
                                     .foregroundColor(.black)
                             }
@@ -275,7 +276,7 @@ struct UnifiedFilterSheet: View {
                                 Image(systemName: "airplane.arrival")
                                     .font(CustomFont.font(.small))
                                     .foregroundColor(Color("Violet"))
-                                Text("Arrival time at \(originCode)")
+                                Text("arrival.time.at".localized.replacingOccurrences(of: "{destination}", with: originCode))
                                     .font(CustomFont.font(.medium, weight: .semibold))
                                     .foregroundColor(.black)
                             }
@@ -396,11 +397,11 @@ struct UnifiedFilterSheet: View {
                         .font(.system(size: 40))
                         .foregroundColor(.gray)
                     
-                    Text("No airlines available")
+                    Text("no.airlines.available".localized)
                         .font(CustomFont.font(.medium))
                         .foregroundColor(.gray)
                     
-                    Text("Airlines will appear here once flight results are loaded")
+                    Text("airlines.will.appear.here".localized)
                         .font(CustomFont.font(.small))
                         .foregroundColor(.gray)
                         .multilineTextAlignment(.center)
@@ -410,7 +411,7 @@ struct UnifiedFilterSheet: View {
             } else {
                 // Select All Option (always at top)
                 airlineSelectionRow(
-                    name: "Select All",
+                    name: "select.all".localized,
                     code: "ALL",
                     price: nil,
                     logo: "",
@@ -608,9 +609,6 @@ struct UnifiedFilterSheet: View {
         }
     }
     
-    
-    
-    
     // MARK: - Price Content
     private var priceContent: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -626,11 +624,13 @@ struct UnifiedFilterSheet: View {
                 }
                 
                 if filterViewModel.hasAPIDataLoaded {
-                    Text("Price range: ₹\(Int(filterViewModel.apiMinPrice)) - ₹\(Int(filterViewModel.apiMaxPrice))")
+                    Text("price.range.info".localized
+                        .replacingOccurrences(of: "{minPrice}", with: "₹\(Int(filterViewModel.apiMinPrice))")
+                        .replacingOccurrences(of: "{maxPrice}", with: "₹\(Int(filterViewModel.apiMaxPrice))"))
                         .font(.system(size: 13))
                         .foregroundColor(.gray)
                 } else {
-                    Text("Average price is ₹\(Int(averagePrice))")
+                    Text("average.price.info".localized.replacingOccurrences(of: "{avgPrice}", with: "₹\(Int(averagePrice))"))
                         .font(.system(size: 13))
                         .foregroundColor(.gray)
                 }
@@ -721,7 +721,7 @@ struct UnifiedFilterSheet: View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {
                 SecondaryButton(
-                    title: "Clear",
+                    title: "clear".localized,
                     font: CustomFont.font(.medium),
                     fontWeight: .semibold,
                     textColor: .gray,
@@ -734,7 +734,7 @@ struct UnifiedFilterSheet: View {
                 )
                 
                 PrimaryButton(
-                    title: "Apply",
+                    title: "apply".localized,
                     font: CustomFont.font(.medium),
                     fontWeight: .semibold,
                     textColor: .white,

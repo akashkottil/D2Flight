@@ -168,13 +168,13 @@
 "all.count.flights.loaded" = "All {count} flights loaded";
 "count.guests.count.rooms" = "{count} Guest(s), {count} Room(s)";
 "count.travelers.class" = "{count} Traveler(s), {class}";
-"su" = "Su";
-"mo" = "Mo";
-"tu" = "Tu";
-"we" = "We";
-"th" = "Th";
-"fr" = "Fr";
-"sa" = "Sa";
+"su" = "Sun";
+"mo" = "Mon";
+"tu" = "Tue";
+"we" = "Wed";
+"th" = "Thu";
+"fr" = "Fri";
+"sa" = "Sat";
 "by.creating.or.logging.into.an.account.youre.agreeing.with.our.terms.and.conditions.and.privacy.policy" = "By creating or logging into an account you're agreeing with our Terms and conditions and Privacy policy";
 "yes.keep.me.informed.with.the.latest.updates.alerts.and.offers.through.email.and.push.notifications" = "Yes, keep me informed with the latest updates, alerts, and offers through email and push notifications";
 "kochi" = "Kochi";
@@ -615,7 +615,6 @@
 "ru" = "RU";
 "ru" = "ru";
 "ru-ru" = "ru-RU";
-"sa" = "Sa";
 "salem" = "Salem";
 "scanning.hundreds.of.airlines" = "Scanning hundreds of airlines";
 "scroll" = "scroll";
@@ -666,7 +665,6 @@
 "spice.jet" = "Spice Jet";
 "st" = "ST";
 "stops" = "Stops";
-"su" = "Su";
 "success" = "success";
 "sv" = "SV";
 "sv" = "sv";
@@ -695,7 +693,6 @@
 "try.again" = "Try Again";
 "try.different.locations" = "Try different locations";
 "try.searching.with.a.different.keyword" = "Try searching with a different keyword";
-"tu" = "Tu";
 "tw" = "TW";
 "ua" = "UA";
 "uk" = "UK";
@@ -721,7 +718,6 @@
 "violet" = "Violet";
 "vistara" = "Vistara";
 "vn" = "VN";
-"we" = "We";
 "wed.17.oct.-.mon.24.oct" = "Wed 17 Oct - Mon 24 Oct";
 "wifi" = "wifi";
 "window.location.hrefss" = "window\\.location(?:\\.href)?\\s*=\\s*[";
