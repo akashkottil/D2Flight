@@ -1,6 +1,7 @@
 import SwiftUI
+import SafariServices
 
-// MARK: - Updated HotelView with Localized Date Display
+// MARK: - Updated HotelView with Localized Date Display and Optimized Loading
 struct HotelView: View {
     @State private var hotelLocation = ""
     @State private var hotelIATACode = ""
@@ -30,7 +31,6 @@ struct HotelView: View {
     @StateObject private var hotelSearchVM = HotelSearchViewModel()
     @StateObject private var networkMonitor = NetworkMonitor()
     @State private var showWebView = false
-    @State private var currentDeeplink: String? = nil
     
     // Recent locations management
     @StateObject private var recentLocationsManager = RecentLocationsManager.shared
@@ -141,14 +141,7 @@ struct HotelView: View {
                 lastNetworkStatus: &lastNetworkStatus
             )
         }
-        // Handle search results
-        .onReceive(hotelSearchVM.$deeplink) { deeplink in
-            if let deeplink = deeplink {
-                currentDeeplink = deeplink
-                showWebView = true
-                print("🔗 HotelView received deeplink: \(deeplink)")
-            }
-        }
+        // ✅ OPTIMIZED: Remove deeplink receiver - web view handles it directly
         .onReceive(hotelSearchVM.$errorMessage) { errorMessage in
             if let error = errorMessage {
                 print("⚠️ HotelView received error: \(error)")
@@ -192,10 +185,9 @@ struct HotelView: View {
                 print("🏨 Hotel location selected: \(selectedLocation) (\(iataCode))")
             }
         }
+        // ✅ OPTIMIZED: Show web view with loading state
         .sheet(isPresented: $showWebView) {
-            if let deeplink = currentDeeplink {
-                HotelWebView(url: deeplink)
-            }
+            HotelSearchWebView(hotelSearchVM: hotelSearchVM)
         }
         .onAppear {
             if hotelLocation.isEmpty {
@@ -253,13 +245,14 @@ struct HotelView: View {
                     Spacer()
                 }
             }
-            .padding()
+            .padding(.leading)
+            .padding(.vertical)
             .background(Color.white)
             .cornerRadius(12)
         }
     }
     
-    // MARK: - Search Handler with Universal Validation
+    // MARK: - ✅ OPTIMIZED: Search Handler with Immediate Web View Opening
     private func handleSearchHotels() {
         print("🏨 Search Hotels button tapped!")
         
@@ -292,11 +285,12 @@ struct HotelView: View {
         
         print("🎯 Hotel search parameters validated and starting search")
         
-        // Start the search
+        // ✅ OPTIMIZED: Open web view immediately, then start search
+        showWebView = true
         hotelSearchVM.searchHotels()
     }
     
-    // ✅ UPDATED: Popular Location Handler with Universal Validation
+    // ✅ OPTIMIZED: Popular Location Handler with Immediate Web View Opening
     private func handlePopularLocationTapped(_ location: MasonryImage) {
         print("🏨 Popular hotel location tapped: \(location.title) (\(location.iataCode))")
         
@@ -338,7 +332,8 @@ struct HotelView: View {
         
         print("🎯 Popular hotel search validated and starting")
         
-        // Start the hotel search
+        // ✅ OPTIMIZED: Open web view immediately, then start search
+        showWebView = true
         hotelSearchVM.searchHotels()
     }
     
@@ -514,6 +509,88 @@ struct HotelView: View {
             "\(rooms) \("room".localized)" :
             "\(rooms) \("rooms".localized)"
         return "\(guestsText), \(roomsText)"
+    }
+}
+
+// MARK: - Hotel Search Web View with Simple Loading State
+struct HotelSearchWebView: View {
+    @ObservedObject var hotelSearchVM: HotelSearchViewModel
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                if let deeplink = hotelSearchVM.deeplink {
+                    // Show Safari when URL is ready
+                    SafariWebViewWrapper(urlString: deeplink)
+                        .transition(.opacity)
+                } else if hotelSearchVM.isLoading {
+                    // Show simple loading indicator while waiting
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .progressViewStyle(CircularProgressViewStyle(tint: Color("Violet")))
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(.systemBackground))
+                } else if let error = hotelSearchVM.errorMessage {
+                    // Show error state
+                    VStack(spacing: 20) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 50))
+                            .foregroundColor(.orange)
+                        
+                        Text("Search Failed")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text(error)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        
+                        Button("Try Again") {
+                            dismiss()
+                        }
+                        .padding()
+                        .background(Color("Violet"))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    .padding()
+                } else {
+                    // Initial loading state
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .progressViewStyle(CircularProgressViewStyle(tint: Color("Violet")))
+                        
+                        Text("Preparing search...")
+                            .font(.title3)
+                            .fontWeight(.medium)
+                            .foregroundColor(.gray)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(.systemBackground))
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
+// MARK: - Safari Web View Wrapper (to avoid naming conflicts)
+struct SafariWebViewWrapper: UIViewControllerRepresentable {
+    let urlString: String
+    
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let config = SFSafariViewController.Configuration()
+        config.entersReaderIfAvailable = false
+        let safari = SFSafariViewController(url: URL(string: urlString)!, configuration: config)
+        return safari
+    }
+    
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
+        // No updates needed
     }
 }
 
