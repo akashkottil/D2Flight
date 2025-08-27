@@ -1,10 +1,14 @@
 import SwiftUI
+import SafariServices
 
 struct ResultDetails: View {
     let flight: FlightResult
     @Environment(\.dismiss) private var dismiss
-    @State private var showAllDeals = false // Track expanded state
-    
+
+    @State private var showAllDeals = false
+    @State private var showWebSheet = false
+    @State private var selectedDeeplink: URL? = nil
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -16,9 +20,9 @@ struct ResultDetails: View {
                         .padding(.trailing, 10)
                         .frame(width: 24,height: 24)
                 }
-                
+
                 Spacer()
-                
+
                 Button(action: {
                     // Share functionality
                 }) {
@@ -30,7 +34,7 @@ struct ResultDetails: View {
             }
             .padding()
             .background(Color.white)
-            
+
             ScrollView {
                 VStack(spacing: 0) {
                     // Route and Trip Details Section
@@ -50,7 +54,7 @@ struct ResultDetails: View {
                                     .foregroundColor(.black.opacity(0.5))
                             }
                         }
-                        
+
                         // Trip location names
                         HStack {
                             if let firstLeg = flight.legs.first {
@@ -61,7 +65,7 @@ struct ResultDetails: View {
                             Spacer()
                         }
                         .font(.system(size: 14, weight: .semibold))
-                        
+
                         // Trip Details
                         HStack {
                             Text(getTripDetailsText())
@@ -73,8 +77,8 @@ struct ResultDetails: View {
                     }
                     .padding()
                     .background(Color.white)
-                    
-                    // UPDATED: Real Booking Platforms Section with expandable functionality
+
+                    // Booking Platforms Section
                     VStack(spacing: 0) {
                         // Header
                         HStack {
@@ -86,10 +90,10 @@ struct ResultDetails: View {
                         .padding(.horizontal)
                         .padding(.top)
                         .padding(.bottom, 8)
-                        
+
                         // Display providers based on expanded state
                         let providersToShow = showAllDeals ? flight.providers : Array(flight.providers.prefix(3))
-                        
+
                         ForEach(Array(providersToShow.enumerated()), id: \.offset) { index, provider in
                             if let splitProvider = provider.splitProviders?.first {
                                 BookingPlatformRow(
@@ -103,10 +107,14 @@ struct ResultDetails: View {
                                     ),
                                     isFirst: index == 0,
                                     isLast: index == providersToShow.count - 1
-                                )
+                                ) { url in
+                                    selectedDeeplink = url
+                                    showWebSheet = true
+                                    print("🔗 Presenting sheet for \(splitProvider.name): \(url.absoluteString)")
+                                }
                             }
                         }
-                        
+
                         // Show "View more deals" or "Show less" button conditionally
                         if flight.providers.count > 3 {
                             Button(action: {
@@ -139,9 +147,9 @@ struct ResultDetails: View {
                         }
                     }
                     .background(Color.white)
-                    
+
                     Divider()
-                    
+
                     // Price note
                     HStack {
                         Spacer()
@@ -153,9 +161,9 @@ struct ResultDetails: View {
                     .padding(.horizontal)
                     .padding(.vertical, 20)
                     .background(Color.white)
-                    
+
                     Divider()
-                    
+
                     // Flight Details Section
                     VStack(spacing: 16) {
                         ForEach(flight.legs.indices, id: \.self) { index in
@@ -167,7 +175,6 @@ struct ResultDetails: View {
                         }
                     }
                     .padding(.top)
-//                    .background(Color.gray.opacity(0.05))
                 }
             }
         }
@@ -177,35 +184,43 @@ struct ResultDetails: View {
             print("📋 Displaying flight details for: \(flight.id)")
             printFlightProviders()
         }
+        // PRESENT THE BOTTOM SHEET
+        .sheet(isPresented: $showWebSheet, onDismiss: { selectedDeeplink = nil }) {
+            if let url = selectedDeeplink {
+                SafariSheet(url: url)
+                    .presentationDetents([.fraction(1.0)])
+                    .presentationDragIndicator(.visible)
+                    .ignoresSafeArea()
+            } else {
+                EmptyView()
+            }
+        }
     }
-    
+
     private func getRouteText() -> String {
         guard let firstLeg = flight.legs.first else { return "Flight Details" }
         return "\(firstLeg.originCode) → \(firstLeg.destinationCode)"
     }
-    
+
     private func getStopsText() -> String {
         guard let firstLeg = flight.legs.first else { return "Direct" }
         return firstLeg.stopsText.lowercased()
     }
-    
+
     private func getTripDetailsText() -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "E dd MMM"
-        
+
         var details = ""
         if let firstLeg = flight.legs.first {
             let date = Date(timeIntervalSince1970: TimeInterval(firstLeg.departureTimeAirport))
             details = dateFormatter.string(from: date)
         }
-        
-        // Add cabin class and traveler info
+
         details += " • Economy • 2 Travelers"
-        
         return details
     }
-    
-    // NEW: Get lowest price from remaining providers (4th onward)
+
     private func getLowestRemainingPrice() -> Double {
         if flight.providers.count > 3 {
             let remainingProviders = Array(flight.providers.dropFirst(3))
@@ -213,20 +228,19 @@ struct ResultDetails: View {
         }
         return flight.min_price
     }
-    
-    // NEW: Print provider details for debugging
+
     private func printFlightProviders() {
         print("🏪 ===== FLIGHT PROVIDERS DETAILS =====")
         print("Flight ID: \(flight.id)")
         print("Total Providers: \(flight.providers.count)")
         print("Price Range: ₹\(flight.min_price) - ₹\(flight.max_price)")
-        
+
         for (index, provider) in flight.providers.enumerated() {
             print("\nProvider \(index + 1):")
             print("  Price: ₹\(provider.price)")
             print("  Is Split: \(provider.isSplit)")
             print("  Transfer Type: \(provider.transferType ?? "N/A")")
-            
+
             if let splitProviders = provider.splitProviders {
                 print("  Split Providers Count: \(splitProviders.count)")
                 for (spIndex, splitProvider) in splitProviders.enumerated() {
@@ -244,19 +258,19 @@ struct ResultDetails: View {
     }
 }
 
-// MARK: - Updated Booking Platform Row
+// MARK: - Booking Platform Row
 struct BookingPlatformRow: View {
     let platform: BookingPlatform
     let isFirst: Bool
     let isLast: Bool
-    
+    let onTapViewDeal: (URL) -> Void
+
     var body: some View {
         VStack(spacing: 0) {
             if !isFirst {
-                Divider()
-                    .padding(.leading)
+                Divider().padding(.leading)
             }
-            
+
             HStack {
                 // Provider Logo
                 AsyncImage(url: URL(string: platform.imageURL)) { image in
@@ -273,13 +287,12 @@ struct BookingPlatformRow: View {
                         )
                 }
                 .frame(width: 40, height: 24)
-                
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(platform.name)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.black.opacity(0.8))
-                    
-                    // Show rating if available
+
                     if let rating = platform.rating, let ratingCount = platform.ratingCount {
                         HStack(spacing: 4) {
                             Image(systemName: "star.fill")
@@ -291,21 +304,18 @@ struct BookingPlatformRow: View {
                         }
                     }
                 }
-                
+
                 Spacer()
-                
-                // Price
+
                 Text("₹\(Int(platform.price))")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.black)
-                
-                // Info icon
+
                 Image(systemName: "info.circle")
                     .font(.system(size: 11))
                     .foregroundColor(.gray)
                     .padding(.leading, 4)
-                
-                // Book button
+
                 PrimaryButton(
                     title: "view.deal".localized,
                     font: .system(size: 12),
@@ -316,10 +326,8 @@ struct BookingPlatformRow: View {
                     verticalPadding: 12,
                     cornerRadius: 6
                 ) {
-                    // Open deep link for booking
                     if let url = URL(string: platform.deeplink) {
-                        UIApplication.shared.open(url)
-                        print("🔗 Opening booking link for \(platform.name): \(platform.deeplink)")
+                        onTapViewDeal(url)
                     } else {
                         print("❌ Invalid booking URL for \(platform.name)")
                     }
@@ -331,9 +339,7 @@ struct BookingPlatformRow: View {
     }
 }
 
-
-
-// MARK: - Updated Supporting Models
+// MARK: - Supporting Models
 struct BookingPlatform {
     let name: String
     let price: Double
@@ -343,84 +349,17 @@ struct BookingPlatform {
     let ratingCount: Int?
 }
 
-#Preview {
-    // Create a sample flight for preview based on your actual API response
-    let sampleSegment = FlightSegment(
-        id: "1341465931",
-        arriveTimeAirport: 1753363200,
-        departureTimeAirport: 1753359000,
-        duration: 70,
-        flightNumber: "516",
-        airlineName: "Alliance Air",
-        airlineIata: "9I",
-        airlineLogo: "https://content.r9cdn.net/rimg/provider-logos/airlines/v/9I.png?crop=false&width=108&height=92&fallback=default2.png&_v=90ac937114a16bb3c9405a546ae3266d",
-        originCode: "COK",
-        origin: "Kochi",
-        destinationCode: "SXV",
-        destination: "Salem",
-        arrival_day_difference: 0,
-        wifi: false,
-        cabinClass: "E",
-        aircraft: "ATR 72-201 / 202"
-    )
-    
-    let sampleLeg = FlightLeg(
-        arriveTimeAirport: 1753363200,
-        departureTimeAirport: 1753359000,
-        duration: 70,
-        origin: "Kochi",
-        originCode: "COK",
-        destination: "Salem",
-        destinationCode: "SXV",
-        stopCount: 0,
-        segments: [sampleSegment]
-    )
-    
-    let sampleSplitProvider1 = SplitProvider(
-        name: "Yatra.com",
-        imageURL: "https://content.r9cdn.net/rimg/provider-logos/airlines/h/YATRAAIR.png?crop=false&width=166&height=62&fallback=default1.png&_v=79278c2f78d9747b2ab4dc606231fadb",
-        price: 1359.0,
-        deeplink: "https://www.kayak.co.in//in?cluster=5...",
-        rating: nil,
-        ratingCount: nil,
-        fareFamily: nil
-    )
-    
-    let sampleSplitProvider2 = SplitProvider(
-        name: "EaseMyTrip",
-        imageURL: "https://content.r9cdn.net/rimg/provider-logos/airlines/h/EASEMYTRIP.png?crop=false&width=166&height=62&fallback=default3.png&_v=7f73dd9532d350ccadae48b2df544c73",
-        price: 1469.5,
-        deeplink: "https://www.kayak.co.in//in?cluster=5...",
-        rating: nil,
-        ratingCount: nil,
-        fareFamily: nil
-    )
-    
-    let sampleProvider1 = Provider(
-        isSplit: false,
-        transferType: "managed",
-        price: 1359.0,
-        splitProviders: [sampleSplitProvider1]
-    )
-    
-    let sampleProvider2 = Provider(
-        isSplit: false,
-        transferType: "managed",
-        price: 1469.5,
-        splitProviders: [sampleSplitProvider2]
-    )
-    
-    let sampleFlight = FlightResult(
-        id: "p1-3fde53e7da45",
-        total_duration: 70,
-        min_price: 1359.0,
-        max_price: 1469.5,
-        legs: [sampleLeg],
-        providers: [sampleProvider1, sampleProvider2],
-        is_best: true,
-        is_cheapest: true,
-        is_fastest: true
-    )
-    
-    ResultDetails(flight: sampleFlight)
+// MARK: - Safari wrapper
+struct SafariSheet: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let vc = SFSafariViewController(url: url)
+        vc.preferredBarTintColor = .systemBackground
+        vc.preferredControlTintColor = .label
+        vc.dismissButtonStyle = .close
+        return vc
+    }
+
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
 }
