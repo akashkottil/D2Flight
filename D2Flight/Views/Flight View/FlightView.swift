@@ -82,7 +82,7 @@ struct FlightView: View {
                         
                         // MARK: - Additional Content (Lazy Loading)
                         LazyVStack {
-                            FlightExploreCard()
+//                            FlightExploreCard()
                             AutoSlidingCardsView()
                             BottomBar()
                         }

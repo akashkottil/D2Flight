@@ -163,6 +163,8 @@ struct RentalView: View {
                         rooms: 1,
                         onLocationTapped: handlePopularLocationTapped
                     )
+                    AutoSlidingCardsView()
+                    BottomBar()
                 }
                 .scrollIndicators(.hidden)
                 

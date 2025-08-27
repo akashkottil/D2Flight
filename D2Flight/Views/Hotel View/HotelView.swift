@@ -126,6 +126,8 @@ struct HotelView: View {
                         rooms: rooms,
                         onLocationTapped: handlePopularLocationTapped
                     )
+                    AutoSlidingCardsView()
+                    BottomBar()
                 }
                 .scrollIndicators(.hidden)
                 
