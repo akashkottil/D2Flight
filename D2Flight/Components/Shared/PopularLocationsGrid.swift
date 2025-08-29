@@ -58,9 +58,9 @@ struct PopularLocationsGrid: View {
         case .flight:
             return "popular.destinations".localized
         case .hotel:
-            return "popular.hotels".localized
+            return "popular.destinations".localized
         case .rental:
-            return "popular.car.rentals".localized
+            return "popular.destinations".localized
         }
     }
 }

@@ -32,7 +32,7 @@ struct APIConstants {
         static let fallbackUserId = "123" // Fallback if UserManager fails
         static let hotelProviderId = "0"
         static let rentalProviderId = "0"
-        static let testAppCode = "TEST"
+        static let testAppCode = "D1WF"
     }
     
     // MARK: - Headers

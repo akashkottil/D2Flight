@@ -190,6 +190,8 @@ struct HotelView: View {
         // ✅ OPTIMIZED: Show web view with loading state
         .sheet(isPresented: $showWebView) {
             HotelSearchWebView(hotelSearchVM: hotelSearchVM)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
         }
         .onAppear {
             if hotelLocation.isEmpty {
@@ -254,11 +256,10 @@ struct HotelView: View {
         }
     }
     
-    // MARK: - ✅ OPTIMIZED: Search Handler with Immediate Web View Opening
     private func handleSearchHotels() {
         print("🏨 Search Hotels button tapped!")
         
-        // ✅ Use SearchValidationHelper for validation
+        // Use SearchValidationHelper for validation
         if let warningType = SearchValidationHelper.validateHotelSearch(
             hotelIATACode: hotelIATACode,
             hotelLocation: hotelLocation,
@@ -287,9 +288,8 @@ struct HotelView: View {
         
         print("🎯 Hotel search parameters validated and starting search")
         
-        // ✅ OPTIMIZED: Open web view immediately, then start search
+        // Open web view immediately - the web view will handle the search and loading states
         showWebView = true
-        hotelSearchVM.searchHotels()
     }
     
     // ✅ OPTIMIZED: Popular Location Handler with Immediate Web View Opening
@@ -514,87 +514,8 @@ struct HotelView: View {
     }
 }
 
-// MARK: - Hotel Search Web View with Simple Loading State
-struct HotelSearchWebView: View {
-    @ObservedObject var hotelSearchVM: HotelSearchViewModel
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            ZStack {
-                if let deeplink = hotelSearchVM.deeplink {
-                    // Show Safari when URL is ready
-                    SafariWebViewWrapper(urlString: deeplink)
-                        .transition(.opacity)
-                } else if hotelSearchVM.isLoading {
-                    // Show simple loading indicator while waiting
-                    VStack(spacing: 20) {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                            .progressViewStyle(CircularProgressViewStyle(tint: Color("Violet")))
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(.systemBackground))
-                } else if let error = hotelSearchVM.errorMessage {
-                    // Show error state
-                    VStack(spacing: 20) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 50))
-                            .foregroundColor(.orange)
-                        
-                        Text("Search Failed")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        Text(error)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                        
-                        Button("Try Again") {
-                            dismiss()
-                        }
-                        .padding()
-                        .background(Color("Violet"))
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                    }
-                    .padding()
-                } else {
-                    // Initial loading state
-                    VStack(spacing: 20) {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                            .progressViewStyle(CircularProgressViewStyle(tint: Color("Violet")))
-                        
-                        Text("Preparing search...")
-                            .font(.title3)
-                            .fontWeight(.medium)
-                            .foregroundColor(.gray)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(.systemBackground))
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-        }
-    }
-}
 
-// MARK: - Safari Web View Wrapper (to avoid naming conflicts)
-struct SafariWebViewWrapper: UIViewControllerRepresentable {
-    let urlString: String
-    
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let config = SFSafariViewController.Configuration()
-        config.entersReaderIfAvailable = false
-        let safari = SFSafariViewController(url: URL(string: urlString)!, configuration: config)
-        return safari
-    }
-    
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
-        // No updates needed
-    }
-}
+
 
 #Preview {
     HotelView()
