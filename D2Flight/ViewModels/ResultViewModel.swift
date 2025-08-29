@@ -62,12 +62,20 @@ class ResultViewModel: ObservableObject {
         print("   Previous filter state: \(isFilteredResults)")
         print("   Previous results count: \(flightResults.count)")
         
+        // ✅ PRESERVE ADS STATE: Store current ads before clearing
+            let currentAds = adsService.ads
+            let adsLoaded = hasLoadedAds
+        
         // Reset filter state
         currentFilterRequest = PollRequest()
         isFilteredResults = false
         
         // Reset pagination
         resetPagination()
+        
+        // ✅ RESTORE ADS STATE: Restore ads after clearing filters
+            adsService.ads = currentAds
+            hasLoadedAds = adsLoaded
         
         // Enable continuous polling for unfiltered results
         shouldContinuouslyPoll = true
@@ -218,8 +226,7 @@ class ResultViewModel: ObservableObject {
             return
         }
         
-        // Reset for new search
-        resetPagination()
+        resetPaginationForNewSearch()
         
         self.searchId = searchId
         isLoading = true
@@ -252,6 +259,16 @@ class ResultViewModel: ObservableObject {
         // ✅ NEW: Reset final poll tracking
         hasFinalPolled = false
         isFinalPolling = false
+        
+        // Reset ads loading state for new search
+        hasLoadedAds = false
+        adsService.ads = []
+        adsService.adsErrorMessage = nil
+    }
+    
+    // ✅ NEW: Method to reset pagination for new searches (including ads)
+    private func resetPaginationForNewSearch() {
+        resetPagination()
         
         // Reset ads loading state for new search
         hasLoadedAds = false
@@ -740,9 +757,17 @@ class ResultViewModel: ObservableObject {
         shouldContinuouslyPoll = false
         print("   shouldContinuouslyPoll: \(shouldContinuouslyPoll)")
         
+        // ✅ PRESERVE ADS STATE: Store current ads before resetting
+            let currentAds = adsService.ads
+            let adsLoaded = hasLoadedAds
+        
         // Reset pagination when applying filters
         resetPagination()
         shouldContinuouslyPoll = false // Keep polling stopped for filter results
+        
+        // ✅ RESTORE ADS STATE: Restore ads after pagination reset
+            adsService.ads = currentAds
+            hasLoadedAds = adsLoaded
         
         isLoading = true
         errorMessage = nil
