@@ -1,6 +1,6 @@
 /* Auto-generated from translations.csv */
 "english" = "Norwegian";
-"last.minute.flights" = "Siste liten flyreiser";
+"last.minute.flights" = "Flyreiser i siste liten";
 "flight.ads" = "Flyannonser";
 "flight" = "Flyvning";
 "rental" = "Utleie";
@@ -137,9 +137,9 @@
 "select.country" = "Velg land";
 "select.currency" = "Velg valuta";
 "search.country" = "Søk etter land";
-"search.currency" = "Søk valuta";
+"search.currency" = "Søk etter valuta";
 "about.us" = "Om oss";
-"last.minute.flights" = "Siste liten flyreiser";
+"last.minute.flights" = "Flyreiser i siste liten";
 "version.1.02" = "Versjon: 1.02";
 "welcome.to.our.flight.price.comparison.app.we.know.that.planning.a.trip.can.be.stressful.especially.when.it.comes.to.finding.the.best.deals.on.flights.thats.where.we.come.in.our.app.makes.it.easy.for.you.to.compare.prices.from.multiple.airlines.so.you.can.find.the.best.option.for.your.budget.and.schedule" = "Velkommen til vår prissammenligningsapp! Vi vet at det kan være stressende å planlegge en reise, spesielt når det gjelder å finne de beste flytilbudene. Det er her vi kommer inn. Appen vår gjør det enkelt for deg å sammenligne priser fra flere flyselskaper, slik at du kan finne det beste alternativet for ditt budsjett og timeplan.";
 "our.team.is.passionate.about.helping.travelers.save.money.and.have.a.great.trip.we.are.constantly.updating.our.app.with.the.latest.deals.and.features.to.make.your.search.even.easier.with.our.user-friendly.interface.and.reliable.price.comparisons.you.can.book.your.next.flight.with.confidence" = "Teamet vårt er lidenskapelig opptatt av å hjelpe reisende med å spare penger og ha en flott tur. Vi oppdaterer kontinuerlig appen vår med de nyeste tilbudene og funksjonene for å gjøre søket ditt enda enklere. Med vårt brukervennlige grensesnitt og pålitelige prissammenligninger kan du trygt bestille din neste flyreise.";
@@ -243,7 +243,7 @@
 "flight.providers.count.-.3.more.deal.from.intgetlowestremainingprice" = "\\(flight.providers.count - 3) mer avtale fra ₹\\(Int(getLowestRemainingPrice()))";
 "formatteddateactualpickup.formatteddateactualdropoff" = "\\(formattedDate(actualPickUp)) • \\(formattedDate(actualDropOff))";
 "formatter.stringfrom.checkindate.-.formatter.stringfrom.checkoutdate" = "\\(formatter.string(from: checkinDate)) - \\(formatter.string(from: checkoutDate))";
-"formatter.stringfrom.departuredate.-.formatter.stringfrom.returndate" = "\\(formatter.streng(fra: avgangsdato)) - \\(formatter.streng(fra: returdato))";
+"formatter.stringfrom.departuredate.-.formatter.stringfrom.returndate" = "\\(formatter.string(fra: avgangsdato)) - \\(formatter.streng(fra: returdato))";
 "formatter.stringfrom.firstdate.-.returndatestring" = "\\(formatter.string(fra: firstDate)) - \\(returnDateString)";
 "getappversion.getbuildnumber" = "\\(getAppVersion()) (\\(getBuildNumber()))";
 "gueststext.roomstext" = "\\(gjestertekst), \\(romtekst)";
@@ -502,7 +502,7 @@
 "kz" = "KZ";
 "language.change" = "Språkendring";
 "language.updated.successfully" = "Språket er oppdatert!";
-"last.minute.flights" = "Siste liten flyreiser";
+"last.minute.flights" = "Flyreiser i siste liten";
 "launch.screen" = "Startskjerm";
 "lax" = "LAKSEN";
 "lb" = "LB";
@@ -510,7 +510,7 @@
 "li" = "LI";
 "light" = "Lys";
 "limit" = "begrense";
-"loading.viewmodel.isloading" = "Laster inn: \\(viewModel.isLoading ?";
+"loading.viewmodel.isloading" = "Laster: \\(viewModel.isLoading ?";
 "lon" = "LON";
 "london.heathrow" = "London Heathrow";
 "los.angeles" = "Los Angeles";
@@ -553,7 +553,7 @@
 "nl" = "nl";
 "nl-nl" = "nl-NL";
 "no" = "INGEN";
-"no.flight.deals.found.for.your.search.criteria" = "Ingen flytilbud funnet for søkekriteriene dine.";
+"no.flight.deals.found.for.your.search.criteria" = "Fant ingen flytilbud for søkekriteriene dine.";
 "no.internet.connection.try.reconnecting" = "Ingen Internett-tilkobling. Prøv å koble til på nytt";
 "no.locations.found" = "Ingen steder funnet";
 "no.recent.searches" = "Ingen nylige søk";
@@ -627,7 +627,7 @@
 "se" = "SE";
 "search" = "Søk";
 "search" = "søk";
-"search.currency" = "Søk valuta";
+"search.currency" = "Søk etter valuta";
 "search.failed.error.localizeddescription" = "Søk mislyktes: \\(error.localizedDescription)";
 "search.results" = "Søkeresultater";
 "search.timeout.-.please.try.again" = "Tidsavbrudd for søk - prøv igjen";
@@ -781,3 +781,24 @@
 "dec" = "des";
 "stop" = "stoppe";
 "travellers" = "Reisende";
+"update.search" = "Oppdater søk";
+"airbus.a320.neo" = "Airbus A320 neo";
+"hide.details" = "Skjul detaljer";
+"searching.flights" = "søker etter flyreiser";
+"show.all.flights" = "vis alle flyreiser";
+"non.stop.flights.only" = "kun direkteflyvninger";
+"1.stop" = "1 stopp";
+"2.stops" = "2 stopp";
+"departure.time.from" = "avgangstid fra kl";
+"arrival.time.at" = "ankomsttid kl";
+"price.range.info" = "info om prisklasse";
+"updating.search" = "oppdaterer søket";
+"any" = "noen";
+"2.stopovers" = "2 mellomlandinger";
+"1.stopover" = "1 mellomlanding";
+"emirates" = "Emirater";
+"indigo" = "IndiGo";
+"oman.air" = "Oman Air";
+"saudia" = "SAUDI";
+"spicejet" = "SpiceJet";
+"srilankan.airlines" = "SriLankan Airlines";

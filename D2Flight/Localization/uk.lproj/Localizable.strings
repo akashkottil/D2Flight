@@ -81,7 +81,7 @@
 "account.settings" = "Налаштування облікового запису";
 "region" = "Регіон";
 "currency" = "Валюта";
-"request.a.feature" = "Запит на функцію";
+"request.a.feature" = "Запит функції";
 "contact.us" = "Зв'яжіться з нами";
 "privacy.policy" = "Політика конфіденційності";
 "about.us" = "Про нас";
@@ -161,7 +161,7 @@
 "varies" = "Варіюється";
 "from" = "від";
 "lets.make.sure.you.get.the.best" = "Давайте переконаємося, що ви отримаєте найкраще!";
-"allow.push.notifications.so.that.we.can.ensure.you.dont.miss.out.on.the.best.deals" = "Дозвольте push-повідомлення, щоб ми могли гарантувати, що ви не пропустите найкращі пропозиції.";
+"allow.push.notifications.so.that.we.can.ensure.you.dont.miss.out.on.the.best.deals" = "Дозвольте push-сповіщення, щоб ми могли гарантувати, що ви не пропустите найкращі пропозиції.";
 "allow" = "Дозволити";
 "sponsored" = "Спонсорована";
 "ad" = "оголошення";
@@ -400,7 +400,7 @@
 "ey" = "EY";
 "failed.to.apply.filters.error.localizeddescription" = "Не вдалося застосувати фільтри: \\(error.localizedDescription)";
 "failed.to.create.session.please.try.again" = "Не вдалося створити сеанс. Спробуйте ще раз.";
-"failed.to.decode.response" = "Не вдалося декодувати відповідь";
+"failed.to.decode.response" = "Не вдалося розшифрувати відповідь";
 "failed.to.delete.account.error.localizeddescription" = "Не вдалося видалити обліковий запис: \\(error.localizedDescription)";
 "failed.to.encode.request" = "Не вдалося закодувати запит";
 "failed.to.fetch.flights.after.maxretries.attempts.error.localizeddescription" = "Не вдалося отримати рейси після \\(maxRetries) спроб: \\(error.localizedDescription)";
@@ -474,7 +474,7 @@
 "inr" = "INR";
 "installed.installdate.formatter.dateformatter" = "Встановлено: \\(installDate, форматування: dateFormatter)";
 "invalid.credentials.provided" = "Надано недійсні облікові дані";
-"invalid.response" = "Недійсна відповідь";
+"invalid.response" = "Невірна відповідь";
 "invalid.search.id" = "Недійсний ідентифікатор пошуку";
 "invalid.url" = "Недійсний URL";
 "iq" = "IQ";
@@ -501,7 +501,7 @@
 "kw" = "кВт";
 "kz" = "KZ";
 "language.change" = "Зміна мови";
-"language.updated.successfully" = "Мову успішно оновлено!";
+"language.updated.successfully" = "Мова успішно оновлена!";
 "last.minute.flights" = "Рейси в останню хвилину";
 "launch.screen" = "Екран запуску";
 "lax" = "LAX";
@@ -521,7 +521,7 @@
 "lv" = "LV";
 "lv-lv" = "lv-LV";
 "managed" = "керований";
-"masonry.layout" = "Розкладка кладки";
+"masonry.layout" = "Схема кладки";
 "max" = "макс";
 "mc" = "MC";
 "mel" = "MEL";
@@ -566,7 +566,7 @@
 "opening.booking.page" = "Відкриття сторінки бронювання";
 "organic" = "органічні";
 "pa" = "PA";
-"page" = "сторінки";
+"page" = "сторінку";
 "paris.charles.de.gaulle" = "Париж Шарль де Голль";
 "pe" = "PE";
 "per.adult" = "на дорослого";
@@ -743,7 +743,7 @@
 "zh-cn" = "zh-CN";
 "zh-hans" = "ж-Ганс";
 "0f" = "₹%.0f";
-"intplatform.price" = "₹\\(Int(platform.price))";
+"intplatform.price" = "₹\\(Int(платформа.ціна))";
 "intprice" = "₹\\(Int(ціна))";
 "travellers" = "мандрівники";
 "guests" = "гостей";
@@ -755,7 +755,7 @@
 "may" = "травня";
 "june" = "червень";
 "july" = "липень";
-"august" = "серпень";
+"august" = "Серпень";
 "september" = "вересень";
 "october" = "жовтень";
 "november" = "Листопад";
@@ -781,3 +781,24 @@
 "dec" = "груд";
 "stop" = "СТІЙ";
 "travellers" = "Мандрівники";
+"update.search" = "Оновити пошук";
+"airbus.a320.neo" = "Airbus A320 neo";
+"hide.details" = "Приховати деталі";
+"searching.flights" = "пошук рейсів";
+"show.all.flights" = "показати всі рейси";
+"non.stop.flights.only" = "лише прямі рейси";
+"1.stop" = "1 зупинка";
+"2.stops" = "2 зупинки";
+"departure.time.from" = "час відправлення з";
+"arrival.time.at" = "час прибуття о";
+"price.range.info" = "інформація про ціновий діапазон";
+"updating.search" = "оновлення пошуку";
+"any" = "будь-який";
+"2.stopovers" = "2 зупинки";
+"1.stopover" = "1 зупинка";
+"emirates" = "Емірати";
+"indigo" = "IndiGo";
+"oman.air" = "Оман Ейр";
+"saudia" = "САУДІЯ";
+"spicejet" = "SpiceJet";
+"srilankan.airlines" = "Авіакомпанія SriLankan Airlines";

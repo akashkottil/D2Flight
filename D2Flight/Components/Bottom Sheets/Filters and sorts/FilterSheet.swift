@@ -20,19 +20,28 @@ enum StopsOption: CaseIterable {
     
     var title: String {
         switch self {
-        case .any: return "Any"
-        case .direct: return "Direct"
-        case .oneStop: return "1 Stop"
-        case .twoStops: return "2 Stops"
+        case .any: return "any".localized
+        case .direct: return "direct".localized
+        case .oneStop: return "1.stop".localized
+        case .twoStops: return "2.stops".localized
         }
     }
     
     var subtitle: String {
         switch self {
-        case .any: return "Show all flights"
-        case .direct: return "Non-stop flights only"
-        case .oneStop: return "Up to 1 stopover"
-        case .twoStops: return "Up to 2 stopovers"
+        case .any: return "show.all.flights".localized
+        case .direct: return "non.stop.flights.only".localized
+        case .oneStop: return "exactly.1.stopover".localized  // Changed subtitle
+        case .twoStops: return "exactly.2.stopovers".localized // Changed subtitle
+        }
+    }
+    
+    var exactStops: Int? {
+        switch self {
+        case .any: return nil
+        case .direct: return 0
+        case .oneStop: return 1
+        case .twoStops: return 2
         }
     }
     
@@ -45,7 +54,17 @@ enum StopsOption: CaseIterable {
         }
     }
     
-    // Helper to convert from maxStops value back to option
+    // Helper to convert from exactStops value back to option
+    static func fromExactStops(_ stops: Int) -> StopsOption {
+        switch stops {
+        case 0: return .direct
+        case 1: return .oneStop
+        case 2: return .twoStops
+        default: return .any
+        }
+    }
+    
+    // Keep the existing helper for backward compatibility
     static func fromMaxStops(_ maxStops: Int) -> StopsOption {
         switch maxStops {
         case 0: return .direct
@@ -138,13 +157,13 @@ struct UnifiedFilterSheet: View {
     // MARK: - Header Title
     private var headerTitle: String {
         switch filterType {
-        case .sort: return "Sort"
-        case .times: return "Times"
-        case .airlines: return "Airlines"
-        case .duration: return "Duration"
-        case .price: return "Price"
-        case .classes: return "Classes"
-        case .stops: return "Stops" // ✅ NEW
+        case .sort: return "sort".localized
+        case .times: return "times".localized
+        case .airlines: return "airlines".localized
+        case .duration: return "duration".localized
+        case .price: return "price".localized
+        case .classes: return "classes".localized
+        case .stops: return "stops".localized // ✅ NEW
         }
     }
     
@@ -177,9 +196,34 @@ struct UnifiedFilterSheet: View {
                     title: option.title,
                     subtitle: option.subtitle,
                     option: option,
-                    isSelected: StopsOption.fromMaxStops(filterViewModel.maxStops) == option
+                    isSelected: getCurrentStopsSelection() == option
                 )
             }
+        }
+    }
+
+    // Add this helper function to determine current selection
+    private func getCurrentStopsSelection() -> StopsOption {
+        // ✅ FIXED: Always check exact stops first, then fall back to maxStops
+        if let exactStops = filterViewModel.exactStops {
+            return StopsOption.fromExactStops(exactStops)
+        } else if filterViewModel.maxStops == 3 {
+            return .any
+        } else {
+            return StopsOption.fromMaxStops(filterViewModel.maxStops)
+        }
+    }
+    
+    private func getLocalizedStopText(_ stopCount: Int) -> String {
+        switch stopCount {
+        case 0:
+            return "non.stop".localized
+        case 1:
+            return "1.stop".localized
+        case 2:
+            return "count.stops".localized.replacingOccurrences(of: "{count}", with: "2")
+        default:
+            return "any".localized
         }
     }
     
@@ -199,7 +243,7 @@ struct UnifiedFilterSheet: View {
                             Image(systemName: "airplane.departure")
                                 .font(CustomFont.font(.small))
                                 .foregroundColor(Color("Violet"))
-                            Text("Departure time from \(originCode)")
+                            Text("departure.time.from".localized.replacingOccurrences(of: "{origin}", with: originCode))
                                 .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         }
@@ -217,7 +261,7 @@ struct UnifiedFilterSheet: View {
                             Image(systemName: "airplane.arrival")
                                 .font(CustomFont.font(.small))
                                 .foregroundColor(Color("Violet"))
-                            Text("Arrival time at \(destinationCode)")
+                            Text("arrival.time.at".localized.replacingOccurrences(of: "{destination}", with: destinationCode))
                                 .font(CustomFont.font(.medium, weight: .semibold))
                                 .foregroundColor(.black)
                         }
@@ -245,7 +289,7 @@ struct UnifiedFilterSheet: View {
                                 Image(systemName: "airplane.departure")
                                     .font(CustomFont.font(.small))
                                     .foregroundColor(Color("Violet"))
-                                Text("Departure time from \(destinationCode)")
+                                Text("departure.time.from".localized.replacingOccurrences(of: "{origin}", with: destinationCode))
                                     .font(CustomFont.font(.medium, weight: .semibold))
                                     .foregroundColor(.black)
                             }
@@ -263,7 +307,7 @@ struct UnifiedFilterSheet: View {
                                 Image(systemName: "airplane.arrival")
                                     .font(CustomFont.font(.small))
                                     .foregroundColor(Color("Violet"))
-                                Text("Arrival time at \(originCode)")
+                                Text("arrival.time.at".localized.replacingOccurrences(of: "{destination}", with: originCode))
                                     .font(CustomFont.font(.medium, weight: .semibold))
                                     .foregroundColor(.black)
                             }
@@ -283,16 +327,31 @@ struct UnifiedFilterSheet: View {
     // ✅ NEW: Stops Selection Row (Similar to Sort Selection Row)
     private func stopsSelectionRow(title: String, subtitle: String, option: StopsOption, isSelected: Bool) -> some View {
         Button(action: {
-            // Update the filter view model
-            if let maxStops = option.maxStops {
-                filterViewModel.maxStops = maxStops
-            } else {
-                filterViewModel.maxStops = 3 // Any stops
-            }
-            
-            print("🛑 Stops filter selected: \(title)")
-            print("   Max stops value: \(filterViewModel.maxStops)")
-        }) {
+                // ✅ FIXED: Use exact stops filtering logic
+                switch option {
+                case .any:
+                    filterViewModel.exactStops = nil
+                    filterViewModel.isExactStopsFilter = false
+                    filterViewModel.maxStops = 3 // Keep for backward compatibility
+                case .direct:
+                    filterViewModel.exactStops = 0
+                    filterViewModel.isExactStopsFilter = true
+                    filterViewModel.maxStops = 0
+                case .oneStop:
+                    filterViewModel.exactStops = 1
+                    filterViewModel.isExactStopsFilter = true
+                    filterViewModel.maxStops = 1
+                case .twoStops:
+                    filterViewModel.exactStops = 2
+                    filterViewModel.isExactStopsFilter = true
+                    filterViewModel.maxStops = 2
+                }
+                
+                print("🛑 Stops filter selected: \(title)")
+                print("   Exact stops value: \(filterViewModel.exactStops?.description ?? "nil")")
+                print("   Is exact filter: \(filterViewModel.isExactStopsFilter)")
+                print("   Max stops (fallback): \(filterViewModel.maxStops)")
+            }) {
             VStack(spacing: 0) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
@@ -335,7 +394,7 @@ struct UnifiedFilterSheet: View {
         VStack(spacing: 0) {
             ForEach(SortOption.allCases, id: \.self) { option in
                 sortSelectionRow(
-                    title: option.displayName,
+                    title: option.localizedDisplayName,
                     option: option,
                     isSelected: filterViewModel.selectedSortOption == option
                 )
@@ -348,7 +407,7 @@ struct UnifiedFilterSheet: View {
             filterViewModel.selectedSortOption = option
         }) {
             HStack {
-                Text(title)
+                Text(option.localizedDisplayName)
                     .font(CustomFont.font(.medium, weight: .semibold))
                     .foregroundColor(.black)
                 
@@ -384,11 +443,11 @@ struct UnifiedFilterSheet: View {
                         .font(.system(size: 40))
                         .foregroundColor(.gray)
                     
-                    Text("No airlines available")
+                    Text("no.airlines.available".localized)
                         .font(CustomFont.font(.medium))
                         .foregroundColor(.gray)
                     
-                    Text("Airlines will appear here once flight results are loaded")
+                    Text("airlines.will.appear.here".localized)
                         .font(CustomFont.font(.small))
                         .foregroundColor(.gray)
                         .multilineTextAlignment(.center)
@@ -398,7 +457,7 @@ struct UnifiedFilterSheet: View {
             } else {
                 // Select All Option (always at top)
                 airlineSelectionRow(
-                    name: "Select All",
+                    name: "select.all".localized,
                     code: "ALL",
                     price: nil,
                     logo: "",
@@ -596,9 +655,6 @@ struct UnifiedFilterSheet: View {
         }
     }
     
-    
-    
-    
     // MARK: - Price Content
     private var priceContent: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -614,11 +670,13 @@ struct UnifiedFilterSheet: View {
                 }
                 
                 if filterViewModel.hasAPIDataLoaded {
-                    Text("Price range: ₹\(Int(filterViewModel.apiMinPrice)) - ₹\(Int(filterViewModel.apiMaxPrice))")
+                    Text("price.range.info".localized
+                        .replacingOccurrences(of: "{minPrice}", with: "₹\(Int(filterViewModel.apiMinPrice))")
+                        .replacingOccurrences(of: "{maxPrice}", with: "₹\(Int(filterViewModel.apiMaxPrice))"))
                         .font(.system(size: 13))
                         .foregroundColor(.gray)
                 } else {
-                    Text("Average price is ₹\(Int(averagePrice))")
+                    Text("average.price.info".localized.replacingOccurrences(of: "{avgPrice}", with: "₹\(Int(averagePrice))"))
                         .font(.system(size: 13))
                         .foregroundColor(.gray)
                 }
@@ -709,7 +767,7 @@ struct UnifiedFilterSheet: View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {
                 SecondaryButton(
-                    title: "Clear",
+                    title: "clear".localized,
                     font: CustomFont.font(.medium),
                     fontWeight: .semibold,
                     textColor: .gray,
@@ -722,7 +780,7 @@ struct UnifiedFilterSheet: View {
                 )
                 
                 PrimaryButton(
-                    title: "Apply",
+                    title: "apply".localized,
                     font: CustomFont.font(.medium),
                     fontWeight: .semibold,
                     textColor: .white,

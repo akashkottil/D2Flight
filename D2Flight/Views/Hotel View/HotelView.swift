@@ -1,6 +1,7 @@
 import SwiftUI
+import SafariServices
 
-// MARK: - Updated HotelView with Localized Date Display
+// MARK: - Updated HotelView with Localized Date Display and Optimized Loading
 struct HotelView: View {
     @State private var hotelLocation = ""
     @State private var hotelIATACode = ""
@@ -30,7 +31,6 @@ struct HotelView: View {
     @StateObject private var hotelSearchVM = HotelSearchViewModel()
     @StateObject private var networkMonitor = NetworkMonitor()
     @State private var showWebView = false
-    @State private var currentDeeplink: String? = nil
     
     // Recent locations management
     @StateObject private var recentLocationsManager = RecentLocationsManager.shared
@@ -44,7 +44,7 @@ struct HotelView: View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading,spacing: 6) {
                         // Header
                         HStack {
                             Image("HomeLogo")
@@ -112,7 +112,7 @@ struct HotelView: View {
                     }
                     .padding()
                     .padding(.top, 50)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 10)
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
                     
@@ -126,6 +126,8 @@ struct HotelView: View {
                         rooms: rooms,
                         onLocationTapped: handlePopularLocationTapped
                     )
+                    AutoSlidingCardsView()
+                    BottomBar()
                 }
                 .scrollIndicators(.hidden)
                 
@@ -141,14 +143,7 @@ struct HotelView: View {
                 lastNetworkStatus: &lastNetworkStatus
             )
         }
-        // Handle search results
-        .onReceive(hotelSearchVM.$deeplink) { deeplink in
-            if let deeplink = deeplink {
-                currentDeeplink = deeplink
-                showWebView = true
-                print("🔗 HotelView received deeplink: \(deeplink)")
-            }
-        }
+        // ✅ OPTIMIZED: Remove deeplink receiver - web view handles it directly
         .onReceive(hotelSearchVM.$errorMessage) { errorMessage in
             if let error = errorMessage {
                 print("⚠️ HotelView received error: \(error)")
@@ -192,10 +187,11 @@ struct HotelView: View {
                 print("🏨 Hotel location selected: \(selectedLocation) (\(iataCode))")
             }
         }
+        // ✅ OPTIMIZED: Show web view with loading state
         .sheet(isPresented: $showWebView) {
-            if let deeplink = currentDeeplink {
-                HotelWebView(url: deeplink)
-            }
+            HotelSearchWebView(hotelSearchVM: hotelSearchVM)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
         }
         .onAppear {
             if hotelLocation.isEmpty {
@@ -253,17 +249,17 @@ struct HotelView: View {
                     Spacer()
                 }
             }
-            .padding()
+            .padding(.leading)
+            .padding(.vertical)
             .background(Color.white)
             .cornerRadius(12)
         }
     }
     
-    // MARK: - Search Handler with Universal Validation
     private func handleSearchHotels() {
         print("🏨 Search Hotels button tapped!")
         
-        // ✅ Use SearchValidationHelper for validation
+        // Use SearchValidationHelper for validation
         if let warningType = SearchValidationHelper.validateHotelSearch(
             hotelIATACode: hotelIATACode,
             hotelLocation: hotelLocation,
@@ -292,11 +288,11 @@ struct HotelView: View {
         
         print("🎯 Hotel search parameters validated and starting search")
         
-        // Start the search
-        hotelSearchVM.searchHotels()
+        // Open web view immediately - the web view will handle the search and loading states
+        showWebView = true
     }
     
-    // ✅ UPDATED: Popular Location Handler with Universal Validation
+    // ✅ OPTIMIZED: Popular Location Handler with Immediate Web View Opening
     private func handlePopularLocationTapped(_ location: MasonryImage) {
         print("🏨 Popular hotel location tapped: \(location.title) (\(location.iataCode))")
         
@@ -338,7 +334,8 @@ struct HotelView: View {
         
         print("🎯 Popular hotel search validated and starting")
         
-        // Start the hotel search
+        // ✅ OPTIMIZED: Open web view immediately, then start search
+        showWebView = true
         hotelSearchVM.searchHotels()
     }
     
@@ -516,6 +513,9 @@ struct HotelView: View {
         return "\(guestsText), \(roomsText)"
     }
 }
+
+
+
 
 #Preview {
     HotelView()

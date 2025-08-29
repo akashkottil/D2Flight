@@ -42,7 +42,7 @@ struct RentalView: View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 6) {
                         // Header
                         HStack {
                             Image("HomeLogo")
@@ -77,10 +77,12 @@ struct RentalView: View {
                                     .background(
                                         Group {
                                             if isSameDropOff {
-                                                Color("Violet")
+                                                RoundedRectangle(cornerRadius: 100)
+                                                            .fill(Color("Violet"))
                                                     .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
                                             } else {
-                                                Color("Violet").opacity(0.15)
+                                                RoundedRectangle(cornerRadius: 100)
+                                                            .fill(Color("Violet").opacity(0.15))
                                             }
                                         }
                                     )
@@ -107,10 +109,12 @@ struct RentalView: View {
                                     .background(
                                         Group {
                                             if !isSameDropOff {
-                                                Color("Violet")
+                                                RoundedRectangle(cornerRadius: 100)
+                                                            .fill(Color("Violet"))
                                                     .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
                                             } else {
-                                                Color("Violet").opacity(0.15)
+                                                RoundedRectangle(cornerRadius: 100)
+                                                            .fill(Color("Violet").opacity(0.15))
                                             }
                                         }
                                     )
@@ -119,16 +123,17 @@ struct RentalView: View {
                         }
                         .padding(.vertical, 10)
                         
+                        
                         // Location Input Section
                         locationSection
                         
-                        HStack(spacing: 10) {
+                        
                             dateTimeView(
                                 icon: "CalenderIcon",
                                 title: isSameDropOff ? "pick-up.same.drop-off".localized : "pick-up.drop-off".localized
                             )
                             .id("datetime_selector")
-                        }
+                        
                         
                         // Search Rentals Button with validation
                         PrimaryButton(
@@ -144,7 +149,7 @@ struct RentalView: View {
                     }
                     .padding()
                     .padding(.top, 50)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 10)
                     .background(GradientColor.Primary)
                     .cornerRadius(20)
                     
@@ -158,6 +163,8 @@ struct RentalView: View {
                         rooms: 1,
                         onLocationTapped: handlePopularLocationTapped
                     )
+                    AutoSlidingCardsView()
+                    BottomBar()
                 }
                 .scrollIndicators(.hidden)
                 

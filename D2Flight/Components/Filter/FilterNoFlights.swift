@@ -1,8 +1,10 @@
 import SwiftUI
 
-struct FilterNoFlights : View {
+struct FilterNoFlights: View {
+    let onClearAll: () -> Void   // ← inject the action
+
     var body: some View {
-        VStack(spacing:20){
+        VStack(spacing: 20) {
             Image("FilterErrorImg")
             Text("edit.filter".localized)
                 .font(CustomFont.font(.large))
@@ -11,8 +13,9 @@ struct FilterNoFlights : View {
                 .font(CustomFont.font(.large))
                 .fontWeight(.medium)
                 .foregroundColor(.gray)
-                .padding(.horizontal,40)
+                .padding(.horizontal, 40)
                 .multilineTextAlignment(.center)
+
             PrimaryButton(
                 title: "clear all filter",
                 font: CustomFont.font(.large),
@@ -21,12 +24,13 @@ struct FilterNoFlights : View {
                 height: 44,
                 cornerRadius: 8
             ) {
-                print("filter error")
+                onClearAll()           // ← call the injected action
+                print("filter cleared!")
             }
         }
     }
 }
 
 #Preview {
-    FilterNoFlights()
+    FilterNoFlights(onClearAll: { })
 }

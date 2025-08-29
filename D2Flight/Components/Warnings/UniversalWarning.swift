@@ -1,9 +1,3 @@
-//
-//  WarningType.swift
-//  D2Flight
-//
-//  Created by Akash Kottil on 08/08/25.
-//
 import SwiftUI
 
 // MARK: - Universal Warning Types
@@ -11,15 +5,27 @@ enum WarningType {
     case noInternet
     case emptySearch
     case sameLocation
+    case hotelSearchError
+    case rentalSearchError
+    case deeplinkError
+    case searchTimeout
     
     var message: String {
         switch self {
         case .noInternet:
-            return "No Internet connection. Try reconnecting"
+            return "no.internet.connection.try.reconnecting".localized
         case .emptySearch:
-            return "Select location to search flight"
+            return "select.location.to.search.flight".localized
         case .sameLocation:
-            return "Try different locations"
+            return "try.different.locations".localized
+        case .hotelSearchError:
+            return "hotel.search.failed.try.again".localized
+        case .rentalSearchError:
+            return "rental.search.failed.try.again".localized
+        case .deeplinkError:
+            return "search.failed.please.try.again".localized
+        case .searchTimeout:
+            return "search.taking.too.long.please.try.again".localized
         }
     }
     
@@ -27,15 +33,42 @@ enum WarningType {
         switch self {
         case .noInternet:
             return "wifi.slash"
-        case .emptySearch:
+        case .emptySearch, .sameLocation:
             return "exclamationmark.triangle.fill"
-        case .sameLocation:
-            return "exclamationmark.triangle.fill"
+        case .hotelSearchError:
+            return "bed.double.fill"
+        case .rentalSearchError:
+            return "car.fill"
+        case .deeplinkError, .searchTimeout:
+            return "exclamationmark.circle.fill"
+        }
+    }
+    
+    // NEW: Auto-dismiss behavior configuration
+    var shouldAutoDismiss: Bool {
+        switch self {
+        case .noInternet:
+            return false // Keep showing until network is restored
+        case .emptySearch, .sameLocation:
+            return true // Auto-dismiss after 3 seconds
+        case .hotelSearchError, .rentalSearchError, .deeplinkError, .searchTimeout:
+            return true // Auto-dismiss after 4 seconds for error messages
+        }
+    }
+    
+    var autoDismissDelay: TimeInterval {
+        switch self {
+        case .emptySearch, .sameLocation:
+            return 3.0
+        case .hotelSearchError, .rentalSearchError, .deeplinkError, .searchTimeout:
+            return 4.0
+        default:
+            return 3.0
         }
     }
 }
 
-// MARK: - Universal Warning Component
+// MARK: - Universal Warning Component (Updated with better error handling)
 struct UniversalWarning: View {
     let warningType: WarningType
     @Binding var isVisible: Bool
@@ -70,9 +103,9 @@ struct UniversalWarning: View {
             generator.prepare()
             generator.impactOccurred()
             
-            // Auto dismiss after 3 seconds (except for no internet which needs manual dismiss)
-            if warningType != .noInternet {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            // Auto dismiss based on warning type configuration
+            if warningType.shouldAutoDismiss {
+                DispatchQueue.main.asyncAfter(deadline: .now() + warningType.autoDismissDelay) {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         isVisible = false
                     }
@@ -82,7 +115,7 @@ struct UniversalWarning: View {
     }
 }
 
-// MARK: - Warning Manager (ObservableObject for global state)
+// MARK: - Warning Manager (Enhanced with error tracking)
 class WarningManager: ObservableObject {
     @Published var activeWarning: WarningType? = nil
     @Published var showWarning = false
@@ -91,6 +124,19 @@ class WarningManager: ObservableObject {
     private init() {}
     
     func showWarning(type: WarningType) {
+        // If there's already a warning showing, dismiss it first
+        if showWarning {
+            hideWarning()
+            // Small delay before showing new warning
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.displayWarning(type: type)
+            }
+        } else {
+            displayWarning(type: type)
+        }
+    }
+    
+    private func displayWarning(type: WarningType) {
         activeWarning = type
         withAnimation(.easeInOut(duration: 0.3)) {
             showWarning = true
@@ -108,9 +154,36 @@ class WarningManager: ObservableObject {
             self.activeWarning = nil
         }
     }
+    
+    // NEW: Show deeplink-specific errors
+    func showDeeplinkError(for searchType: SearchType, error: Error? = nil) {
+        let warningType: WarningType
+        
+        switch searchType {
+        case .hotel:
+            warningType = .hotelSearchError
+        case .rental:
+            warningType = .rentalSearchError
+        case .flight:
+            warningType = .deeplinkError
+        }
+        
+        if let error = error {
+            print("🔗 Deeplink error for \(searchType): \(error.localizedDescription)")
+        }
+        
+        showWarning(type: warningType)
+    }
+    
+    // NEW: Show timeout errors
+    func showTimeoutError() {
+        showWarning(type: .searchTimeout)
+    }
 }
 
-// MARK: - Warning Overlay View (Reusable Component)
+
+
+// MARK: - Warning Overlay View (Enhanced)
 struct WarningOverlay: View {
     @ObservedObject var warningManager = WarningManager.shared
     
@@ -130,7 +203,7 @@ struct WarningOverlay: View {
     }
 }
 
-// MARK: - Search Validation Helper
+// MARK: - Search Validation Helper (Enhanced with deeplink validation)
 struct SearchValidationHelper {
     
     // Validate flight search
@@ -212,9 +285,19 @@ struct SearchValidationHelper {
         
         return nil // No validation errors
     }
+    
+    // NEW: Validate deeplink response
+    static func validateDeeplink(_ deeplink: String?) -> Bool {
+        guard let deeplink = deeplink,
+              !deeplink.isEmpty,
+              URL(string: deeplink) != nil else {
+            return false
+        }
+        return true
+    }
 }
 
-// MARK: - Network Monitor Integration
+// MARK: - Network Monitor Integration (Enhanced)
 extension NetworkMonitor {
     func handleNetworkChange(isConnected: Bool, lastNetworkStatus: inout Bool) {
         if lastNetworkStatus && !isConnected {

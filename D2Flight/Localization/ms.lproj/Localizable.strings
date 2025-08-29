@@ -8,7 +8,7 @@
 "profile" = "Profil";
 "one.way" = "Sehala";
 "round.trip" = "Pergi Balik";
-"same.drop-off" = "Turun yang sama";
+"same.drop-off" = "Turun sama";
 "different.drop-off" = "Penghantaran yang berbeza";
 "enter.departure" = "Masukkan Berlepas";
 "enter.destination" = "Masukkan Destinasi";
@@ -18,7 +18,7 @@
 "check-in" = "Daftar masuk";
 "check-out" = "Daftar keluar";
 "pick-up" = "Pick-up";
-"drop-off" = "Drop-off";
+"drop-off" = "Hantar-lepas";
 "departure" = "berlepas";
 "return" = "Kembali";
 "add.return" = "Tambah Pulangan";
@@ -96,7 +96,7 @@
 "per.adult" = "setiap Dewasa";
 "looking.for.best.deals" = "Mencari Tawaran Terbaik";
 "searching.for.best.price.for.your.journey" = "Mencari harga terbaik untuk perjalanan anda";
-"scanning.hundreds.of.airlines" = "Mengimbas ratusan syarikat penerbangan";
+"scanning.hundreds.of.airlines" = "Mengimbas beratus-ratus syarikat penerbangan";
 "finalizing.your.best.deals" = "Memuktamadkan tawaran terbaik anda";
 "loading.more.flights" = "Memuatkan lebih banyak penerbangan...";
 "loading.countries" = "Memuatkan negara...";
@@ -186,7 +186,7 @@
 "berlin" = "Berlin";
 "historic.germany" = "Jerman bersejarah";
 "rio.de.janeiro" = "Rio de Janeiro";
-"city.of.samba" = "Bandar Samba";
+"city.of.samba" = "Kota Samba";
 "cairo" = "Kaherah";
 "land.of.pyramids" = "Tanah Piramid";
 "viewmodel.isloadingmore" = ": viewModel.isLoadingMore ?";
@@ -285,7 +285,7 @@
 "apple" = "epal";
 "applicationjson" = "aplikasi/json";
 "apply" = "Mohon";
-"applying.changes" = "Menggunakan perubahan...";
+"applying.changes" = "Memohon perubahan...";
 "ar" = "ar";
 "ar" = "AR";
 "ar-sa" = "ar-SA";
@@ -345,7 +345,7 @@
 "cookie" = "Kuki";
 "country" = "negara";
 "cr" = "CR";
-"created.usermanager.isusercreated" = "Dibuat: \\(userManager.isUserCreated ?";
+"created.usermanager.isusercreated" = "Dicipta: \\(userManager.isUserCreated ?";
 "cs" = "cs";
 "cs-cz" = "cs-CZ";
 "cu" = "CU";
@@ -521,7 +521,7 @@
 "lv" = "LV";
 "lv-lv" = "lv-LV";
 "managed" = "terurus";
-"masonry.layout" = "Susun Atur Batu";
+"masonry.layout" = "Susun atur Batu";
 "max" = "maks";
 "mc" = "MC";
 "mel" = "MEL";
@@ -540,7 +540,7 @@
 "mx" = "MX";
 "my" = "SAYA";
 "mz" = "MZ";
-"nature.and.environment" = "Alam dan persekitaran";
+"nature.and.environment" = "Alam semula jadi dan persekitaran";
 "nb" = "nb";
 "network.connection.failed" = "Sambungan rangkaian gagal";
 "network.connection.failed.please.check.your.internet.connection" = "Sambungan rangkaian gagal. Sila semak sambungan internet anda.";
@@ -622,7 +622,7 @@
 "sa" = "Sa";
 "sa" = "SA";
 "salem" = "Salem";
-"scanning.hundreds.of.airlines" = "Mengimbas ratusan syarikat penerbangan";
+"scanning.hundreds.of.airlines" = "Mengimbas beratus-ratus syarikat penerbangan";
 "scroll" = "tatal";
 "se" = "SE";
 "search" = "Cari";
@@ -737,7 +737,7 @@
 "ye" = "YE";
 "youve.selected.countryname.would.you.like.to.switch.to.getlanguagedisplaynamesuggestedlanguage.or.keep.getlanguagedisplaynamecurrentlanguage" = "Anda telah memilih \\(countryName). Adakah anda mahu bertukar kepada \\(getLanguageDisplayName(suggestedLanguage)) atau kekalkan \\(getLanguageDisplayName(currentLanguage))?";
 "your.recent.flight.searches.will.appear.here" = "Carian penerbangan terbaru anda akan dipaparkan di sini";
-"yyyy-mm-ddthhmm" = "yyyy-MM-dd'T'HH:mm";
+"yyyy-mm-ddthhmm" = "tttt-MM-dd'T'HH:mm";
 "yyyy-mm-ddthhmm" = "YYYY-MM-DDTHH:MM";
 "za" = "ZA";
 "zh-cn" = "zh-CN";
@@ -781,3 +781,24 @@
 "dec" = "Dis";
 "stop" = "berhenti";
 "travellers" = "Pengembara";
+"update.search" = "Kemas kini Carian";
+"airbus.a320.neo" = "Airbus A320 neo";
+"hide.details" = "Sembunyikan butiran";
+"searching.flights" = "mencari penerbangan";
+"show.all.flights" = "tunjukkan semua penerbangan";
+"non.stop.flights.only" = "penerbangan tanpa henti sahaja";
+"1.stop" = "1 perhentian";
+"2.stops" = "2 perhentian";
+"departure.time.from" = "masa berlepas dari";
+"arrival.time.at" = "masa ketibaan di";
+"price.range.info" = "maklumat julat harga";
+"updating.search" = "mengemas kini carian";
+"any" = "mana-mana";
+"2.stopovers" = "2 persinggahan";
+"1.stopover" = "1 persinggahan";
+"emirates" = "Emirates";
+"indigo" = "IndiGo";
+"oman.air" = "Oman Air";
+"saudia" = "SAUDIA";
+"spicejet" = "SpiceJet";
+"srilankan.airlines" = "Syarikat Penerbangan SriLankan";

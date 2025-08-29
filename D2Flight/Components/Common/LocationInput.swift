@@ -6,20 +6,22 @@ struct LocationInput: View {
     @Binding var isSelectingOrigin: Bool
     @Binding var searchText: String
     
-    @FocusState private var focusedField: Field?
+    // Separate focus states to avoid enum churn
+    @FocusState private var originFocused: Bool
+    @FocusState private var destinationFocused: Bool
+    
+    // Stable per-field text (prevents swapping bindings)
+    @State private var originText: String = ""
+    @State private var destinationText: String = ""
     
     @State private var swapButtonRotationAngle: Double = 0
     
-    // NEW: Parameters to control rental-specific behavior
+    // Parameters to control behavior
     let isFromRental: Bool
     let isSameDropOff: Bool
     let isFromHotel: Bool
     
-    enum Field {
-        case origin, destination
-    }
-    
-    // Default initializer for FlightView (maintains backward compatibility)
+    // Default initializer for FlightView
     init(
         originLocation: Binding<String>,
         destinationLocation: Binding<String>,
@@ -32,10 +34,10 @@ struct LocationInput: View {
         self._searchText = searchText
         self.isFromRental = false
         self.isSameDropOff = true
-        self.isFromHotel = false // ADD this line
+        self.isFromHotel = false
     }
     
-    // New initializer for RentalView
+    // Rental initializer
     init(
         originLocation: Binding<String>,
         destinationLocation: Binding<String>,
@@ -50,10 +52,10 @@ struct LocationInput: View {
         self._searchText = searchText
         self.isFromRental = isFromRental
         self.isSameDropOff = isSameDropOff
-        self.isFromHotel = false // ADD this line
+        self.isFromHotel = false
     }
     
-    // NEW: Hotel initializer
+    // Hotel initializer
     init(
         originLocation: Binding<String>,
         destinationLocation: Binding<String>,
@@ -70,74 +72,53 @@ struct LocationInput: View {
         self.isFromHotel = isFromHotel
     }
     
-    // Computed properties for dynamic text based on source
+    // Placeholders
     private var originPlaceholder: String {
-        if isFromHotel {
-            return "enter.hotel.location".localized
-        } else if isFromRental {
-            return "enter.pick-up.location".localized
-        } else {
-            return "enter.departure".localized
-        }
+        if isFromHotel { return "enter.hotel.location".localized }
+        else if isFromRental { return "enter.pick-up.location".localized }
+        else { return "enter.departure".localized }
     }
     
     private var destinationPlaceholder: String {
-        if isFromRental {
-            return "enter.drop-off.location".localized
-        } else {
-            return "enter.destination".localized
-        }
+        if isFromRental { return "enter.drop-off.location".localized }
+        else { return "enter.destination".localized }
     }
     
-    // Determine if destination section should be shown
+    // Visibility rules
     private var shouldShowDestination: Bool {
-        if isFromHotel {
-            return false // Hotel only shows origin (location)
-        } else if isFromRental && isSameDropOff {
-            return false // Hide destination for rental same drop-off
-        }
-        return true // Show for flight view and rental different drop-off
+        if isFromHotel { return false }
+        if isFromRental && isSameDropOff { return false }   // <- one input for rental same-drop-off
+        return true                                          // <- two inputs otherwise
     }
     
-    // Determine if swap button should be shown
     private var shouldShowSwapButton: Bool {
-        if isFromHotel {
-            return false // No swap for hotel
-        } else if isFromRental && isSameDropOff {
-            return false // Hide swap button for rental same drop-off
-        }
-        return true // Show for flight view and rental different drop-off
+        if isFromHotel { return false }
+        if isFromRental && isSameDropOff { return false }
+        return true
     }
     
     var body: some View {
         ZStack {
             VStack(spacing: 1) {
-                // Origin/Pick-up section (always visible)
+                // ORIGIN
                 HStack {
                     Image("DepartureLightIcon")
                         .resizable()
                         .frame(width: 20, height: 20)
-                    TextField(originPlaceholder, text: isSelectingOrigin ? $searchText : $originLocation)
-                        .focused($focusedField, equals: .origin)
-                        .onChange(of: focusedField) { newValue in
-                            if newValue == .origin {
-                                isSelectingOrigin = true
-                                searchText = originLocation
-                            }
-                        }
-                        .foregroundColor(originLocation.isEmpty ? .gray : .black)
-                        .fontWeight(originLocation.isEmpty ? .medium : .semibold)
+                    
+                    TextField(originPlaceholder, text: $originText)
+                        .focused($originFocused)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .foregroundColor(originText.isEmpty ? .gray : .black)
+                        .fontWeight(originText.isEmpty ? .medium : .semibold)
                         .font(CustomFont.font(.regular))
                     
-                    // Clear button for origin
-                    if !(isSelectingOrigin ? searchText.isEmpty : originLocation.isEmpty) {
-                        Button(action: {
-                            if isSelectingOrigin {
-                                searchText = ""
-                            } else {
-                                originLocation = ""
-                            }
-                        }) {
+                    if !originText.isEmpty {
+                        Button {
+                            originText = ""
+                            if originFocused { searchText = "" }
+                        } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.gray)
                         }
@@ -147,40 +128,42 @@ struct LocationInput: View {
                 }
                 .padding(.vertical, 18)
                 .padding(.horizontal)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if !originFocused {
+                        isSelectingOrigin = true
+                        DispatchQueue.main.async { originFocused = true }
+                    }
+                }
+                .onChange(of: originText) { newValue in
+                    if originFocused { searchText = newValue }
+                }
                 
-                // Destination section (conditionally visible)
+                // DESTINATION (conditional)
                 if shouldShowDestination {
                     Divider()
                         .background(Color.gray.opacity(0.5))
                         .padding(.leading)
                         .padding(.trailing, shouldShowSwapButton ? 70 : 0)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
                     
                     HStack {
                         Image("DestinationLightIcon")
                             .resizable()
                             .frame(width: 20, height: 20)
-                        TextField(destinationPlaceholder, text: !isSelectingOrigin ? $searchText : $destinationLocation)
-                            .focused($focusedField, equals: .destination)
-                            .onChange(of: focusedField) { newValue in
-                                if newValue == .destination {
-                                    isSelectingOrigin = false
-                                    searchText = destinationLocation
-                                }
-                            }
-                            .foregroundColor(destinationLocation.isEmpty ? .gray : .black)
-                            .fontWeight(destinationLocation.isEmpty ? .medium : .semibold)
+                        
+                        TextField(destinationPlaceholder, text: $destinationText)
+                            .focused($destinationFocused)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .foregroundColor(destinationText.isEmpty ? .gray : .black)
+                            .fontWeight(destinationText.isEmpty ? .medium : .semibold)
                             .font(CustomFont.font(.regular))
                         
-                        // Clear button for destination
-                        if !(!isSelectingOrigin ? searchText.isEmpty : destinationLocation.isEmpty) {
-                            Button(action: {
-                                if !isSelectingOrigin {
-                                    searchText = ""
-                                } else {
-                                    destinationLocation = ""
-                                }
-                            }) {
+                        if !destinationText.isEmpty {
+                            Button {
+                                destinationText = ""
+                                if destinationFocused { searchText = "" }
+                            } label: {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
                             }
@@ -190,28 +173,34 @@ struct LocationInput: View {
                     }
                     .padding(.vertical, 18)
                     .padding(.horizontal)
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if !destinationFocused {
+                            isSelectingOrigin = false
+                            DispatchQueue.main.async { destinationFocused = true }
+                        }
+                    }
+                    .onChange(of: destinationText) { newValue in
+                        if destinationFocused { searchText = newValue }
+                    }
                 }
             }
             .background(.gray.opacity(0.1))
             .cornerRadius(12)
-            .animation(.spring(response: 0.6, dampingFraction: 0.8), value: shouldShowDestination)
             
-            // 🔄 Swap Button (conditionally visible)
+            // Swap (if visible)
             if shouldShowSwapButton {
                 Button(action: {
-                    let temp = originLocation
-                    originLocation = destinationLocation
-                    destinationLocation = temp
+                    let t = originText
+                    originText = destinationText
+                    destinationText = t
                     
-                    // Update searchText to match current field
-                    if isSelectingOrigin {
-                        searchText = originLocation
-                    } else {
-                        searchText = destinationLocation
+                    if originFocused {
+                        searchText = originText
+                    } else if destinationFocused {
+                        searchText = destinationText
                     }
                     
-                    // 🔁 Rotate swap icon
                     withAnimation(.easeInOut(duration: 0.3)) {
                         swapButtonRotationAngle -= 180
                     }
@@ -221,18 +210,21 @@ struct LocationInput: View {
                 }
                 .offset(x: 135)
                 .shadow(color: .purple.opacity(0.3), radius: 5)
-                .transition(.opacity.combined(with: .scale))
-                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: shouldShowSwapButton)
             }
         }
         .padding()
         .onAppear {
-            // Set focus based on mode
+            // Seed UI text from the bound values
+            originText = originLocation
+            destinationText = destinationLocation
+            
+            // Auto-focus origin (async) if applicable
             if isFromHotel || (isFromRental && isSameDropOff) {
-                focusedField = .origin // Only focus on origin for hotel or same drop-off
-            } else {
-                focusedField = .origin // Default behavior
+                DispatchQueue.main.async { originFocused = true }
             }
         }
+        // Keep UI text in sync if parent updates these bindings externally
+        .onChange(of: originLocation) { originText = $0 }
+        .onChange(of: destinationLocation) { destinationText = $0 }
     }
 }

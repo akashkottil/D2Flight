@@ -10,15 +10,16 @@ import SwiftUI
 
 // MARK: - Supporting Models (defined first to avoid scope issues)
 enum SortOption: String, CaseIterable {
-    case best = "Best"
-    case cheapest = "Cheapest"
-    case quickest = "Quickest"
-    case earliest = "Earliest"
+    case best = "best"
+    case cheapest = "cheapest"
+    case quickest = "quickest"
+    case earliest = "earliest"
     
     var displayName: String {
         return self.rawValue
     }
 }
+
 
 struct AirlineOption: Identifiable {
     let id = UUID()
@@ -68,6 +69,10 @@ class FilterViewModel: ObservableObject {
     @Published private(set) var apiMaxPrice: Double = 10000
     @Published private(set) var hasAPIDataLoaded: Bool = false
     @Published private(set) var userHasModifiedPrice: Bool = false
+    
+    // MARK: - NEW: Exact stops filtering
+    @Published var exactStops: Int? = nil
+    @Published var isExactStopsFilter: Bool = false
     
     // Trip type for conditional filtering
     var isRoundTrip: Bool = false
@@ -263,22 +268,22 @@ class FilterViewModel: ObservableObject {
         
         // ✅ Sort options - always apply if not default
         if selectedSortOption != .best {
-            switch selectedSortOption {
-            case .best:
-                request.sort_by = "quality"
-                request.sort_order = "desc"
-            case .cheapest:
-                request.sort_by = "price"
-                request.sort_order = "asc"
-            case .quickest:
-                request.sort_by = "duration"
-                request.sort_order = "asc"
-            case .earliest:
-                request.sort_by = "departure"
-                request.sort_order = "asc"
-            }
-            print("   ✓ Sort: \(request.sort_by!) \(request.sort_order!)")
-        }
+                    switch selectedSortOption {
+                    case .best:
+                        request.sort_by = "quality"
+                        request.sort_order = "desc"
+                    case .cheapest:
+                        request.sort_by = "price"
+                        request.sort_order = "asc"
+                    case .quickest:
+                        request.sort_by = "duration"
+                        request.sort_order = "asc"
+                    case .earliest:
+                        request.sort_by = "departure"
+                        request.sort_order = "asc"
+                    }
+                    print("   ✓ Sort: \(request.sort_by!) \(request.sort_order!)")
+                }
         
         // ✅ Duration filter - only apply if different from default
         if maxDuration < 1440 {
@@ -286,11 +291,19 @@ class FilterViewModel: ObservableObject {
             print("   ✓ Duration: ≤ \(Int(maxDuration)) minutes")
         }
         
-        // ✅ Stop count filter - only apply if different from default
-        if maxStops < 3 {
-            request.stop_count_max = maxStops
-            print("   ✓ Stops: ≤ \(maxStops)")
-        }
+        if let exactStopsValue = exactStops, isExactStopsFilter {
+                    // Use exact stops filtering for precise control
+                    request.stop_count_min = exactStopsValue
+                    request.stop_count_max = exactStopsValue
+                    print("   ✅ EXACT Stops Filter: EXACTLY \(exactStopsValue) stops")
+                    print("     stop_count_min: \(exactStopsValue)")
+                    print("     stop_count_max: \(exactStopsValue)")
+                } else if maxStops < 3 {
+                    // Fallback to max stops only for "any" option or legacy support
+                    request.stop_count_max = maxStops
+                    print("   ✓ Max Stops (fallback): ≤ \(maxStops)")
+                }
+        
         
         // ✅ Time range filters
         var timeRanges: [ArrivalDepartureRange] = []
@@ -390,7 +403,8 @@ class FilterViewModel: ObservableObject {
         selectedAirlines.removeAll()
         excludedAirlines.removeAll()
         maxStops = 3
-        
+        exactStops = nil
+        isExactStopsFilter = false
         // Reset price filter properly
         resetPriceFilter()
         
@@ -409,5 +423,40 @@ class FilterViewModel: ObservableObject {
                !excludedAirlines.isEmpty ||
                maxStops < 3 ||
                isPriceFilterActive()
+    }
+    
+    func getLocalizedAirlineFilterDisplayText() -> String {
+        if selectedAirlines.isEmpty {
+            return "airlines".localized
+        } else if selectedAirlines.count == 1,
+                  let airline = getAirline(by: selectedAirlines.first!) {
+            return airline.name
+        } else {
+            return "\(selectedAirlines.count) \("airlines".localized)"
+        }
+    }
+
+    /// Get localized price filter display text
+    func getLocalizedPriceFilterDisplayText() -> String {
+        if isPriceFilterActive() {
+            return "₹\(formatPriceValue(priceRange.lowerBound)) - ₹\(formatPriceValue(priceRange.upperBound))"
+        } else {
+            return "price".localized
+        }
+    }
+}
+
+extension SortOption {
+    var localizedDisplayName: String {
+        switch self {
+        case .best:
+            return "best".localized
+        case .cheapest:
+            return "cheapest".localized
+        case .quickest:
+            return "quickest".localized
+        case .earliest:
+            return "earliest".localized
+        }
     }
 }

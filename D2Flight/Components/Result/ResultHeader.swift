@@ -109,7 +109,7 @@ struct ResultHeader: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(CustomFont.font(.small))
-                                Text("Clear All")
+                                Text("clear.all".localized)
                             }
                             .font(CustomFont.font(.small, weight: .semibold))
                             .padding(.vertical, 8)
@@ -121,35 +121,28 @@ struct ResultHeader: View {
                     }
                     
                     // Sort Button
-                    Button(action: {
-                        selectedFilterType = .sort
-                        showUnifiedFilterSheet = true
-                    }) {
-                        HStack {
-                            Image("SortIcon")
-                            Text("Sort: \(filterViewModel.selectedSortOption.displayName)")
+                    FilterButton(
+                        title: getSortFilterTitle(),
+                        isSelected: filterViewModel.selectedSortOption != .best,
+                        action: {
+                            selectedFilterType = .sort
+                            showUnifiedFilterSheet = true
                         }
-                        .font(CustomFont.font(.small, weight: .semibold))
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                        .background(filterViewModel.selectedSortOption != .best ? Color("Violet") : Color.gray.opacity(0.1))
-                        .foregroundColor(filterViewModel.selectedSortOption != .best ? .white : .gray)
-                        .cornerRadius(20)
-                    }
-                    
+                    )
+
                     // Stops Filter Button
                     FilterButton(
-                        title: getStopsFilterTitle(),
+                        title: getLocalizedStopsFilterTitle(),
                         isSelected: filterViewModel.maxStops < 3,
                         action: {
                             selectedFilterType = .stops
                             showUnifiedFilterSheet = true
                         }
                     )
-                    
+
                     // Time Filter
                     FilterButton(
-                        title: "Time",
+                        title: "times".localized,
                         isSelected: filterViewModel.departureTimeRange != 0...86400 ||
                                    filterViewModel.arrivalTimeRange != 0...86400 ||
                                    (isRoundTrip && filterViewModel.returnDepartureTimeRange != 0...86400) ||
@@ -159,39 +152,30 @@ struct ResultHeader: View {
                             showUnifiedFilterSheet = true
                         }
                     )
-                    
+
                     // Airlines Filter
                     FilterButton(
-                        title: filterViewModel.getAirlineFilterDisplayText(),
+                        title: filterViewModel.getLocalizedAirlineFilterDisplayText(),
                         isSelected: filterViewModel.selectedAirlinesCount > 0,
                         action: {
                             selectedFilterType = .airlines
                             showUnifiedFilterSheet = true
                         }
                     )
-                    
-                    // Duration Filter
-//                    FilterButton(
-//                        title: "Duration",
-//                        isSelected: filterViewModel.maxDuration < 1440,
-//                        action: {
-//                            selectedFilterType = .durationFlightSearchViewModel
-//                            showUnifiedFilterSheet = true
-//                        }
-//                    )
-                    
+
+                    // Price Filter
                     FilterButton(
-                        title: filterViewModel.getPriceFilterDisplayText(),
+                        title: filterViewModel.getLocalizedPriceFilterDisplayText(),
                         isSelected: filterViewModel.isPriceFilterActive(),
                         action: {
                             selectedFilterType = .price
                             showUnifiedFilterSheet = true
                         }
                     )
-                    
+
                     // Classes Filter
                     FilterButton(
-                        title: "Classes",
+                        title: "classes".localized,
                         isSelected: filterViewModel.selectedClass != .economy,
                         action: {
                             selectedFilterType = .classes
@@ -279,7 +263,7 @@ struct ResultHeader: View {
                filterViewModel.isPriceFilterActive() // ✅ Include price filter
     }
     
-    private func clearAllFilters() {
+     func clearAllFilters() {
         print("\n🗑️ ===== CLEAR ALL FILTERS =====")
         print("🔄 Clearing all filters and resetting to default state...")
         
@@ -327,4 +311,22 @@ struct ResultHeader: View {
         }
         print("   Has Any Filters: \(pollRequest.hasFilters())")
     }
+    
+    private func getLocalizedStopsFilterTitle() -> String {
+        switch filterViewModel.maxStops {
+        case 0:
+            return "direct".localized
+        case 1:
+            return "1.stop".localized
+        case 2:
+            return "count.stops".localized.replacingOccurrences(of: "{count}", with: "2")
+        default:
+            return "stops".localized
+        }
+    }
+    
+    private func getSortFilterTitle() -> String {
+        return "sort".localized + ": \(filterViewModel.selectedSortOption.localizedDisplayName)"
+    }
+    
 }
