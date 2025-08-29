@@ -244,7 +244,7 @@ struct ResultView: View {
                         }
                         
                     case .ad(let ad):
-                        AdCardView(ad: ad) {
+                        AdCard(ad: ad) {
                             handleAdTap(ad)
                         }
                         .id("ad-\(ad.id)")

@@ -1,211 +1,130 @@
 import SwiftUI
 
-struct AdCardView: View {
+struct AdCard: View {
     let ad: AdResponse
     let onAdTapped: (() -> Void)?
-    
+
     init(ad: AdResponse, onAdTapped: (() -> Void)? = nil) {
         self.ad = ad
         self.onAdTapped = onAdTapped
     }
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header with logo and company info
-            headerSection
-            
-            // Background image
-            backgroundImageSection
-            
-            // Content section
-            contentSection
-            
-            // Action button
-            actionButton
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(16) // Match your app's corner radius
-        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2) // Match your card shadow
-    }
-    
-    // MARK: - Header Section
-    private var headerSection: some View {
-        HStack {
-            // Company logo
-            AsyncImage(url: URL(string: fullLogoUrl)) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                logoPlaceholder
-            }
-            .frame(width: 32, height: 32)
-            .cornerRadius(6)
-            
-            // Company info
-            VStack(alignment: .leading, spacing: 2) {
-                Text(ad.companyName)
-                    .font(CustomFont.font(.medium, weight: .semibold))
-                    .foregroundColor(.black)
-                    .lineLimit(1)
-                
-                Text("Sponsored")
-                    .font(CustomFont.font(.small))
-                    .foregroundColor(.gray)
-                    .lineLimit(1)
-            }
-            
-            Spacer()
-            
-            // Ad badge
-            Text("Ad")
-                .font(CustomFont.font(.tiny, weight: .medium))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.blue.opacity(0.1))
-                .foregroundColor(.blue)
-                .cornerRadius(12)
-        }
-    }
-    
-    // MARK: - Background Image Section
-    private var backgroundImageSection: some View {
-        AsyncImage(url: URL(string: fullBackgroundImageUrl)) { image in
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        } placeholder: {
-            imagePlaceholder
-        }
-        .frame(height: 100)
-        .clipped()
-        .cornerRadius(12)
-    }
-    
-    // MARK: - Content Section
-    private var contentSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(ad.headline)
-                .font(CustomFont.font(.medium, weight: .semibold))
-                .foregroundColor(.black)
-                .lineLimit(2)
-            
-            Text(ad.description)
-                .font(CustomFont.font(.regular))
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.leading)
-                .lineLimit(3)
-        }
-    }
-    
-    // MARK: - Action Button
-    private var actionButton: some View {
         Button(action: handleAdTap) {
-            HStack {
-                Text(ad.bookingButtonText)
-                    .font(CustomFont.font(.medium, weight: .medium))
-                    .foregroundColor(.white)
-                Spacer()
-                Image(systemName: "arrow.right")
-                    .foregroundColor(.white)
-                    .font(CustomFont.font(.small))
+            // === Your original adCard design, unchanged visually ===
+            VStack {
+                HStack(alignment: .center) {
+                    AsyncImage(url: URL(string: fullBackgroundImageUrl)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Image("cairoImg")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .opacity(0.6)
+                    }
+                    .frame(width: 70, height: 70)
+                    .clipped()
+                    .cornerRadius(10)
+
+                    // Texts
+                    VStack(alignment: .leading) {
+                        Text(ad.headline)
+                            .font(.system(size: 18))
+                            .fontWeight(.semibold)
+                            .lineLimit(2)
+
+                        Text(ad.description)
+                            .font(.system(size: 16))
+                            .foregroundColor(.gray)
+                            .lineLimit(3)
+                    }
+
+                    // "ad" badge
+                    VStack{
+                        VStack {
+                            Text("ad")
+                                .fontWeight(.medium)
+                                .foregroundColor(.gray.opacity(0.6))
+                                .font(.caption)
+                            
+                        }
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(Color.white)
+                        .cornerRadius(4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                        )
+                        Spacer()
+                    }
+                    
+                }
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
-            .background(Color("Violet")) // Use your app's primary color
-            .cornerRadius(12)
+            .frame( height: 75)
+            .padding(.vertical,10)
+            .padding(.horizontal,10)
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            // === end of your original visual ===
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(PlainButtonStyle()) // keep the card look when tappable
+        .accessibilityLabel(Text("\(ad.companyName) ad: \(ad.headline)"))
     }
-    
-    // MARK: - Supporting Views
-    private var logoPlaceholder: some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(Color.gray.opacity(0.3))
-            .overlay(
-                Image(systemName: "building.2")
-                    .foregroundColor(.gray)
-                    .font(CustomFont.font(.small))
-            )
-    }
-    
-    private var imagePlaceholder: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.gray.opacity(0.3))
-            .overlay(
-                Image(systemName: "photo")
-                    .foregroundColor(.gray)
-                    .font(CustomFont.font(.large))
-            )
-    }
-    
-    // MARK: - ✅ FIXED: URL Helpers for relative paths
-    private var fullLogoUrl: String {
-        if ad.logoUrl.starts(with: "/") {
-            return "https://www.kayak.com\(ad.logoUrl)"
-        }
+}
+
+// MARK: - URL helpers (keep your relative path fixes)
+private extension AdCard {
+    var fullLogoUrl: String {
+        if ad.logoUrl.starts(with: "/") { return "https://www.kayak.com\(ad.logoUrl)" }
         return ad.logoUrl
     }
-    
-    private var fullBackgroundImageUrl: String {
-        if ad.backgroundImageUrl.starts(with: "/") {
-            return "https://www.kayak.com\(ad.backgroundImageUrl)"
-        }
+    var fullBackgroundImageUrl: String {
+        if ad.backgroundImageUrl.starts(with: "/") { return "https://www.kayak.com\(ad.backgroundImageUrl)" }
         return ad.backgroundImageUrl
     }
-    
-    private var fullDeepLink: String {
-        if ad.deepLink.starts(with: "/") {
-            return "https://www.kayak.com\(ad.deepLink)"
-        }
+    var fullDeepLink: String {
+        if ad.deepLink.starts(with: "/") { return "https://www.kayak.com\(ad.deepLink)" }
         return ad.deepLink
     }
-    
-    // MARK: - Actions
-    private func handleAdTap() {
-        // Track impression
-        if !ad.impressionUrl.isEmpty {
-            trackImpression()
-        }
-        
-        // Open deep link
+}
+
+// MARK: - Actions (ported from AdCardView)
+private extension AdCard {
+    func handleAdTap() {
+        if !ad.impressionUrl.isEmpty { trackImpression() }
         openDeepLink()
-        
-        // Call custom handler if provided
         onAdTapped?()
     }
-    
-    private func trackImpression() {
-        let fullImpressionUrl: String
-        if ad.impressionUrl.starts(with: "/") {
-            fullImpressionUrl = "https://www.kayak.com\(ad.impressionUrl)"
-        } else {
-            fullImpressionUrl = ad.impressionUrl
-        }
-        
+
+    func trackImpression() {
+        let fullImpressionUrl: String =
+            ad.impressionUrl.starts(with: "/")
+            ? "https://www.kayak.com\(ad.impressionUrl)"
+            : ad.impressionUrl
+
         guard let url = URL(string: fullImpressionUrl) else {
             print("🎯 Invalid impression URL: \(fullImpressionUrl)")
             return
         }
-        
         Task {
             do {
-                let _ = try await URLSession.shared.data(from: url)
+                _ = try await URLSession.shared.data(from: url)
                 print("🎯 Impression tracked for ad: \(ad.headline)")
             } catch {
                 print("🎯 Failed to track impression: \(error)")
             }
         }
     }
-    
-    private func openDeepLink() {
+
+    func openDeepLink() {
         guard let url = URL(string: fullDeepLink) else {
             print("🎯 Invalid deep link URL: \(fullDeepLink)")
             return
         }
-        
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url) { success in
                 if success {
@@ -216,6 +135,52 @@ struct AdCardView: View {
             }
         } else {
             print("🎯 Cannot open URL: \(fullDeepLink)")
+        }
+    }
+}
+
+
+struct AdCard_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            AdCard(
+                ad: AdResponse(
+                    rank: 1,
+                    backgroundImageUrl: "/rimg/trip-backgrounds/cairo.jpg",
+                    impressionUrl: "/track/impression",
+                    bookingButtonText: "Book Now",
+                    productType: "flight",
+                    headline: "Fly to Cairo for less",
+                    site: "kayak",
+                    companyName: "Kayak",
+                    logoUrl: "/rimg/provider-logos/airlines/logo.png",
+                    trackUrl: "/track/url",
+                    deepLink: "/flights/cairo",
+                    description: "Book your dream trip with exclusive discounts"
+                )
+            )
+            .previewLayout(.sizeThatFits)
+            .padding()
+
+            AdCard(
+                ad: AdResponse(
+                    rank: 2,
+                    backgroundImageUrl: "/rimg/trip-backgrounds/tokyo.jpg",
+                    impressionUrl: "/track/impression",
+                    bookingButtonText: "Explore Deals",
+                    productType: "flight",
+                    headline: "Discover Tokyo",
+                    site: "kayak",
+                    companyName: "Kayak",
+                    logoUrl: "/rimg/provider-logos/airlines/logo.png",
+                    trackUrl: "/track/url",
+                    deepLink: "/flights/tokyo",
+                    description: "Unforgettable experiences await in Japan"
+                )
+            )
+            .previewLayout(.sizeThatFits)
+            .padding()
+            .preferredColorScheme(.dark)
         }
     }
 }
