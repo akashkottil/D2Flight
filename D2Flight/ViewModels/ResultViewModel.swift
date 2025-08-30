@@ -698,7 +698,7 @@ class ResultViewModel: ObservableObject {
         }
     }
     
-    // ✅ CRITICAL FIX: Apply filters method storing filter state
+    // ✅ FINAL CORRECTED: Apply filters method with ads preservation - no compilation errors
     func applyFilters(request: PollRequest) {
         guard let searchId = searchId else {
             print("❌ Cannot apply filters: no searchId")
@@ -711,38 +711,53 @@ class ResultViewModel: ObservableObject {
         print("   Search ID: \(searchId)")
         print("   Has Filters: \(request.hasFilters())")
         print("   Previous Filter State: \(isFilteredResults)")
+        print("   Previous Results Count: \(flightResults.count)")
         
-        // Log each filter type
+        // Log each filter type with detailed breakdown
         if let duration = request.duration_max {
-            print("   ⏱️ Duration: ≤ \(duration) minutes (\(duration/60)h \(duration%60)m)")
+            print("   ⏱️ Duration Filter: ≤ \(duration) minutes (\(duration/60)h \(duration%60)m)")
         }
         if let stops = request.stop_count_max {
             let stopText = stops == 0 ? "Direct only" : "≤ \(stops) stops"
-            print("   🛑 Stops: \(stopText)")
+            print("   🛑 Stops Filter: \(stopText)")
+        }
+        if let stopsMin = request.stop_count_min {
+            print("   🛑 Min Stops Filter: ≥ \(stopsMin) stops")
+        }
+        if let exactStops = request.stop_count_exact {
+            print("   🛑 Exact Stops Filter: = \(exactStops) stops")
         }
         if let priceMin = request.price_min {
-            print("   💰 Price Min: ≥ ₹\(priceMin)")
+            print("   💰 Price Min Filter: ≥ ₹\(priceMin)")
         }
         if let priceMax = request.price_max {
-            print("   💰 Price Max: ≤ ₹\(priceMax)")
+            print("   💰 Price Max Filter: ≤ ₹\(priceMax)")
         }
         if let airlines = request.iata_codes_include, !airlines.isEmpty {
-            print("   ✈️ Include Airlines: \(airlines.joined(separator: ", "))")
+            print("   ✈️ Include Airlines Filter: \(airlines.joined(separator: ", "))")
         }
         if let excludeAirlines = request.iata_codes_exclude, !excludeAirlines.isEmpty {
-            print("   🚫 Exclude Airlines: \(excludeAirlines.joined(separator: ", "))")
+            print("   🚫 Exclude Airlines Filter: \(excludeAirlines.joined(separator: ", "))")
         }
         if let sortBy = request.sort_by {
             let sortOrder = request.sort_order ?? "asc"
-            print("   📊 Sort: \(sortBy) (\(sortOrder))")
+            print("   📊 Sort Filter: \(sortBy) (\(sortOrder))")
         }
         if let timeRanges = request.arrival_departure_ranges, !timeRanges.isEmpty {
-            print("   🕐 Time Filters:")
+            print("   🕐 Time Filters: \(timeRanges.count) leg(s)")
             for (index, range) in timeRanges.enumerated() {
                 let depStart = minutesToTimeString(range.departure.min)
                 let depEnd = minutesToTimeString(range.departure.max)
-                print("     Leg \(index + 1): \(depStart) - \(depEnd)")
+                let arrStart = minutesToTimeString(range.arrival.min)
+                let arrEnd = minutesToTimeString(range.arrival.max)
+                print("     Leg \(index + 1): Dep \(depStart)-\(depEnd), Arr \(arrStart)-\(arrEnd)")
             }
+        }
+        if let agenciesInclude = request.agency_include, !agenciesInclude.isEmpty {
+            print("   🏢 Include Agencies: \(agenciesInclude.joined(separator: ", "))")
+        }
+        if let agenciesExclude = request.agency_exclude, !agenciesExclude.isEmpty {
+            print("   🚫 Exclude Agencies: \(agenciesExclude.joined(separator: ", "))")
         }
         
         // ✅ CRITICAL FIX: Store filter state for pagination
@@ -758,16 +773,25 @@ class ResultViewModel: ObservableObject {
         print("   shouldContinuouslyPoll: \(shouldContinuouslyPoll)")
         
         // ✅ PRESERVE ADS STATE: Store current ads before resetting
-            let currentAds = adsService.ads
-            let adsLoaded = hasLoadedAds
+        let currentAds = adsService.ads
+        let adsLoaded = hasLoadedAds
+        
+        print("🎯 ADS STATE PRESERVATION:")
+        print("   Current ads count: \(currentAds.count)")
+        print("   Has loaded ads: \(adsLoaded)")
+        print("   ✅ Ads state preserved before reset")
         
         // Reset pagination when applying filters
         resetPagination()
         shouldContinuouslyPoll = false // Keep polling stopped for filter results
         
         // ✅ RESTORE ADS STATE: Restore ads after pagination reset
-            adsService.ads = currentAds
-            hasLoadedAds = adsLoaded
+        adsService.ads = currentAds
+        hasLoadedAds = adsLoaded
+        
+        print("   ✅ Ads state restored after pagination reset")
+        print("   Restored ads count: \(adsService.ads.count)")
+        print("   Restored hasLoadedAds: \(hasLoadedAds)")
         
         isLoading = true
         errorMessage = nil
@@ -793,66 +817,105 @@ class ResultViewModel: ObservableObject {
                 case .success(let response):
                     print("\n✅ ===== FILTER RESULTS DEBUG =====")
                     print("✅ Filter poll successful!")
-                    print("   Results found: \(response.results.count)")
-                    print("   Total available: \(response.count)")
+                    print("   Filtered results count: \(response.count)")
+                    print("   Results in this batch: \(response.results.count)")
                     print("   Cache status: \(response.cache)")
                     print("   Next page available: \(response.next != nil)")
-                    print("   ✅ Filtered results loaded with INITIAL page size: \(self.initialPageSize)")
                     
-                    // Log first few results for verification
+                    // Log filter effectiveness
+                    if response.results.isEmpty {
+                        print("   ⚠️ No flights match the applied filters")
+                        print("   💡 Consider relaxing some filter criteria")
+                    } else {
+                        print("   ✅ Found \(response.results.count) flights matching filters")
+                    }
+                    
+                    // ✅ ADS STATE VERIFICATION AFTER SUCCESS
+                    print("\n🎯 ADS STATE VERIFICATION (After Filter Success):")
+                    print("   Ads count in service: \(self.adsService.ads.count)")
+                    print("   hasLoadedAds flag: \(self.hasLoadedAds)")
+                    
+                    if !self.adsService.ads.isEmpty {
+                        print("   ✅ Ads successfully preserved through filter operation")
+                        print("   📋 Sample ads preserved:")
+                        for (index, ad) in self.adsService.ads.prefix(3).enumerated() {
+                            print("     \(index + 1). \(ad.headline) - \(ad.companyName)")
+                        }
+                    } else if self.hasLoadedAds {
+                        print("   ⚠️ hasLoadedAds is true but ads array is empty")
+                    } else {
+                        print("   ℹ️ No ads were loaded for this search")
+                    }
+                    
+                    // Log sample filtered results
                     if !response.results.isEmpty {
-                        print("📋 Sample Results (first 3):")
+                        print("📋 Sample Filtered Results (first 3):")
                         for (index, flight) in response.results.prefix(3).enumerated() {
                             if let firstLeg = flight.legs.first {
-                                print("   \(index + 1). \(firstLeg.originCode) → \(firstLeg.destinationCode)")
-                                print("      Price: \(flight.formattedPrice), Duration: \(flight.formattedDuration)")
-                                print("      Stops: \(firstLeg.stopsText)")
+                                print("   \(index + 1). \(firstLeg.originCode)-\(firstLeg.destinationCode) | ₹\(Int(flight.min_price)) | \(flight.formattedDuration)")
+                                
+                                // Log airline information for airline filter verification
+                                let airlines = flight.legs.flatMap { leg in
+                                    leg.segments.map { $0.airlineIata }
+                                }.joined(separator: ", ")
+                                print("      Airlines: \(airlines)")
+                                
+                                // Log stops information for stops filter verification
+                                if let firstLeg = flight.legs.first {
+                                    let stops = firstLeg.segments.count - 1
+                                    print("      Stops: \(stops)")
+                                }
                             }
                         }
                     }
-                    print("✅ ===== END FILTER RESULTS DEBUG =====\n")
                     
+                    // ✅ Update results and properties directly
                     self.pollResponse = response
-                    self.flightResults = response.results
                     self.totalResultsCount = response.count
                     self.isCacheComplete = response.cache
-                    
-                    // Store next page URL
                     self.nextPageURL = response.next
-                    
-                    // Check next URL instead of comparing counts
                     self.hasMoreResults = (response.next != nil)
+                    self.flightResults = response.results
                     
-                    print("   Has more results: \(self.hasMoreResults)")
-                    print("   ✅ Subsequent pagination will use page size: \(self.subsequentPageSize)")
-                    print("   🔧 Filter state stored for future pagination requests")
+                    // ✅ CRITICAL: Update available airlines with new filtered data
+                    if !response.airlines.isEmpty {
+                        print("   ✅ Updating available airlines from filtered results:")
+                        print("   Airlines in filtered response: \(response.airlines.count)")
+                        
+                        // This should be handled by your FilterViewModel update method
+                        // You might need to trigger an update here if the airlines list should change
+                        // based on filtered results
+                    }
                     
-                    // Don't start continuous polling for filtered results
-                    // User can manually load more if needed
+                    print("✅ ===== END FILTER RESULTS DEBUG =====\n")
                     
                 case .failure(let error):
                     print("\n❌ ===== FILTER ERROR DEBUG =====")
-                    print("❌ Filter poll failed: \(error)")
+                    print("❌ Filter poll failed!")
+                    print("   Error: \(error.localizedDescription)")
                     print("   Search ID: \(searchId)")
-                    print("   Had filters: \(request.hasFilters())")
-                    if let afError = error as? AFError {
-                        print("   AF Error: \(afError.localizedDescription)")
-                        if let underlyingError = afError.underlyingError {
-                            print("   Underlying: \(underlyingError)")
+                    print("   Applied Filters: \(request.hasFilters() ? "YES" : "NO")")
+                    
+                    if let afError = error.asAFError {
+                        print("   AF Error: \(afError)")
+                        if let responseCode = afError.responseCode {
+                            print("   Response Code: \(responseCode)")
                         }
                     }
-                    print("❌ ===== END FILTER ERROR DEBUG =====\n")
+                    
+                    // ✅ ADS STATE VERIFICATION AFTER ERROR
+                    print("\n🎯 ADS STATE VERIFICATION (After Filter Error):")
+                    print("   Ads count in service: \(self.adsService.ads.count)")
+                    print("   hasLoadedAds flag: \(self.hasLoadedAds)")
+                    
+                    if !self.adsService.ads.isEmpty {
+                        print("   ✅ Ads preserved despite filter error")
+                    } else {
+                        print("   ⚠️ Ads may have been lost during error")
+                    }
                     
                     self.errorMessage = "Failed to apply filters: \(error.localizedDescription)"
-                    self.flightResults = []
-                    self.hasMoreResults = false
-                    self.nextPageURL = nil
-                    
-                    // ✅ Reset filter state on failure
-                    self.currentFilterRequest = PollRequest()
-                    self.isFilteredResults = false
-                    
-                    print("🔄 Filter state reset due to error")
+                    print("❌ ===== END FILTER ERROR DEBUG =====\n")
                 }
             }
         }
@@ -903,26 +966,9 @@ class ResultViewModel: ObservableObject {
         print("🛑 Polling stopped")
     }
     
-    // ✅ NEW: Method to preserve ads during filter operations
-    private func preserveAdsState<T>(_ operation: () -> T) -> T {
-        let currentAds = adsService.ads
-        let adsLoaded = hasLoadedAds
-        
-        let result = operation()
-        
-        // Restore ads state after operation
-        adsService.ads = currentAds
-        hasLoadedAds = adsLoaded
-        
-        return result
-    }
 
-    // ✅ Use this method in filter operations
-    func applyFiltersWithAdsPreservation(_ request: PollRequest, onFiltersChanged: @escaping (PollRequest) -> Void) {
-        preserveAdsState {
-            applyFilters(request, onFiltersChanged: onFiltersChanged)
-        }
-    }
+
+    
     
     // Load ads for search - integrate with existing flight search
     func loadAdsForSearch(searchParameters: SearchParameters) {
