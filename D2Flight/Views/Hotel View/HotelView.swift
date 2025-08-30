@@ -180,7 +180,8 @@ struct HotelView: View {
             LocationSelectionView(
                 originLocation: $hotelLocation,
                 destinationLocation: .constant(""),
-                isFromHotel: true
+                isFromHotel: true,
+                serviceType: .hotel 
             ) { selectedLocation, isOrigin, iataCode in
                 hotelLocation = selectedLocation
                 hotelIATACode = iataCode

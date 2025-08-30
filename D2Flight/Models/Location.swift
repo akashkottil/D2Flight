@@ -113,6 +113,116 @@ struct Coordinates: Codable {
     }
 }
 
+
+// MARK: - Service-Specific Location Models
+
+// ✅ Rental Location Response (different structure)
+struct RentalLocationResponse: Codable {
+    let data: [RentalLocation]
+    let language: String?
+}
+
+struct RentalLocation: Codable, Identifiable {
+    let id = UUID()
+    let name: String                    // "Dubai (DXB)"
+    let displayName: String             // "Dubai, Dubai, United Arab Emirates"
+    let type: String                    // "airport"
+    let coordinates: Coordinates
+    
+    enum CodingKeys: String, CodingKey {
+        case name
+        case displayName = "display_name"
+        case type
+        case coordinates
+    }
+    
+    // Convert to standard Location for UI compatibility
+    func toLocation() -> Location {
+        // Extract IATA code from name if available
+        let iataCode = extractIATACode(from: name)
+        
+        return Location(
+            iataCode: iataCode,
+            airportName: name,
+            type: type,
+            displayName: displayName,
+            cityName: extractCityName(from: displayName),
+            countryName: extractCountryName(from: displayName),
+            countryCode: "", // Not provided in rental response
+            imageUrl: "",    // Not provided in rental response
+            coordinates: coordinates
+        )
+    }
+    
+    private func extractIATACode(from name: String) -> String {
+        // Extract code from "Dubai (DXB)" format
+        if let start = name.lastIndex(of: "("),
+           let end = name.lastIndex(of: ")") {
+            return String(name[name.index(after: start)..<end])
+        }
+        return name.prefix(3).uppercased() + String(name.hashValue % 1000)
+    }
+    
+    private func extractCityName(from displayName: String) -> String {
+        return displayName.components(separatedBy: ", ").first ?? displayName
+    }
+    
+    private func extractCountryName(from displayName: String) -> String {
+        let components = displayName.components(separatedBy: ", ")
+        return components.last ?? ""
+    }
+}
+
+// ✅ Hotel Location Response (array format)
+struct HotelLocationResponse: Codable {
+    let locations: [HotelLocation]
+    let language: String?
+    
+    // Custom decoder to handle array response
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.locations = try container.decode([HotelLocation].self)
+        self.language = nil // Hotel API doesn't return language
+    }
+}
+
+struct HotelLocation: Codable, Identifiable {
+    let id = UUID()
+    let cc: String                      // Country code
+    let n: String                       // Name
+    let k: String                       // Key/ID
+    let hc: String                      // Hotel count
+    let s: Int                          // Score/relevance
+    let t: String                       // Type
+    let tn: String                      // Type name
+    let h: String                       // Hotel count text
+    let p: [String]                     // Path/location hierarchy
+    
+    // Convert to standard Location for UI compatibility
+    func toLocation() -> Location {
+        let displayName = createDisplayName()
+        
+        return Location(
+            iataCode: k,                // Use key as IATA code
+            airportName: n,
+            type: t,
+            displayName: displayName,
+            cityName: n,
+            countryName: p.last ?? "",
+            countryCode: cc,
+            imageUrl: "",
+            coordinates: Coordinates(latitude: "0", longitude: "0") // Not provided
+        )
+    }
+    
+    private func createDisplayName() -> String {
+        if p.isEmpty {
+            return n
+        }
+        return "\(n), \(p.joined(separator: ", "))"
+    }
+}
+
 // MARK: - Location Type Enum
 enum LocationType: String, CaseIterable {
     case city = "city"

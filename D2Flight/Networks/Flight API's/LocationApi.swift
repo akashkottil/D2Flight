@@ -1,41 +1,70 @@
 import Foundation
 import Alamofire
 
+enum LocationService {
+    case flight
+    case hotel
+    case rental
+    
+    var autocompleteURL: String {
+        switch self {
+        case .flight:
+            return APIConstants.flightBaseURL + APIConstants.Endpoints.autocomplete
+            // Result: "https://staging.plane.lascade.com/api/autocomplete"
+            
+        case .hotel:
+            return APIConstants.hotelBaseURL + "/api/v2/hotels/autocomplete"
+            // Result: "https://staging.hotel.lascade.com/api/v2/hotels/autocomplete"
+            
+        case .rental:
+            return APIConstants.rentalBaseURL + "/api/v1/autocomplete"
+            // Result: "https://staging.car.lascade.com/api/v1/autocomplete"
+        }
+    }
+    
+    var serviceName: String {
+        switch self {
+        case .flight: return "✈️ Flight"
+        case .hotel: return "🏨 Hotel"
+        case .rental: return "🚗 Rental"
+        }
+    }
+}
+
+
 class LocationApi {
     static let shared = LocationApi()
-    
     private init() {}
     
     func searchLocations(
         query: String,
+        service: LocationService = .flight,
         completion: @escaping (Result<LocationResponse, Error>) -> Void
     ) {
         guard !query.isEmpty else {
-            // ✅ UPDATED: Handle empty response with nullable language
             let apiParams = APIConstants.getAPIParameters()
             let emptyResponse = LocationResponse(data: [], language: apiParams.language)
             completion(.success(emptyResponse))
             return
         }
         
-        // ✅ UPDATED: Get dynamic values from settings INCLUDING language
         let apiParams = APIConstants.getAPIParameters()
-        
-        let url = APIConstants.flightBaseURL + APIConstants.Endpoints.autocomplete
+        let url = service.autocompleteURL
         
         let parameters: [String: Any] = [
             "search": query,
             "country": apiParams.country,
-            "language": apiParams.language  // ✅ Now uses dynamic language
+            "language": apiParams.language
         ]
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept
         ]
         
-        print("🔧 LocationApi using dynamic parameters:")
+        print("🔧 \(service.serviceName) LocationApi:")
+        print("   Autocomplete URL: \(url)")
         print("   Country: \(apiParams.country)")
-        print("   🌐 Language: \(apiParams.language)")  // ✅ Now shows dynamic language
+        print("   Language: \(apiParams.language)")
         print("   Query: \(query)")
         
         AF.request(
@@ -46,58 +75,104 @@ class LocationApi {
         )
         .validate()
         .response { response in
-            // ✅ CUSTOM RESPONSE HANDLING: Handle the response manually to debug issues
             switch response.result {
             case .success(let data):
                 guard let data = data else {
-                    print("❌ No response data received")
+                    print("❌ No response data received from \(service.serviceName)")
                     completion(.failure(NSError(domain: "LocationApi", code: -1, userInfo: [NSLocalizedDescriptionKey: "No response data"])))
                     return
                 }
                 
-                // ✅ DEBUG: Print raw response for debugging
                 if let jsonString = String(data: data, encoding: .utf8) {
-                    print("📥 Raw API Response:")
-                    print("   \(jsonString.prefix(500))...") // Print first 500 chars
+                    print("📥 \(service.serviceName) Raw API Response:")
+                    print("   \(jsonString.prefix(300))...")
                 }
                 
-                do {
-                    let locationResponse = try JSONDecoder().decode(LocationResponse.self, from: data)
-                    print("✅ Location search successful!")
-                    print("   Results found: \(locationResponse.data.count)")
-                    print("   Response language: \(locationResponse.language ?? "null")")
-                    completion(.success(locationResponse))
-                } catch {
-                    print("❌ Location decoding failed: \(error)")
-                    
-                    // ✅ ENHANCED ERROR HANDLING: Provide more context
-                    if let decodingError = error as? DecodingError {
-                        switch decodingError {
-                        case .valueNotFound(let type, let context):
-                            print("   Value not found for type: \(type)")
-                            print("   Coding path: \(context.codingPath)")
-                            print("   Debug description: \(context.debugDescription)")
-                        case .typeMismatch(let type, let context):
-                            print("   Type mismatch for type: \(type)")
-                            print("   Coding path: \(context.codingPath)")
-                            print("   Debug description: \(context.debugDescription)")
-                        case .keyNotFound(let key, let context):
-                            print("   Key not found: \(key)")
-                            print("   Coding path: \(context.codingPath)")
-                        case .dataCorrupted(let context):
-                            print("   Data corrupted at: \(context.codingPath)")
-                        @unknown default:
-                            print("   Unknown decoding error: \(error)")
-                        }
-                    }
-                    
-                    completion(.failure(error))
-                }
+                // ✅ Service-specific decoding
+                self.decodeServiceResponse(data: data, service: service, completion: completion)
                 
             case .failure(let error):
-                print("❌ Location search network failed: \(error)")
+                print("❌ \(service.serviceName) location search network failed: \(error)")
                 completion(.failure(error))
             }
+        }
+    }
+    
+    // ✅ NEW: Service-specific response decoding
+    private func decodeServiceResponse(
+        data: Data,
+        service: LocationService,
+        completion: @escaping (Result<LocationResponse, Error>) -> Void
+    ) {
+        do {
+            let locations: [Location]
+            let language: String?
+            
+            switch service {
+            case .flight:
+                // Flight uses the original LocationResponse format
+                let flightResponse = try JSONDecoder().decode(LocationResponse.self, from: data)
+                locations = flightResponse.data
+                language = flightResponse.language
+                
+            case .rental:
+                // Rental has different field names
+                let rentalResponse = try JSONDecoder().decode(RentalLocationResponse.self, from: data)
+                locations = rentalResponse.data.map { $0.toLocation() }
+                language = rentalResponse.language
+                
+            case .hotel:
+                // Hotel returns array directly
+                let hotelResponse = try JSONDecoder().decode(HotelLocationResponse.self, from: data)
+                locations = hotelResponse.locations.map { $0.toLocation() }
+                language = hotelResponse.language
+            }
+            
+            let standardResponse = LocationResponse(data: locations, language: language)
+            
+            print("✅ \(service.serviceName) location search successful!")
+            print("   Results found: \(locations.count)")
+            print("   Response language: \(language ?? "null")")
+            
+            completion(.success(standardResponse))
+            
+        } catch {
+            print("❌ \(service.serviceName) location decoding failed: \(error)")
+            
+            if let decodingError = error as? DecodingError {
+                self.printDetailedDecodingError(decodingError, service: service)
+            }
+            
+            completion(.failure(error))
+        }
+    }
+    
+    // ✅ Enhanced error logging
+    private func printDetailedDecodingError(_ error: DecodingError, service: LocationService) {
+        print("\n🔬 \(service.serviceName) Detailed Decoding Error:")
+        
+        switch error {
+        case .keyNotFound(let key, let context):
+            print("   📍 KEY NOT FOUND: \(key.stringValue)")
+            print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+            print("   Description: \(context.debugDescription)")
+            
+        case .typeMismatch(let type, let context):
+            print("   📍 TYPE MISMATCH: Expected \(type)")
+            print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+            print("   Description: \(context.debugDescription)")
+            
+        case .valueNotFound(let type, let context):
+            print("   📍 VALUE NOT FOUND: \(type)")
+            print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+            
+        case .dataCorrupted(let context):
+            print("   📍 DATA CORRUPTED")
+            print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+            print("   Description: \(context.debugDescription)")
+            
+        @unknown default:
+            print("   📍 UNKNOWN ERROR: \(error)")
         }
     }
 }

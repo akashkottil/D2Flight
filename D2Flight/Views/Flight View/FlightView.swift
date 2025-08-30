@@ -152,7 +152,8 @@ struct FlightView: View {
                 NavigationLazyView(
                     LocationSelectionView(
                         originLocation: $originLocation,
-                        destinationLocation: $destinationLocation
+                        destinationLocation: $destinationLocation,
+                        serviceType: .flight
                     ) { selectedLocation, isOrigin, iataCode in
                         updateLocationSelection(selectedLocation, isOrigin, iataCode)
                     }

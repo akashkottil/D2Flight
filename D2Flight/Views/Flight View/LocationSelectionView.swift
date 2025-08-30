@@ -10,58 +10,34 @@ struct LocationSelectionView: View {
     @State private var originIATACode = ""
     @State private var destinationIATACode = ""
     
-    // NEW: Parameters to identify source and mode
-    let isFromRental: Bool
-    let isSameDropOff: Bool
-    let isFromHotel: Bool
+    let isFromFlight: Bool
+        let isFromHotel: Bool
+        let isFromRental: Bool
+        let isSameDropOff: Bool
+        let serviceType: LocationService
     
     // Updated closure to include IATA code
     var onLocationSelected: (String, Bool, String) -> Void // location, isOrigin, iataCode
     
-    // Default initializer
     init(
-        originLocation: Binding<String>,
-        destinationLocation: Binding<String>,
-        onLocationSelected: @escaping (String, Bool, String) -> Void
-    ) {
-        self._originLocation = originLocation
-        self._destinationLocation = destinationLocation
-        self.onLocationSelected = onLocationSelected
-        self.isFromRental = false
-        self.isSameDropOff = true
-        self.isFromHotel = false
-    }
-
-    // Rental initializer
-    init(
-        originLocation: Binding<String>,
-        destinationLocation: Binding<String>,
-        isFromRental: Bool,
-        isSameDropOff: Bool,
-        onLocationSelected: @escaping (String, Bool, String) -> Void
-    ) {
-        self._originLocation = originLocation
-        self._destinationLocation = destinationLocation
-        self.onLocationSelected = onLocationSelected
-        self.isFromRental = isFromRental
-        self.isSameDropOff = isSameDropOff
-        self.isFromHotel = false
-    }
-    
-    // Hotel initializer
-    init(
-        originLocation: Binding<String>,
-        destinationLocation: Binding<String>,
-        isFromHotel: Bool,
-        onLocationSelected: @escaping (String, Bool, String) -> Void
-    ) {
-        self._originLocation = originLocation
-        self._destinationLocation = destinationLocation
-        self.onLocationSelected = onLocationSelected
-        self.isFromRental = false
-        self.isSameDropOff = true
-        self.isFromHotel = isFromHotel
-    }
+            originLocation: Binding<String>,
+            destinationLocation: Binding<String>,
+            isFromFlight: Bool = false,
+            isFromHotel: Bool = false,
+            isFromRental: Bool = false,
+            isSameDropOff: Bool = true,
+            serviceType: LocationService = .flight,
+            onLocationSelected: @escaping (String, Bool, String) -> Void
+        ) {
+            self._originLocation = originLocation
+            self._destinationLocation = destinationLocation
+            self.isFromFlight = isFromFlight
+            self.isFromHotel = isFromHotel
+            self.isFromRental = isFromRental
+            self.isSameDropOff = isSameDropOff
+            self.serviceType = serviceType
+            self.onLocationSelected = onLocationSelected
+        }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -214,6 +190,7 @@ struct LocationSelectionView: View {
         .background(Color.gray.opacity(0.05))
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
+            viewModel.serviceType = serviceType
             if isFromRental && isSameDropOff {
                 viewModel.isSelectingOrigin = true
             } else {
