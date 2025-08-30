@@ -411,6 +411,35 @@ class ResultViewModel: ObservableObject {
         }
     }
     
+    private func ensureAdsVisibilityForFilteredResults(_ response: PollResponse) {
+        let resultCount = response.results.count
+        let adsCount = adsService.ads.count
+        
+        print("🎯 ===== ADS VISIBILITY CHECK FOR FILTERED RESULTS =====")
+        print("   Filtered results count: \(resultCount)")
+        print("   Available ads count: \(adsCount)")
+        
+        if resultCount <= 3 && adsCount > 0 && hasLoadedAds {
+            print("   🎯 LOW RESULT COUNT DETECTED - Ensuring ads visibility")
+            print("   Strategy: Ads will be positioned at the end of results")
+            
+            // Log which ads will be displayed
+            let adsToShow = min(adsCount, 3) // Show up to 3 ads for low result counts
+            print("   📋 Ads that will be displayed:")
+            for i in 0..<adsToShow {
+                print("     \(i + 1). \(adsService.ads[i].headline) - \(adsService.ads[i].companyName)")
+            }
+        } else if resultCount > 3 && adsCount > 0 {
+            print("   ✅ Normal result count - ads will use strategic positioning")
+        } else if adsCount == 0 {
+            print("   ⚠️ No ads available to display")
+        } else if !hasLoadedAds {
+            print("   ⚠️ Ads not loaded yet")
+        }
+        
+        print("🎯 ===== END ADS VISIBILITY CHECK =====")
+    }
+    
     // ✅ UPDATED: Check for cache updates and trigger final poll when complete
     private func checkForCacheUpdates(searchId: String) {
         guard totalPollCount < maxTotalPolls else {
