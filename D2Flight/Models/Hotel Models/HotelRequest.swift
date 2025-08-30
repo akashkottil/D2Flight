@@ -9,37 +9,35 @@ import Foundation
 
 // MARK: - Hotel Request Models
 struct HotelRequest {
-    let country: String
-    let userId: String
-    let cityName: String
-    let countryName: String
-    let checkin: String // Format: "YYYY-MM-DD"
-    let checkout: String // Format: "YYYY-MM-DD"
-    let rooms: Int
-    let adults: Int
-    let children: Int?
-    let id: String // hotel provider ID
+    let country: String          // ✅ User's app country (IN)
+    let userId: String           // ✅ App user ID (123)
+    let cityName: String         // ✅ From autocomplete (mumbai)
+    let countryName: String      // ✅ From autocomplete (INDIA)
+    let checkin: String          // ✅ User selected (2025-09-15)
+    let checkout: String         // ✅ User selected (2025-09-16)
+    let rooms: Int               // ✅ User input (1)
+    let adults: Int              // ✅ User input (1)
+    let children: Int?           // ✅ Optional user input
+    let id: String               // ✅ Hotel provider ID (0)
     
     init(
-        cityName: String,
+        cityName: String,            // ✅ "mumbai" from autocomplete
+        countryName: String,         // ✅ "INDIA" from autocomplete
         checkin: String,
         checkout: String,
         rooms: Int,
         adults: Int,
         children: Int? = nil,
-        // Dynamic parameters with fallback to API constants
-        country: String? = nil,
-        countryName: String? = nil,
-        userId: String? = nil, // ✅ UPDATED: Allow override but use dynamic by default
+        country: String? = nil,      // ✅ User's app country
+        userId: String? = nil,       // ✅ App user ID
         id: String = APIConstants.DefaultParams.hotelProviderId
     ) {
-        // Get dynamic values from settings if not provided
         let apiParams = APIConstants.getAPIParameters()
         
-        self.country = country ?? apiParams.country
-        self.countryName = countryName ?? apiParams.country
-        self.userId = userId ?? APIConstants.getCurrentUserId() // ✅ UPDATED: Use dynamic user ID
-        self.cityName = cityName
+        self.country = country ?? apiParams.country         // ✅ "IN"
+        self.userId = userId ?? APIConstants.getCurrentUserId()  // ✅ "123"
+        self.cityName = cityName.lowercased()               // ✅ "mumbai" (lowercase)
+        self.countryName = countryName.uppercased()         // ✅ "INDIA" (uppercase)
         self.checkin = checkin
         self.checkout = checkout
         self.rooms = rooms
@@ -47,10 +45,15 @@ struct HotelRequest {
         self.children = children
         self.id = id
         
-        print("🏨 HotelRequest created with dynamic values:")
-        print("   Country: \(self.country)")
-        print("   Country Name: \(self.countryName)")
-        print("   🆔 User ID: \(self.userId)")
+        print("🏨 HotelRequest created (matching curl format):")
+        print("   ✅ country: \(self.country)")              // IN
+        print("   ✅ user_id: \(self.userId)")               // 123
+        print("   ✅ city_name: \(self.cityName)")           // mumbai
+        print("   ✅ country_name: \(self.countryName)")     // INDIA
+        print("   ✅ checkin: \(self.checkin)")              // 2025-09-15
+        print("   ✅ checkout: \(self.checkout)")            // 2025-09-16
+        print("   ✅ rooms: \(self.rooms)")                  // 1
+        print("   ✅ adults: \(self.adults)")                // 1
     }
 }
 

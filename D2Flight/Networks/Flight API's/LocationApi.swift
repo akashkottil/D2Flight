@@ -10,15 +10,12 @@ enum LocationService {
         switch self {
         case .flight:
             return APIConstants.flightBaseURL + APIConstants.Endpoints.autocomplete
-            // Result: "https://staging.plane.lascade.com/api/autocomplete"
             
         case .hotel:
-            return APIConstants.hotelBaseURL + "/api/v2/hotels/autocomplete"
-            // Result: "https://staging.hotel.lascade.com/api/v2/hotels/autocomplete"
+            return APIConstants.hotelBaseURL + "/api/v3/hotels/autocomplete"
             
         case .rental:
             return APIConstants.rentalBaseURL + "/api/v1/autocomplete"
-            // Result: "https://staging.car.lascade.com/api/v1/autocomplete"
         }
     }
     
@@ -51,11 +48,34 @@ class LocationApi {
         let apiParams = APIConstants.getAPIParameters()
         let url = service.autocompleteURL
         
-        let parameters: [String: Any] = [
-            "search": query,
-            "country": apiParams.country,
-            "language": apiParams.language
-        ]
+        // ✅ UPDATED: Service-specific parameter construction
+        let parameters: [String: Any]
+        
+        switch service {
+        case .flight:
+            // Flight API parameters (existing format)
+            parameters = [
+                "search": query,
+                "country": apiParams.country,
+                "language": apiParams.language
+            ]
+            
+        case .rental:
+            // Rental API parameters (existing format)
+            parameters = [
+                "search": query,
+                "country": apiParams.country,
+                "language": apiParams.language
+            ]
+            
+        case .hotel:
+            // ✅ CORRECT: Hotel v3 API parameters with dynamic values
+            parameters = [
+                "search": query,                    // ✅ Selected city name from user input
+                "country": apiParams.country,       // ✅ Dynamic country from app settings (e.g., "IN")
+                "language": apiParams.language      // ✅ Dynamic language from app settings (e.g., "en-GB")
+            ]
+        }
         
         let headers: HTTPHeaders = [
             "accept": APIConstants.Headers.accept
@@ -63,9 +83,10 @@ class LocationApi {
         
         print("🔧 \(service.serviceName) LocationApi:")
         print("   Autocomplete URL: \(url)")
-        print("   Country: \(apiParams.country)")
-        print("   Language: \(apiParams.language)")
-        print("   Query: \(query)")
+        print("   🔍 Search Query: \(query)")                    // User's typed city name
+        print("   🌍 Country (dynamic): \(apiParams.country)")   // App setting country
+        print("   🌐 Language (dynamic): \(apiParams.language)") // App setting language
+        print("   📋 Parameters: \(parameters)")
         
         AF.request(
             url,
@@ -75,6 +96,7 @@ class LocationApi {
         )
         .validate()
         .response { response in
+            // ... existing response handling stays the same
             switch response.result {
             case .success(let data):
                 guard let data = data else {
@@ -88,7 +110,7 @@ class LocationApi {
                     print("   \(jsonString.prefix(300))...")
                 }
                 
-                // ✅ Service-specific decoding
+                // Service-specific decoding (existing code)
                 self.decodeServiceResponse(data: data, service: service, completion: completion)
                 
             case .failure(let error):
@@ -122,11 +144,11 @@ class LocationApi {
                 language = rentalResponse.language
                 
             case .hotel:
-                // Hotel returns array directly
-                let hotelResponse = try JSONDecoder().decode(HotelLocationResponse.self, from: data)
-                locations = hotelResponse.locations.map { $0.toLocation() }
-                language = hotelResponse.language
-            }
+                        // ✅ UPDATED: Hotel v3 API structure
+                        let hotelResponse = try JSONDecoder().decode(HotelLocationResponse.self, from: data)
+                        locations = hotelResponse.results.map { $0.toLocation() }  // ✅ Use 'results' not 'locations'
+                        language = hotelResponse.language
+                    }
             
             let standardResponse = LocationResponse(data: locations, language: language)
             

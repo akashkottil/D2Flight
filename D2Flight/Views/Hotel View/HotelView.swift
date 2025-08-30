@@ -40,6 +40,7 @@ struct HotelView: View {
     @StateObject private var warningManager = WarningManager.shared
     @State private var lastNetworkStatus = true
     
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -181,11 +182,18 @@ struct HotelView: View {
                 originLocation: $hotelLocation,
                 destinationLocation: .constant(""),
                 isFromHotel: true,
-                serviceType: .hotel 
+                serviceType: .hotel
             ) { selectedLocation, isOrigin, iataCode in
                 hotelLocation = selectedLocation
                 hotelIATACode = iataCode
+                
+                // ✅ CRITICAL: Reset ViewModel state when location changes
+                hotelSearchVM.deeplink = nil           // Clear old deeplink
+                hotelSearchVM.isLoading = false        // Reset loading state
+                hotelSearchVM.errorMessage = nil       // Clear errors
+                
                 print("🏨 Hotel location selected: \(selectedLocation) (\(iataCode))")
+                print("🔄 ViewModel state reset for new location")
             }
         }
         // ✅ OPTIMIZED: Show web view with loading state
@@ -260,7 +268,6 @@ struct HotelView: View {
     private func handleSearchHotels() {
         print("🏨 Search Hotels button tapped!")
         
-        // Use SearchValidationHelper for validation
         if let warningType = SearchValidationHelper.validateHotelSearch(
             hotelIATACode: hotelIATACode,
             hotelLocation: hotelLocation,
@@ -270,12 +277,24 @@ struct HotelView: View {
             return
         }
         
-        // Save current search
         saveCurrentSearch()
         
-        // Update ViewModel properties
-        hotelSearchVM.cityCode = hotelIATACode
-        hotelSearchVM.cityName = hotelLocation
+        print("🏨 Hotel search data analysis:")
+        print("   hotelLocation: '\(hotelLocation)'")      // Should be "Malacca, Malaysia"
+        print("   hotelIATACode: '\(hotelIATACode)'")      // Should be "Malacca"
+        
+        // ✅ CORRECT: Extract country from full location name
+        let countryName = extractCountryNameFromLocation(hotelLocation)
+        
+        print("🏨 Hotel search parameters (debugging):")
+        print("   📍 Full Display: '\(hotelLocation)'")
+        print("   🏙️ City Name: '\(hotelIATACode)'")
+        print("   🌍 Country Name: '\(countryName)'")
+        
+        // ✅ CORRECT: Set proper values in ViewModel
+        hotelSearchVM.cityCode = hotelIATACode          // "Malacca"
+        hotelSearchVM.cityName = hotelIATACode          // "Malacca"
+        hotelSearchVM.countryName = countryName         // "Malaysia" ✅
         hotelSearchVM.rooms = rooms
         hotelSearchVM.adults = adults
         hotelSearchVM.children = children
@@ -287,10 +306,28 @@ struct HotelView: View {
             hotelSearchVM.checkoutDate = selectedDates[1]
         }
         
-        print("🎯 Hotel search parameters validated and starting search")
-        
-        // Open web view immediately - the web view will handle the search and loading states
         showWebView = true
+    }
+
+    
+    
+    private func extractCityNameFromLocation(_ location: String) -> String {
+        let components = location.components(separatedBy: ", ")
+        return components.first ?? location  // "Dubai"
+    }
+    
+    private func extractCountryNameFromLocation(_ location: String) -> String {
+        print("🔍 Extracting country from location: '\(location)'")
+        let components = location.components(separatedBy: ", ")
+        
+        if components.count >= 2 {
+            let country = components.last ?? ""
+            print("   ✅ Extracted country: '\(country)'")
+            return country
+        } else {
+            print("   ⚠️ No comma found in location, using fallback")
+            return "Unknown"
+        }
     }
     
     // ✅ OPTIMIZED: Popular Location Handler with Immediate Web View Opening

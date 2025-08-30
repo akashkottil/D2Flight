@@ -202,14 +202,24 @@ struct LocationSelectionView: View {
     
     private func selectLocation(_ location: Location) {
         if isFromHotel {
-            originLocation = location.airportName
-            originIATACode = location.iataCode
-            print("🏨 Hotel location selected: \(location.displayName) (\(location.iataCode))")
-            onLocationSelected(location.airportName, true, location.iataCode)
-            presentationMode.wrappedValue.dismiss()
-            return
-        }
-        
+                // ✅ CORRECT: Pass full display name and city name
+                let fullDisplayName = location.displayName    // "Malacca, Malaysia"
+                let cityName = location.cityName              // "Malacca"
+                
+                print("🏨 Hotel location selection debug:")
+                print("   Full Display Name: \(fullDisplayName)")
+                print("   City Name: \(cityName)")
+                print("   Country Name: \(location.countryName)")
+                
+                // Update bindings
+                originLocation = fullDisplayName              // ✅ "Malacca, Malaysia"
+                originIATACode = cityName                     // ✅ "Malacca"
+                
+                print("🏨 Hotel location selected: \(fullDisplayName) (\(cityName))")
+                onLocationSelected(fullDisplayName, true, cityName)  // ✅ CORRECT
+                presentationMode.wrappedValue.dismiss()
+                return
+            }
         if viewModel.isSelectingOrigin {
             originLocation = location.airportName
             originIATACode = location.iataCode

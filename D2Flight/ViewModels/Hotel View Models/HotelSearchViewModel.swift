@@ -3,26 +3,55 @@ import Combine
 
 class HotelSearchViewModel: ObservableObject {
     @Published var cityCode: String = ""
-    @Published var cityName: String = ""
-    @Published var checkinDate: Date = Date()
-    @Published var checkoutDate: Date = {
-        let calendar = Calendar.current
-        return calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-    }()
-    @Published var rooms: Int = 1
-    @Published var adults: Int = 2
-    @Published var children: Int = 0
+        @Published var cityName: String = "" {
+            didSet {
+                // ✅ Reset state when city name changes
+                if oldValue != cityName && !oldValue.isEmpty {
+                    print("🔄 City changed from '\(oldValue)' to '\(cityName)' - resetting state")
+                    resetSearchState()
+                }
+            }
+        }
+        @Published var countryName: String = "" {
+            didSet {
+                // ✅ Reset state when country changes
+                if oldValue != countryName && !oldValue.isEmpty {
+                    print("🔄 Country changed from '\(oldValue)' to '\(countryName)' - resetting state")
+                    resetSearchState()
+                }
+            }
+        }
+        @Published var checkinDate: Date = Date()
+        @Published var checkoutDate: Date = {
+            let calendar = Calendar.current
+            return calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+        }()
+        @Published var rooms: Int = 1
+        @Published var adults: Int = 2
+        @Published var children: Int = 0
+        
+        @Published var deeplink: String? = nil
+        @Published var isLoading: Bool = false
+        @Published var errorMessage: String? = nil
+        @Published var hasTimedOut: Bool = false
+        
+        private var searchTimeout: Timer?
+        private let searchTimeoutDuration: TimeInterval = 30.0
+        private var cancellables = Set<AnyCancellable>()
     
-    @Published var deeplink: String? = nil
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String? = nil
     
-    // NEW: Add timeout tracking
-    @Published var hasTimedOut: Bool = false
-    private var searchTimeout: Timer?
-    private let searchTimeoutDuration: TimeInterval = 30.0 // 30 seconds timeout
-    
-    private var cancellables = Set<AnyCancellable>()
+    private func resetSearchState() {
+            deeplink = nil
+            isLoading = false
+            errorMessage = nil
+            hasTimedOut = false
+            
+            // Cancel any ongoing search
+            searchTimeout?.invalidate()
+            searchTimeout = nil
+            
+            print("🔄 Search state reset - ready for new location search")
+        }
     
     func searchHotels() {
         guard !cityCode.isEmpty else {
@@ -45,7 +74,6 @@ class HotelSearchViewModel: ObservableObject {
         deeplink = nil
         hasTimedOut = false
         
-        // Start timeout timer
         startTimeoutTimer()
         
         let apiDateFormatter = DateFormatter()
@@ -54,25 +82,21 @@ class HotelSearchViewModel: ObservableObject {
         let checkinString = apiDateFormatter.string(from: checkinDate)
         let checkoutString = apiDateFormatter.string(from: checkoutDate)
         
-        // Use dynamic parameters (country, currency, and user ID will be auto-selected)
+        print("🏨 Creating HotelRequest with parameters:")
+        print("   ✅ City Name: '\(cityName)'")        // "Malacca"
+        print("   ✅ Country Name: '\(countryName)'")  // "Malaysia"
+        print("   Check-in: \(checkinString)")
+        print("   Check-out: \(checkoutString)")
+        
         let request = HotelRequest(
-            cityName: cityCode, // Using IATA code as city name for API
+            cityName: cityName,
+            countryName: countryName,       // ✅ Move before checkin
             checkin: checkinString,
             checkout: checkoutString,
             rooms: rooms,
             adults: adults,
             children: children > 0 ? children : nil
         )
-        
-        print("🏨 Starting hotel search with request:")
-        print("   City: \(cityName) (\(cityCode))")
-        print("   Check-in: \(checkinString)")
-        print("   Check-out: \(checkoutString)")
-        print("   Rooms: \(rooms)")
-        print("   Adults: \(adults)")
-        print("   Children: \(children)")
-        print("   🔧 Using dynamic country: \(request.country)")
-        print("   🔧 Using dynamic user ID: \(request.userId)")
         
         HotelApi.shared.searchHotel(request: request) { [weak self] result in
             DispatchQueue.main.async {
@@ -266,6 +290,13 @@ class HotelSearchViewModel: ObservableObject {
         let guestsText = "\(totalGuests) Guest\(totalGuests > 1 ? "s" : "")"
         let roomsText = "\(rooms) Room\(rooms > 1 ? "s" : "")"
         return "\(guestsText), \(roomsText)"
+    }
+    
+    
+    private func extractCountryNameFromCityName(_ cityName: String) -> String {
+        // If cityName is just "Dubai", we need to get country from the full display name
+        // This should be handled by passing it from HotelView instead
+        return "United Arab Emirates" // Placeholder - should come from HotelView
     }
     
     // MARK: - Cleanup

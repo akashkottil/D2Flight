@@ -173,56 +173,76 @@ struct RentalLocation: Codable, Identifiable {
     }
 }
 
-// ✅ Hotel Location Response (array format)
 struct HotelLocationResponse: Codable {
-    let locations: [HotelLocation]
+    let results: [HotelLocationV3]
     let language: String?
     
-    // Custom decoder to handle array response
+    // Custom decoder since language might not be in response
     init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.locations = try container.decode([HotelLocation].self)
-        self.language = nil // Hotel API doesn't return language
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.results = try container.decode([HotelLocationV3].self, forKey: .results)
+        // Hotel v3 API doesn't return language field
+        self.language = nil
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case results
     }
 }
 
-struct HotelLocation: Codable, Identifiable {
+// ✅ NEW: Hotel v3 Location Structure
+struct HotelLocationV3: Codable, Identifiable {
     let id = UUID()
-    let cc: String                      // Country code
-    let n: String                       // Name
-    let k: String                       // Key/ID
-    let hc: String                      // Hotel count
-    let s: Int                          // Score/relevance
-    let t: String                       // Type
-    let tn: String                      // Type name
-    let h: String                       // Hotel count text
-    let p: [String]                     // Path/location hierarchy
+    let placeId: Int
+    let primaryPlaceType: String
+    let displayPlaceType: DisplayPlaceType
+    let fullName: String
+    let location: LocationCoordinates
+    let countryName: String
+    let countryCode: String
+    let regionName: String
+    let cityName: String?       // ✅ Make optional
+    let cityId: Int
     
     // Convert to standard Location for UI compatibility
     func toLocation() -> Location {
-        let displayName = createDisplayName()
+        // ✅ Use fallback logic for missing cityName
+        let safeCityName = cityName ?? extractCityFromFullName()
         
         return Location(
-            iataCode: k,                // Use key as IATA code
-            airportName: n,
-            type: t,
-            displayName: displayName,
-            cityName: n,
-            countryName: p.last ?? "",
-            countryCode: cc,
+            iataCode: safeCityName,             // ✅ Use safe city name
+            airportName: safeCityName,
+            type: primaryPlaceType,
+            displayName: fullName,
+            cityName: safeCityName,             // ✅ Use safe city name
+            countryName: countryName,
+            countryCode: countryCode,
             imageUrl: "",
-            coordinates: Coordinates(latitude: "0", longitude: "0") // Not provided
+            coordinates: Coordinates(
+                latitude: String(location.latitude),
+                longitude: String(location.longitude)
+            )
         )
     }
     
-    private func createDisplayName() -> String {
-        if p.isEmpty {
-            return n
-        }
-        return "\(n), \(p.joined(separator: ", "))"
+    // ✅ NEW: Extract city name from fullName as fallback
+    private func extractCityFromFullName() -> String {
+        // "Malacca, Malaysia" -> "Malacca"
+        let components = fullName.components(separatedBy: ", ")
+        return components.first ?? fullName
     }
 }
 
+// ✅ NEW: Supporting v3 structures
+struct DisplayPlaceType: Codable {
+    let type: String
+    let displayName: String
+}
+
+struct LocationCoordinates: Codable {
+    let latitude: Double
+    let longitude: Double
+}
 // MARK: - Location Type Enum
 enum LocationType: String, CaseIterable {
     case city = "city"
