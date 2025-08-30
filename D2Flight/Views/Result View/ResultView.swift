@@ -645,9 +645,14 @@ struct ResultView: View {
     }
     
     private func clearAllFiltersFromNoFlights() {
-        // reset the chips/UI state the same way ResultHeader.clearAllFilters() does
+        print("\n🗑️ ===== CLEAR ALL FILTERS FROM NO FLIGHTS =====")
+        print("🔄 Clearing all filters from FilterNoFlights button...")
+        
+        // ✅ COMPLETE: Reset all filter values including exact stops
         sharedFilterViewModel.selectedSortOption = .best
         sharedFilterViewModel.maxStops = 3
+        sharedFilterViewModel.exactStops = nil              // ✅ ADD: Reset exact stops
+        sharedFilterViewModel.isExactStopsFilter = false    // ✅ ADD: Reset exact filter flag
         sharedFilterViewModel.departureTimeRange = 0...86400
         sharedFilterViewModel.arrivalTimeRange = 0...86400
         sharedFilterViewModel.returnDepartureTimeRange = 0...86400
@@ -657,8 +662,14 @@ struct ResultView: View {
         sharedFilterViewModel.excludedAirlines.removeAll()
         sharedFilterViewModel.selectedClass = .economy
         sharedFilterViewModel.resetPriceFilter()    // uses API range if loaded
+        
+        print("✅ All filter UI state cleared including exact stops")
+        print("   maxStops reset to: \(sharedFilterViewModel.maxStops)")
+        print("   exactStops reset to: \(sharedFilterViewModel.exactStops?.description ?? "nil")")
+        print("   isExactStopsFilter reset to: \(sharedFilterViewModel.isExactStopsFilter)")
+        print("🗑️ ===== END CLEAR ALL FILTERS FROM NO FLIGHTS =====\n")
 
-        // trigger the network-side clear (your existing flow)
+        // ✅ IMPORTANT: trigger the network-side clear with complete state reset
         handleClearAllFilters()
     }
     

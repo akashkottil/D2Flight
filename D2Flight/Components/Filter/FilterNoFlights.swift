@@ -17,15 +17,18 @@ struct FilterNoFlights: View {
                 .multilineTextAlignment(.center)
 
             PrimaryButton(
-                title: "clear all filter",
+                title: "clear.all.filter",
                 font: CustomFont.font(.large),
                 fontWeight: .semibold,
                 width: 150,
                 height: 44,
                 cornerRadius: 8
             ) {
+                print("\n🎯 ===== CLEAR ALL FILTER BUTTON PRESSED =====")
+                print("🎯 User clicked 'Clear All Filter' from FilterNoFlights view")
+                print("🎯 Calling onClearAll() action...")
                 onClearAll()           // ← call the injected action
-                print("filter cleared!")
+                print("🎯 ===== END CLEAR ALL FILTER BUTTON =====\n")
             }
         }
     }

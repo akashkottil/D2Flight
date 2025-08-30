@@ -2,7 +2,7 @@
 
 extension ResultViewModel {
     
-    // ✅ NEW: Clear all filters method
+    // ✅ ADD: Make sure the ResultViewModel clearAllFilters method is complete
     func clearAllFilters() {
         guard let searchId = searchId else {
             print("❌ Cannot clear filters: no searchId")
@@ -15,8 +15,8 @@ extension ResultViewModel {
         print("   Previous filter state: \(isFilteredResults)")
         print("   Previous results count: \(flightResults.count)")
         
-        // Reset filter state
-        currentFilterRequest = PollRequest()
+        // ✅ CRITICAL: Reset filter state completely
+        currentFilterRequest = PollRequest()  // Empty request = no filters
         isFilteredResults = false
         
         // Reset pagination
@@ -35,10 +35,10 @@ extension ResultViewModel {
         print("   ✅ Continuous polling enabled: \(shouldContinuouslyPoll)")
         print("🗑️ ===== END CLEAR ALL FILTERS IN RESULTVIEWMODEL =====\n")
         
-        // Make API call with empty filter request
+        // Make API call with completely empty filter request
         pollApi.pollFlights(
             searchId: searchId,
-            request: PollRequest(), // Empty request = no filters
+            request: PollRequest(), // ✅ CRITICAL: Empty request = no filters
             limit: initialPageSize
         ) { [weak self] result in
             DispatchQueue.main.async {
@@ -48,26 +48,12 @@ extension ResultViewModel {
                 
                 switch result {
                 case .success(let response):
-                    print("\n✅ ===== CLEAR FILTERS SUCCESS DEBUG =====")
+                    print("\n✅ ===== CLEAR FILTERS SUCCESS FROM NO FLIGHTS VIEW =====")
                     print("✅ Clear filters poll successful!")
                     print("   Original results count: \(response.count)")
                     print("   Results in this batch: \(response.results.count)")
-                    print("   Cache status: \(response.cache)")
-                    print("   Next page available: \(response.next != nil)")
-                    print("   ✅ Showing all flights (no filters applied)")
-                    
-                    // Log sample results
-                    if !response.results.isEmpty {
-                        print("📋 Sample Results (first 3):")
-                        for (index, flight) in response.results.prefix(3).enumerated() {
-                            if let firstLeg = flight.legs.first {
-                                print("   \(index + 1). \(firstLeg.originCode) → \(firstLeg.destinationCode)")
-                                print("      Price: \(flight.formattedPrice), Duration: \(flight.formattedDuration)")
-                                print("      Stops: \(firstLeg.stopsText)")
-                            }
-                        }
-                    }
-                    print("✅ ===== END CLEAR FILTERS SUCCESS DEBUG =====\n")
+                    print("   ✅ All flights restored (no filters applied)")
+                    print("✅ ===== END CLEAR FILTERS SUCCESS =====\n")
                     
                     self.pollResponse = response
                     self.flightResults = response.results
@@ -78,29 +64,17 @@ extension ResultViewModel {
                     self.nextPageURL = response.next
                     self.hasMoreResults = (response.next != nil)
                     
-                    print("   Total results now: \(self.flightResults.count)")
-                    print("   Has more results: \(self.hasMoreResults)")
-                    print("   Filter state reset: isFilteredResults = \(self.isFilteredResults)")
-                    
                     // Start continuous polling if cache not complete
                     if !self.isCacheComplete && self.shouldContinuouslyPoll {
                         self.startContinuousPolling()
                     }
                     
                 case .failure(let error):
-                    print("\n❌ ===== CLEAR FILTERS ERROR DEBUG =====")
-                    print("❌ Clear filters poll failed: \(error)")
-                    print("   Search ID: \(searchId)")
-                    print("   Error type: \(type(of: error))")
-                    print("   Error description: \(error.localizedDescription)")
-                    print("❌ ===== END CLEAR FILTERS ERROR DEBUG =====\n")
-                    
+                    print("\n❌ Clear filters from NoFlights failed: \(error)")
                     self.errorMessage = "Failed to clear filters: \(error.localizedDescription)"
                     self.flightResults = []
                     self.hasMoreResults = false
                     self.nextPageURL = nil
-                    
-                    print("🔄 Keeping filter state reset despite error")
                 }
             }
         }
