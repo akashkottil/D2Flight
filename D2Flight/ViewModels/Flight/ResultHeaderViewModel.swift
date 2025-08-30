@@ -252,7 +252,7 @@ struct ResultHeaderView: View {
                 maxPrice: headerViewModel.pollResponseData?.max_price ?? 10000,
                 averagePrice: headerViewModel.calculateAveragePrice(),
                 onApply: {
-                    headerViewModel.applyFilters(onFiltersChanged: onFiltersChanged)
+                    onApply()
                 }
             )
             .presentationDetents([.medium])

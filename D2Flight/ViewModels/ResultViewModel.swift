@@ -903,6 +903,27 @@ class ResultViewModel: ObservableObject {
         print("🛑 Polling stopped")
     }
     
+    // ✅ NEW: Method to preserve ads during filter operations
+    private func preserveAdsState<T>(_ operation: () -> T) -> T {
+        let currentAds = adsService.ads
+        let adsLoaded = hasLoadedAds
+        
+        let result = operation()
+        
+        // Restore ads state after operation
+        adsService.ads = currentAds
+        hasLoadedAds = adsLoaded
+        
+        return result
+    }
+
+    // ✅ Use this method in filter operations
+    func applyFiltersWithAdsPreservation(_ request: PollRequest, onFiltersChanged: @escaping (PollRequest) -> Void) {
+        preserveAdsState {
+            applyFilters(request, onFiltersChanged: onFiltersChanged)
+        }
+    }
+    
     // Load ads for search - integrate with existing flight search
     func loadAdsForSearch(searchParameters: SearchParameters) {
         guard !hasLoadedAds else {

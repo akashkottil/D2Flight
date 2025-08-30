@@ -296,6 +296,11 @@ struct ResultHeader: View {
     }
     
     private func applyFilters() {
+        if selectedFilterType == .airlines || !filterViewModel.selectedAirlines.isEmpty {
+                filterViewModel.applyAirlineFiltersAndUpdateOrdering()
+                print("✅ Applied airline filter ordering updates")
+            }
+        
         let pollRequest = filterViewModel.buildPollRequest()
         onFiltersChanged(pollRequest)
         
