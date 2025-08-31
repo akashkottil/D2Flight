@@ -177,10 +177,39 @@ struct HotelLocationResponse: Codable {
     let results: [HotelLocationV3]
     let language: String?
     
-    // Custom decoder since language might not be in response
+    // Custom decoder with enhanced error handling
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.results = try container.decode([HotelLocationV3].self, forKey: .results)
+        
+        // Decode results with individual item error handling
+        do {
+            self.results = try container.decode([HotelLocationV3].self, forKey: .results)
+        } catch {
+            print("❌ Error decoding hotel location results: \(error)")
+            
+            // Try to decode items individually to skip corrupted ones
+            if let jsonArray = try? container.decode([JSONValue].self, forKey: .results) {
+                var validResults: [HotelLocationV3] = []
+                
+                for (index, jsonItem) in jsonArray.enumerated() {
+                    do {
+                        let itemData = try JSONSerialization.data(withJSONObject: jsonItem.value)
+                        let decodedItem = try JSONDecoder().decode(HotelLocationV3.self, from: itemData)
+                        validResults.append(decodedItem)
+                    } catch {
+                        print("⚠️ Skipping corrupted hotel location at index \(index): \(error)")
+                    }
+                }
+                
+                self.results = validResults
+                print("✅ Recovered \(validResults.count) valid hotel locations from \(jsonArray.count) total")
+            } else {
+                // If all else fails, return empty array to prevent app crash
+                print("🚨 Could not decode any hotel location results, returning empty array")
+                self.results = []
+            }
+        }
+        
         // Hotel v3 API doesn't return language field
         self.language = nil
     }
@@ -201,8 +230,35 @@ struct HotelLocationV3: Codable, Identifiable {
     let countryName: String
     let countryCode: String
     let regionName: String
-    let cityName: String?       // ✅ Make optional
-    let cityId: Int
+    let cityName: String?       // ✅ Already optional
+    let cityId: Int?            // ✅ FIXED: Make optional to prevent crashes
+    
+    // Custom decoder to handle missing optional fields
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Required fields
+        self.placeId = try container.decode(Int.self, forKey: .placeId)
+        self.primaryPlaceType = try container.decode(String.self, forKey: .primaryPlaceType)
+        self.displayPlaceType = try container.decode(DisplayPlaceType.self, forKey: .displayPlaceType)
+        self.fullName = try container.decode(String.self, forKey: .fullName)
+        self.location = try container.decode(LocationCoordinates.self, forKey: .location)
+        self.countryName = try container.decode(String.self, forKey: .countryName)
+        self.countryCode = try container.decode(String.self, forKey: .countryCode)
+        self.regionName = try container.decode(String.self, forKey: .regionName)
+        
+        // Optional fields with fallback handling
+        self.cityName = try container.decodeIfPresent(String.self, forKey: .cityName)
+        self.cityId = try container.decodeIfPresent(Int.self, forKey: .cityId)
+        
+        // Debug logging for missing fields
+        if self.cityName == nil {
+            print("⚠️ Hotel location missing cityName for: \(self.fullName)")
+        }
+        if self.cityId == nil {
+            print("⚠️ Hotel location missing cityId for: \(self.fullName)")
+        }
+    }
     
     // Convert to standard Location for UI compatibility
     func toLocation() -> Location {
@@ -231,6 +287,11 @@ struct HotelLocationV3: Codable, Identifiable {
         let components = fullName.components(separatedBy: ", ")
         return components.first ?? fullName
     }
+    
+    enum CodingKeys: String, CodingKey {
+        case placeId, primaryPlaceType, displayPlaceType, fullName, location
+        case countryName, countryCode, regionName, cityName, cityId
+    }
 }
 
 // ✅ NEW: Supporting v3 structures
@@ -243,6 +304,47 @@ struct LocationCoordinates: Codable {
     let latitude: Double
     let longitude: Double
 }
+
+struct JSONValue: Codable {
+    let value: Any
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if let intValue = try? container.decode(Int.self) {
+            value = intValue
+        } else if let doubleValue = try? container.decode(Double.self) {
+            value = doubleValue
+        } else if let stringValue = try? container.decode(String.self) {
+            value = stringValue
+        } else if let boolValue = try? container.decode(Bool.self) {
+            value = boolValue
+        } else if let arrayValue = try? container.decode([JSONValue].self) {
+            value = arrayValue.map { $0.value }
+        } else if let dictValue = try? container.decode([String: JSONValue].self) {
+            value = dictValue.mapValues { $0.value }
+        } else {
+            value = NSNull()
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        
+        if let intValue = value as? Int {
+            try container.encode(intValue)
+        } else if let doubleValue = value as? Double {
+            try container.encode(doubleValue)
+        } else if let stringValue = value as? String {
+            try container.encode(stringValue)
+        } else if let boolValue = value as? Bool {
+            try container.encode(boolValue)
+        } else {
+            try container.encodeNil()
+        }
+    }
+}
+
 // MARK: - Location Type Enum
 enum LocationType: String, CaseIterable {
     case city = "city"
