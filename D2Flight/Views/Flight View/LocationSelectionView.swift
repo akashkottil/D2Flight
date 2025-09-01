@@ -10,58 +10,34 @@ struct LocationSelectionView: View {
     @State private var originIATACode = ""
     @State private var destinationIATACode = ""
     
-    // NEW: Parameters to identify source and mode
-    let isFromRental: Bool
-    let isSameDropOff: Bool
-    let isFromHotel: Bool
+    let isFromFlight: Bool
+        let isFromHotel: Bool
+        let isFromRental: Bool
+        let isSameDropOff: Bool
+        let serviceType: LocationService
     
     // Updated closure to include IATA code
     var onLocationSelected: (String, Bool, String) -> Void // location, isOrigin, iataCode
     
-    // Default initializer
     init(
-        originLocation: Binding<String>,
-        destinationLocation: Binding<String>,
-        onLocationSelected: @escaping (String, Bool, String) -> Void
-    ) {
-        self._originLocation = originLocation
-        self._destinationLocation = destinationLocation
-        self.onLocationSelected = onLocationSelected
-        self.isFromRental = false
-        self.isSameDropOff = true
-        self.isFromHotel = false
-    }
-
-    // Rental initializer
-    init(
-        originLocation: Binding<String>,
-        destinationLocation: Binding<String>,
-        isFromRental: Bool,
-        isSameDropOff: Bool,
-        onLocationSelected: @escaping (String, Bool, String) -> Void
-    ) {
-        self._originLocation = originLocation
-        self._destinationLocation = destinationLocation
-        self.onLocationSelected = onLocationSelected
-        self.isFromRental = isFromRental
-        self.isSameDropOff = isSameDropOff
-        self.isFromHotel = false
-    }
-    
-    // Hotel initializer
-    init(
-        originLocation: Binding<String>,
-        destinationLocation: Binding<String>,
-        isFromHotel: Bool,
-        onLocationSelected: @escaping (String, Bool, String) -> Void
-    ) {
-        self._originLocation = originLocation
-        self._destinationLocation = destinationLocation
-        self.onLocationSelected = onLocationSelected
-        self.isFromRental = false
-        self.isSameDropOff = true
-        self.isFromHotel = isFromHotel
-    }
+            originLocation: Binding<String>,
+            destinationLocation: Binding<String>,
+            isFromFlight: Bool = false,
+            isFromHotel: Bool = false,
+            isFromRental: Bool = false,
+            isSameDropOff: Bool = true,
+            serviceType: LocationService = .flight,
+            onLocationSelected: @escaping (String, Bool, String) -> Void
+        ) {
+            self._originLocation = originLocation
+            self._destinationLocation = destinationLocation
+            self.isFromFlight = isFromFlight
+            self.isFromHotel = isFromHotel
+            self.isFromRental = isFromRental
+            self.isSameDropOff = isSameDropOff
+            self.serviceType = serviceType
+            self.onLocationSelected = onLocationSelected
+        }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -214,6 +190,7 @@ struct LocationSelectionView: View {
         .background(Color.gray.opacity(0.05))
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
+            viewModel.serviceType = serviceType
             if isFromRental && isSameDropOff {
                 viewModel.isSelectingOrigin = true
             } else {
@@ -225,14 +202,27 @@ struct LocationSelectionView: View {
     
     private func selectLocation(_ location: Location) {
         if isFromHotel {
-            originLocation = location.airportName
-            originIATACode = location.iataCode
-            print("🏨 Hotel location selected: \(location.displayName) (\(location.iataCode))")
-            onLocationSelected(location.airportName, true, location.iataCode)
+            // ✅ UPDATED: Use consistent formatting for hotel locations
+            let formattedDisplayName = LocationDisplayFormatter.formatDisplayName(for: location)
+            let cityName = location.cityName
+            
+            print("🏨 Hotel location selection debug:")
+            print("   Original Display Name: \(location.displayName)")
+            print("   Formatted Display Name: \(formattedDisplayName)")
+            print("   City Name: \(cityName)")
+            print("   Country Name: \(location.countryName)")
+            
+            // Update bindings
+            originLocation = formattedDisplayName
+            originIATACode = cityName
+            
+            print("🏨 Hotel location selected: \(formattedDisplayName) (\(cityName))")
+            onLocationSelected(formattedDisplayName, true, cityName)
             presentationMode.wrappedValue.dismiss()
             return
         }
         
+        // Rest of the method remains the same for flights and rentals
         if viewModel.isSelectingOrigin {
             originLocation = location.airportName
             originIATACode = location.iataCode
@@ -277,7 +267,173 @@ struct LocationSelectionView: View {
     }
 }
 
-// MARK: - Recent Location Row View (unchanged)
+struct LocationRowView: View {
+    let location: Location
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 16) {
+                // Location Icon based on type
+                Image(location.type == "airport" ? "FlightIcon" : "HotelIcon")
+                    .foregroundColor(Color("Violet"))
+                    .font(CustomFont.font(.large))
+                    .frame(width: 24, height: 24)
+                
+                // Location Info - Updated Design
+                VStack(alignment: .leading, spacing: 4) {
+                    // First Line: Full Name or Primary Text
+                    HStack {
+                        Text(getPrimaryText())
+                            .font(CustomFont.font(.medium, weight: .semibold))
+                            .foregroundColor(.black)
+                            .lineLimit(1)
+                        
+                        Spacer()
+                    }
+                    
+                    // Second Line: Secondary Text based on type
+                    HStack {
+                        Text(getSecondaryText())
+                            .font(CustomFont.font(.regular))
+                            .foregroundColor(.gray)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+                        
+                        Spacer()
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    // MARK: - Helper Methods for Type-Specific Formatting
+    
+    private func getPrimaryText() -> String {
+        switch location.type {
+        case "city":
+            return location.displayName // Full name as is
+            
+        case "airport":
+            // For airports, the displayName already contains the airport code
+            // Just remove duplicate city names from the fullName/displayName
+            return removeDuplicateCityNames(from: location.displayName)
+            
+        case "hotel":
+            return location.displayName // Full hotel name
+            
+        default:
+            return location.displayName
+        }
+    }
+    
+    private func getSecondaryText() -> String {
+        switch location.type {
+        case "city":
+            // Format: cityName, countryName
+            let components = [location.cityName, location.countryName]
+                .filter { !$0.isEmpty }
+            return components.joined(separator: ", ")
+            
+        case "airport":
+            // Just city name
+            return location.cityName
+            
+        case "hotel":
+            // Format: cityName, regionName, countryName
+            // Use displayName parsing if regionName is not available directly
+            let components = parseHotelSecondaryInfo()
+            return components.joined(separator: ", ")
+            
+        default:
+            return location.displayName
+        }
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func removeDuplicateCityNames(from fullName: String) -> String {
+        let components = fullName.components(separatedBy: ", ")
+        var uniqueComponents: [String] = []
+        var seenComponents: Set<String> = []
+        
+        for component in components {
+            let trimmed = component.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !seenComponents.contains(trimmed.lowercased()) {
+                uniqueComponents.append(trimmed)
+                seenComponents.insert(trimmed.lowercased())
+            }
+        }
+        
+        return uniqueComponents.joined(separator: ", ")
+    }
+    
+    private func parseHotelSecondaryInfo() -> [String] {
+        // For hotels, try to build: cityName, regionName, countryName
+        var components: [String] = []
+        
+        // Add city name if available and not empty
+        if !location.cityName.isEmpty {
+            components.append(location.cityName)
+        }
+        
+        // For region name, we might need to extract it from displayName
+        // since the Location model might not have regionName directly
+        if let regionName = extractRegionFromDisplayName() {
+            components.append(regionName)
+        }
+        
+        // Add country name if available and not empty
+        if !location.countryName.isEmpty {
+            components.append(location.countryName)
+        }
+        
+        // Remove duplicates while preserving order
+        var uniqueComponents: [String] = []
+        var seenComponents: Set<String> = []
+        
+        for component in components {
+            let trimmed = component.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !seenComponents.contains(trimmed.lowercased()) && !trimmed.isEmpty {
+                uniqueComponents.append(trimmed)
+                seenComponents.insert(trimmed.lowercased())
+            }
+        }
+        
+        return uniqueComponents
+    }
+    
+    private func extractRegionFromDisplayName() -> String? {
+        // Try to extract region from displayName
+        // Example: "Hotel Name, City, Region, Country" -> "Region"
+        let components = location.displayName.components(separatedBy: ", ")
+        
+        // For hotels, if we have more than 2 components, the middle ones might be regions
+        if components.count >= 3 {
+            // Skip first (hotel name) and last (country), take middle as region
+            let middleComponents = Array(components[1..<components.count-1])
+            
+            // Filter out components that match city name or country name to find region
+            let regionCandidates = middleComponents.filter { component in
+                let trimmed = component.trimmingCharacters(in: .whitespacesAndNewlines)
+                return !trimmed.isEmpty &&
+                       trimmed.lowercased() != location.cityName.lowercased() &&
+                       trimmed.lowercased() != location.countryName.lowercased()
+            }
+            
+            return regionCandidates.first?.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        return nil
+    }
+}
+
+// MARK: - Recent Location Row View (Updated to Match LocationRowView)
 struct RecentLocationRowView: View {
     let recentLocation: RecentLocation
     let onTap: () -> Void
@@ -296,28 +452,27 @@ struct RecentLocationRowView: View {
                         .font(CustomFont.font(.regular, weight: .medium))
                 }
                 
-                // Location Info
+                // Location Info - Updated to Match LocationRowView
                 VStack(alignment: .leading, spacing: 4) {
+                    // First Line: Primary Text (same logic as LocationRowView)
                     HStack {
-                        if recentLocation.type == "airport" {
-                            Text(recentLocation.airportName)
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.black)
-                            
-                            Text("(\(recentLocation.iataCode))")
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.black)
-                        } else {
-                            Text(recentLocation.cityName)
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.black)
-                        }
+                        Text(getRecentPrimaryText())
+                            .font(CustomFont.font(.medium, weight: .semibold))
+                            .foregroundColor(.black)
+                            .lineLimit(1)
                         
                         Spacer()
                     }
                     
+                    // Second Line: Secondary Text (same logic as LocationRowView)
                     HStack {
-                        // Empty for now
+                        Text(getRecentSecondaryText())
+                            .font(CustomFont.font(.regular))
+                            .foregroundColor(.gray)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+                        
+                        Spacer()
                     }
                 }
                 
@@ -328,55 +483,119 @@ struct RecentLocationRowView: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
+    
+    // MARK: - Helper Methods for Recent Location Formatting
+    
+    private func getRecentPrimaryText() -> String {
+        switch recentLocation.type {
+        case "city":
+            return recentLocation.displayName
+            
+        case "airport":
+            // For airports, use displayName and remove duplicates
+            return removeDuplicateCityNamesForRecent(from: recentLocation.displayName)
+            
+        case "hotel":
+            return recentLocation.displayName
+            
+        default:
+            return recentLocation.displayName
+        }
+    }
+    
+    private func getRecentSecondaryText() -> String {
+        switch recentLocation.type {
+        case "city":
+            // Format: cityName, countryName
+            let components = [recentLocation.cityName, recentLocation.countryName]
+                .filter { !$0.isEmpty }
+            return components.joined(separator: ", ")
+            
+        case "airport":
+            // Just city name
+            return recentLocation.cityName
+            
+        case "hotel":
+            // Format: cityName, countryName (simplified for recent)
+            let components = [recentLocation.cityName, recentLocation.countryName]
+                .filter { !$0.isEmpty }
+            return components.joined(separator: ", ")
+            
+        default:
+            return recentLocation.displayName
+        }
+    }
+    
+    private func removeDuplicateCityNamesForRecent(from fullName: String) -> String {
+        let components = fullName.components(separatedBy: ", ")
+        var uniqueComponents: [String] = []
+        var seenComponents: Set<String> = []
+        
+        for component in components {
+            let trimmed = component.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !seenComponents.contains(trimmed.lowercased()) {
+                uniqueComponents.append(trimmed)
+                seenComponents.insert(trimmed.lowercased())
+            }
+        }
+        
+        return uniqueComponents.joined(separator: ", ")
+    }
 }
 
-// MARK: - Location Row View (unchanged)
-struct LocationRowView: View {
-    let location: Location
-    let onTap: () -> Void
+struct LocationDisplayFormatter {
     
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 16) {
-                // Location Icon based on type
-                Image(location.type == "airport" ? "FlightIcon" : "HotelIcon")
-                    .foregroundColor(Color("Violet"))
-                    .font(CustomFont.font(.large))
-                    .frame(width: 24, height: 24)
-                
-                // Location Info
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        if location.type == "airport" {
-                            Text(location.airportName)
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.black)
-                            
-                            Text("(\(location.iataCode))")
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.black)
-                        } else {
-                            Text(location.cityName)
-                                .font(CustomFont.font(.medium, weight: .semibold))
-                                .foregroundColor(.black)
-                        }
-                        
-                        Spacer()
-                    }
-                    
-                    Text(location.displayName)
-                        .font(CustomFont.font(.regular))
-                        .foregroundColor(.gray)
-                        .fontWeight(.medium)
-                        .lineLimit(2)
-                }
-                
-                Spacer()
-            }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 16)
+    // MARK: - Format Display Name to Match LocationRowView
+    static func formatDisplayName(for location: Location) -> String {
+        switch location.type {
+        case "city":
+            return location.displayName
+            
+        case "airport":
+            // Remove duplicate city names from displayName
+            return removeDuplicateCityNames(from: location.displayName)
+            
+        case "hotel":
+            return location.displayName
+            
+        default:
+            return location.displayName
         }
-        .buttonStyle(PlainButtonStyle())
+    }
+    
+    // MARK: - Format Display Name from Raw String and Type
+    static func formatDisplayName(from displayName: String, type: String) -> String {
+        switch type {
+        case "city":
+            return displayName
+            
+        case "airport":
+            // Remove duplicate city names from displayName
+            return removeDuplicateCityNames(from: displayName)
+            
+        case "hotel":
+            return displayName
+            
+        default:
+            return displayName
+        }
+    }
+    
+    // MARK: - Helper Function to Remove Duplicate City Names
+    private static func removeDuplicateCityNames(from fullName: String) -> String {
+        let components = fullName.components(separatedBy: ", ")
+        var uniqueComponents: [String] = []
+        var seenComponents: Set<String> = []
+        
+        for component in components {
+            let trimmed = component.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !seenComponents.contains(trimmed.lowercased()) {
+                uniqueComponents.append(trimmed)
+                seenComponents.insert(trimmed.lowercased())
+            }
+        }
+        
+        return uniqueComponents.joined(separator: ", ")
     }
 }
 

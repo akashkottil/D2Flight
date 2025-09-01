@@ -209,7 +209,8 @@ struct RentalView: View {
                 originLocation: $pickUpLocation,
                 destinationLocation: $dropOffLocation,
                 isFromRental: true,
-                isSameDropOff: isSameDropOff
+                isSameDropOff: isSameDropOff,
+                serviceType: .rental 
             ) { selectedLocation, isOrigin, iataCode in
                 if isOrigin {
                     pickUpLocation = selectedLocation

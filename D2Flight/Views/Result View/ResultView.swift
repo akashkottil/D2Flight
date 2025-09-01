@@ -397,34 +397,124 @@ struct ResultView: View {
             var mixedContent: [ContentType] = []
             let ads = await MainActor.run { viewModel.adsService.ads }
             
+            print("🎯 Generating mixed content:")
+            print("   Flights: \(flights.count)")
+            print("   Ads available: \(ads.count)")
+            
             // Add all flights first
             for flight in flights {
                 mixedContent.append(.flight(flight))
             }
             
-            // Insert ads at strategic positions
-            var adIndex = 0
-            let positions = [2, 6, 10, 15, 20, 25, 30]
+            // ✅ ENHANCED: Smart ads insertion based on result count
+            guard !ads.isEmpty else {
+                print("   ⚠️ No ads to insert")
+                return mixedContent
+            }
             
-            for position in positions {
-                if position < mixedContent.count && adIndex < ads.count {
-                    mixedContent.insert(.ad(ads[adIndex]), at: position + adIndex)
+            var adIndex = 0
+            let flightCount = flights.count
+            
+            if flightCount <= 3 {
+                // ✅ FIX: For 3 or fewer results, add ads at the end
+                print("   📍 Low result count (\(flightCount) ≤ 3) - adding ads at the end")
+                
+                // Add ads after the last flight
+                while adIndex < ads.count && adIndex < 3 { // Limit to 3 ads for small result sets
+                    mixedContent.append(.ad(ads[adIndex]))
+                    print("     ✅ Added ad \(adIndex + 1) at position \(mixedContent.count - 1): \(ads[adIndex].headline)")
                     adIndex += 1
-                } else if adIndex >= ads.count {
-                    break
+                }
+            } else {
+                // ✅ ENHANCED: For more results, use smart positioning
+                print("   📍 Normal result count (\(flightCount) > 3) - using strategic positions")
+                
+                // Calculate dynamic positions based on result count
+                var positions: [Int] = []
+                
+                if flightCount >= 4 {
+                    positions.append(2) // After 2nd flight
+                }
+                if flightCount >= 7 {
+                    positions.append(6) // After 6th flight
+                }
+                if flightCount >= 11 {
+                    positions.append(10) // After 10th flight
+                }
+                if flightCount >= 16 {
+                    positions.append(15) // After 15th flight
+                }
+                if flightCount >= 21 {
+                    positions.append(20) // After 20th flight
+                }
+                if flightCount >= 26 {
+                    positions.append(25) // After 25th flight
+                }
+                if flightCount >= 31 {
+                    positions.append(30) // After 30th flight
+                }
+                
+                print("     Strategic positions for \(flightCount) flights: \(positions)")
+                
+                // Insert ads at calculated positions
+                for position in positions {
+                    if position < mixedContent.count && adIndex < ads.count {
+                        mixedContent.insert(.ad(ads[adIndex]), at: position + adIndex)
+                        print("     ✅ Inserted ad \(adIndex + 1) at position \(position + adIndex): \(ads[adIndex].headline)")
+                        adIndex += 1
+                    } else if adIndex >= ads.count {
+                        print("     ⚠️ No more ads to insert")
+                        break
+                    }
+                }
+                
+                // ✅ FALLBACK: If we still have ads and space, add them at the end
+                if adIndex < ads.count && flightCount > 0 {
+                    let remainingAds = min(ads.count - adIndex, 2) // Limit remaining ads
+                    for i in 0..<remainingAds {
+                        mixedContent.append(.ad(ads[adIndex + i]))
+                        print("     ✅ Added remaining ad \(adIndex + i + 1) at end: \(ads[adIndex + i].headline)")
+                    }
+                    adIndex += remainingAds
+                }
+            }
+            
+            print("   🎯 Final mixed content: \(mixedContent.count) items (\(flights.count) flights + \(adIndex) ads)")
+            
+            // Debug: Print content structure
+            for (index, item) in mixedContent.enumerated() {
+                switch item {
+                case .flight(let flight):
+                    if let firstLeg = flight.legs.first {
+                        print("     \(index + 1). Flight: \(firstLeg.originCode)-\(firstLeg.destinationCode) ₹\(Int(flight.min_price))")
+                    }
+                case .ad(let ad):
+                    print("     \(index + 1). Ad: \(ad.headline)")
                 }
             }
             
             return mixedContent
         }.value
     }
+
     
     private func handleAdsUpdate(_ ads: [AdResponse]) {
+        guard !ads.isEmpty else {
+            print("🎯 No ads received in update")
+            return
+        }
+        
+        print("🎯 Ads updated - regenerating mixed content:")
+        print("   New ads count: \(ads.count)")
+        print("   Current flights count: \(viewModel.flightResults.count)")
+        
         // Regenerate content when ads are updated
         if !viewModel.flightResults.isEmpty {
             Task.detached(priority: .background) {
                 await processContentItems(viewModel.flightResults)
             }
+        } else {
+            print("   ⚠️ No flights available to mix with ads")
         }
     }
     
@@ -555,9 +645,14 @@ struct ResultView: View {
     }
     
     private func clearAllFiltersFromNoFlights() {
-        // reset the chips/UI state the same way ResultHeader.clearAllFilters() does
+        print("\n🗑️ ===== CLEAR ALL FILTERS FROM NO FLIGHTS =====")
+        print("🔄 Clearing all filters from FilterNoFlights button...")
+        
+        // ✅ COMPLETE: Reset all filter values including exact stops
         sharedFilterViewModel.selectedSortOption = .best
         sharedFilterViewModel.maxStops = 3
+        sharedFilterViewModel.exactStops = nil              // ✅ ADD: Reset exact stops
+        sharedFilterViewModel.isExactStopsFilter = false    // ✅ ADD: Reset exact filter flag
         sharedFilterViewModel.departureTimeRange = 0...86400
         sharedFilterViewModel.arrivalTimeRange = 0...86400
         sharedFilterViewModel.returnDepartureTimeRange = 0...86400
@@ -567,8 +662,14 @@ struct ResultView: View {
         sharedFilterViewModel.excludedAirlines.removeAll()
         sharedFilterViewModel.selectedClass = .economy
         sharedFilterViewModel.resetPriceFilter()    // uses API range if loaded
+        
+        print("✅ All filter UI state cleared including exact stops")
+        print("   maxStops reset to: \(sharedFilterViewModel.maxStops)")
+        print("   exactStops reset to: \(sharedFilterViewModel.exactStops?.description ?? "nil")")
+        print("   isExactStopsFilter reset to: \(sharedFilterViewModel.isExactStopsFilter)")
+        print("🗑️ ===== END CLEAR ALL FILTERS FROM NO FLIGHTS =====\n")
 
-        // trigger the network-side clear (your existing flow)
+        // ✅ IMPORTANT: trigger the network-side clear with complete state reset
         handleClearAllFilters()
     }
     

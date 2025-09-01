@@ -190,28 +190,48 @@ struct UnifiedFilterSheet: View {
     
     // ✅ NEW: Stops Content (Similar to Sort Content)
     private var stopsContent: some View {
-        VStack(spacing: 0) {
-            ForEach(StopsOption.allCases, id: \.self) { option in
-                stopsSelectionRow(
-                    title: option.title,
-                    subtitle: option.subtitle,
-                    option: option,
-                    isSelected: getCurrentStopsSelection() == option
-                )
-            }
+        VStack(alignment: .leading, spacing: 16) {
+                ForEach(StopsOption.allCases, id: \.self) { option in
+                    stopsSelectionRow(
+                        title: option.title,
+                        subtitle: option.subtitle,
+                        option: option,
+                        isSelected: getCurrentStopsSelection() == option
+                    )
+                }
+            }.onAppear {
+            // ✅ ADD: Sync current stops selection on appear
+            print("🛑 Stops filter opened - syncing current state")
+            print("   Current maxStops: \(filterViewModel.maxStops)")
+            print("   Current exactStops: \(filterViewModel.exactStops?.description ?? "nil")")
+            print("   Current isExactStopsFilter: \(filterViewModel.isExactStopsFilter)")
         }
     }
+    
 
     // Add this helper function to determine current selection
     private func getCurrentStopsSelection() -> StopsOption {
-        // ✅ FIXED: Always check exact stops first, then fall back to maxStops
-        if let exactStops = filterViewModel.exactStops {
+        // Use exactStops if available, otherwise fallback to maxStops
+        if filterViewModel.isExactStopsFilter, let exactStops = filterViewModel.exactStops {
             return StopsOption.fromExactStops(exactStops)
-        } else if filterViewModel.maxStops == 3 {
-            return .any
         } else {
             return StopsOption.fromMaxStops(filterViewModel.maxStops)
         }
+    }
+    
+    private func clearStopsFilter() {
+        print("\n🛑 ===== CLEARING STOPS FILTER =====")
+        print("🗑️ Individual stops clear button pressed")
+        
+        // Reset all stops-related properties
+        filterViewModel.maxStops = 3
+        filterViewModel.exactStops = nil
+        filterViewModel.isExactStopsFilter = false
+        
+        print("   Reset maxStops to: 3 (any stops)")
+        print("   Reset exactStops to: nil")
+        print("   Reset isExactStopsFilter to: false")
+        print("🛑 ===== END CLEARING STOPS FILTER =====\n")
     }
     
     private func getLocalizedStopText(_ stopCount: Int) -> String {
@@ -798,22 +818,18 @@ struct UnifiedFilterSheet: View {
         .padding(.bottom, 24)
     }
     
-    // MARK: - Clear Filters Helper
     private func clearFilters() {
         switch filterType {
+        case .stops:                    // ✅ ADD: Stops clear case
+            clearStopsFilter()
         case .times:
             filterViewModel.departureTimeRange = 0...86400
             filterViewModel.arrivalTimeRange = 0...86400
             filterViewModel.returnDepartureTimeRange = 0...86400
             filterViewModel.returnArrivalTimeRange = 0...86400
         case .duration:
-            filterViewModel.departureStopoverRange = 0...1440
-            filterViewModel.departureLegRange = 0...1440
-            filterViewModel.returnStopoverRange = 0...1440
-            filterViewModel.returnLegRange = 0...1440
             filterViewModel.maxDuration = 1440
         case .price:
-            // ✅ CRITICAL: Reset to API values, not hardcoded values
             filterViewModel.resetPriceFilter()
         default:
             break

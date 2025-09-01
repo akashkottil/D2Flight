@@ -13,51 +13,41 @@ class HotelApi {
     ) {
         let url = "\(baseURL)\(APIConstants.Endpoints.hotelDeeplink)\(request.id)/"
         
-        // Get dynamic language from API parameters
-        let apiParams = APIConstants.getAPIParameters()
-        
+        // ✅ CORRECT: Match the working curl parameters exactly
         var parameters: [String: Any] = [
-            "country": request.country,
-            "user_id": request.userId,
-            "city_name": request.cityName,
-            "country_name": request.countryName,
-            "checkin": request.checkin,
-            "checkout": request.checkout,
-            "rooms": request.rooms,
-            "adults": request.adults,
-            "language": apiParams.language,
-            "currency": apiParams.currency
+            "country": request.country,          // ✅ User's app country (IN)
+            "user_id": request.userId,           // ✅ App user ID (123)
+            "city_name": request.cityName,       // ✅ From autocomplete (mumbai)
+            "country_name": request.countryName, // ✅ From autocomplete (INDIA)
+            "checkin": request.checkin,          // ✅ User selected (2025-09-15)
+            "checkout": request.checkout,        // ✅ User selected (2025-09-16)
+            "rooms": request.rooms,              // ✅ User input (1)
+            "adults": request.adults             // ✅ User input (1)
         ]
         
-        // Add children parameter only if it's provided and greater than 0
+        // Add children only if provided and greater than 0
         if let children = request.children, children > 0 {
             parameters["children"] = children
         }
         
+        // ✅ CORRECT: Match the working curl headers exactly
         let headers: HTTPHeaders = [
-            "accept": APIConstants.Headers.accept,
-            "Accept-Language": apiParams.language,
-            "country": apiParams.country
+            "accept": "application/json",        // ✅ CORRECT: Match curl exactly
         ]
         
-        print("🏨 Hotel API Request with dynamic language:")
+        print("🏨 Hotel API Request (matching working curl):")
         print("   URL: \(url)")
-        print("   🌐 Language: \(apiParams.language)")
-        print("   💰 Currency: \(apiParams.currency)")
-        print("   🌍 Country: \(apiParams.country)")
-        print("   Parameters: \(parameters)")
-        print("   Headers: \(headers)")
+        print("   ✅ Parameters: \(parameters)")
+        print("   ✅ Headers: \(headers)")
         
         // Create request with timeout
-        let request = AF.request(
+        AF.request(
             url,
             method: .get,
             parameters: parameters,
             headers: headers
         ).validate(statusCode: 200..<400)
-        
-        // Set timeout for the request
-        request.response(queue: .main) { response in
+        .response(queue: .main) { response in
             // Check for timeout or network errors first
             if let error = response.error {
                 if error.isTimeoutError {
@@ -76,14 +66,23 @@ class HotelApi {
                 print("🏨 Hotel API HTTP Status: \(httpResponse.statusCode)")
                 
                 switch httpResponse.statusCode {
+                case 200...299:
+                    print("✅ Hotel API success: \(httpResponse.statusCode)")
+                    
                 case 400...499:
                     print("❌ Hotel API client error: \(httpResponse.statusCode)")
+                    if let data = response.data,
+                       let responseString = String(data: data, encoding: .utf8) {
+                        print("   Response: \(responseString)")
+                    }
                     completion(.failure(HotelAPIError.clientError(httpResponse.statusCode)))
                     return
+                    
                 case 500...599:
                     print("❌ Hotel API server error: \(httpResponse.statusCode)")
                     completion(.failure(HotelAPIError.serverError(httpResponse.statusCode)))
                     return
+                    
                 default:
                     break
                 }
@@ -91,26 +90,25 @@ class HotelApi {
             
             switch response.result {
             case .success(let data):
-                // Handle the response - could be HTML redirect or direct URL
+                // ✅ Handle successful response
                 var finalURL = url
                 
-                // If there's a redirect, use the final URL
+                // Build URL with parameters for deeplink
+                var urlComponents = URLComponents(string: url)
+                var queryItems: [URLQueryItem] = []
+                
+                for (key, value) in parameters {
+                    queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
+                }
+                
+                urlComponents?.queryItems = queryItems
+                finalURL = urlComponents?.url?.absoluteString ?? url
+                
+                // If there's a response with redirect location, use that
                 if let httpResponse = response.response,
-                   let responseURL = httpResponse.url {
-                    finalURL = responseURL.absoluteString
-                    print("✅ Got redirect URL: \(finalURL)")
-                } else {
-                    // Build the URL with parameters if no redirect
-                    var urlComponents = URLComponents(string: url)
-                    var queryItems: [URLQueryItem] = []
-                    
-                    for (key, value) in parameters {
-                        queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
-                    }
-                    
-                    urlComponents?.queryItems = queryItems
-                    finalURL = urlComponents?.url?.absoluteString ?? url
-                    print("✅ Built final URL: \(finalURL)")
+                   let location = httpResponse.allHeaderFields["Location"] as? String {
+                    finalURL = location
+                    print("✅ Got redirect location: \(finalURL)")
                 }
                 
                 // Validate the final URL
@@ -120,36 +118,18 @@ class HotelApi {
                     return
                 }
                 
-                // If we got HTML data, try to extract any redirect URL from it
-                if let htmlData = data,
-                   let htmlString = String(data: htmlData, encoding: .utf8) {
-                    
-                    // Look for meta refresh or JavaScript redirects
-                    if let redirectURL = self.extractRedirectURL(from: htmlString) {
-                        finalURL = redirectURL
-                        print("✅ Extracted redirect URL from HTML: \(finalURL)")
-                    }
-                    
-                    // Only check for specific error patterns that indicate actual failures
-                    if self.containsActualError(htmlString) {
-                        print("❌ Actual error detected in HTML response")
-                        completion(.failure(HotelAPIError.searchFailed))
-                        return
-                    }
-                }
-                
                 let hotelResponse = HotelResponse(
                     deeplink: finalURL,
                     status: "success",
-                    message: "Hotel search URL generated successfully with language \(apiParams.language)"
+                    message: "Hotel search URL generated successfully"
                 )
                 
-                print("✅ Hotel search successful with language \(apiParams.language)!")
+                print("✅ Hotel search successful!")
                 print("   Final URL: \(finalURL)")
                 completion(.success(hotelResponse))
                 
             case .failure(let error):
-                print("❌ Hotel search failed: \(error)")
+                print("❌ Hotel search network failed: \(error)")
                 if let data = response.data {
                     print("Response data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
                 }

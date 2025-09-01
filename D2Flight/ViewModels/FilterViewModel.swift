@@ -402,13 +402,12 @@ class FilterViewModel: ObservableObject {
         selectedClass = .economy
         selectedAirlines.removeAll()
         excludedAirlines.removeAll()
-        maxStops = 3
-        exactStops = nil
-        isExactStopsFilter = false
-        // Reset price filter properly
+        maxStops = 3                    // Reset to "Any"
+        exactStops = nil               // ✅ ADD: Reset exact stops
+        isExactStopsFilter = false     // ✅ ADD: Reset exact filter flag
         resetPriceFilter()
         
-        print("🔧 All filters cleared including price modifications")
+        print("🔧 All filters cleared including stops filter reset")
     }
     
     // ✅ UPDATED: Helper method to check if any filters are active
