@@ -334,14 +334,22 @@ struct HotelView: View {
     private func handlePopularLocationTapped(_ location: MasonryImage) {
         print("🏨 Popular hotel location tapped: \(location.title) (\(location.iataCode))")
         
-        // Set hotel location to popular location
-        hotelLocation = location.title
+        // ✅ UPDATED: Format the location title for consistent display
+        let formattedTitle = LocationDisplayFormatter.formatDisplayName(
+            from: location.title,
+            type: "city"
+        )
+        
+        // Set hotel location to formatted popular location
+        hotelLocation = formattedTitle
         hotelIATACode = location.iataCode
+        
+        print("🏨 Formatted popular location: \(formattedTitle)")
         
         // ✅ Use SearchValidationHelper for validation
         if let warningType = SearchValidationHelper.validateHotelSearch(
             hotelIATACode: location.iataCode,
-            hotelLocation: location.title,
+            hotelLocation: formattedTitle,
             isConnected: networkMonitor.isConnected
         ) {
             warningManager.showWarning(type: warningType)
@@ -353,7 +361,7 @@ struct HotelView: View {
         
         // Update ViewModel properties
         hotelSearchVM.cityCode = location.iataCode
-        hotelSearchVM.cityName = location.title
+        hotelSearchVM.cityName = location.iataCode
         hotelSearchVM.rooms = rooms
         hotelSearchVM.adults = adults
         hotelSearchVM.children = children
@@ -370,11 +378,7 @@ struct HotelView: View {
             hotelSearchVM.checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: hotelSearchVM.checkinDate) ?? Date()
         }
         
-        print("🎯 Popular hotel search validated and starting")
-        
-        // ✅ OPTIMIZED: Open web view immediately, then start search
         showWebView = true
-        hotelSearchVM.searchHotels()
     }
     
     // MARK: - Helper Methods
@@ -494,50 +498,75 @@ struct HotelView: View {
         }
         
         if let lastHotelPair = hotelPairs.first {
-            hotelLocation = lastHotelPair.origin.displayName
+            // ✅ UPDATED: Use formatted display name
+            let originalDisplayName = lastHotelPair.origin.displayName
+            let formattedDisplayName = LocationDisplayFormatter.formatDisplayName(
+                from: originalDisplayName,
+                type: lastHotelPair.origin.type
+            )
+            
+            hotelLocation = formattedDisplayName
             hotelIATACode = lastHotelPair.origin.iataCode
             hasPrefilled = true
             print("✅ HotelView: Auto-prefilled from hotel searches")
+            print("   Original: \(originalDisplayName)")
+            print("   Formatted: \(formattedDisplayName)")
         } else if let anyRecentPair = recentPairs.first {
-            hotelLocation = anyRecentPair.origin.displayName
+            // ✅ UPDATED: Use formatted display name
+            let originalDisplayName = anyRecentPair.origin.displayName
+            let formattedDisplayName = LocationDisplayFormatter.formatDisplayName(
+                from: originalDisplayName,
+                type: anyRecentPair.origin.type
+            )
+            
+            hotelLocation = formattedDisplayName
             hotelIATACode = anyRecentPair.origin.iataCode
             hasPrefilled = true
             print("✅ HotelView: Auto-prefilled from any recent search")
+            print("   Original: \(originalDisplayName)")
+            print("   Formatted: \(formattedDisplayName)")
         }
     }
     
     private func saveCurrentSearch() {
+        // ✅ UPDATED: Save with formatted display name but preserve original for data
         let hotelLocationObj = Location(
             iataCode: hotelIATACode,
             airportName: hotelLocation,
-            type: "city",
-            displayName: hotelLocation,
-            cityName: hotelLocation,
-            countryName: "",
+            type: "city", // Hotel locations are typically saved as city type
+            displayName: hotelLocation, // Use the formatted name that's already clean
+            cityName: hotelIATACode, // Usually the city code
+            countryName: extractCountryNameFromLocation(hotelLocation),
             countryCode: "",
             imageUrl: "",
             coordinates: Coordinates(latitude: "0", longitude: "0")
         )
         
         recentLocationsManager.addSearchPair(origin: hotelLocationObj, destination: hotelLocationObj)
-        print("💾 HotelView: Saved hotel search: \(hotelLocation)")
+        print("💾 HotelView: Saved hotel search with formatted name: \(hotelLocation)")
     }
     
     private func savePopularHotelSearch(location: MasonryImage) {
+        // ✅ UPDATED: Format the location title before saving
+        let formattedTitle = LocationDisplayFormatter.formatDisplayName(
+            from: location.title,
+            type: "city" // Popular locations are typically cities
+        )
+        
         let hotelLocationObj = Location(
             iataCode: location.iataCode,
-            airportName: location.title,
+            airportName: formattedTitle,
             type: "city",
-            displayName: location.title,
-            cityName: location.title,
-            countryName: "",
+            displayName: formattedTitle,
+            cityName: location.iataCode, // Use iataCode as city name for consistency
+            countryName: extractCountryNameFromLocation(formattedTitle),
             countryCode: "",
             imageUrl: "",
             coordinates: Coordinates(latitude: "0", longitude: "0")
         )
         
         recentLocationsManager.addSearchPair(origin: hotelLocationObj, destination: hotelLocationObj)
-        print("💾 Saved popular hotel search: \(location.title)")
+        print("💾 Saved popular hotel search with formatted name: \(formattedTitle)")
     }
     
     private func formatGuestsText(adults: Int, children: Int, rooms: Int) -> String {

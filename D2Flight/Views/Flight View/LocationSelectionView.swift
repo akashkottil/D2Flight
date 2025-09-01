@@ -202,24 +202,27 @@ struct LocationSelectionView: View {
     
     private func selectLocation(_ location: Location) {
         if isFromHotel {
-                // ✅ CORRECT: Pass full display name and city name
-                let fullDisplayName = location.displayName    // "Malacca, Malaysia"
-                let cityName = location.cityName              // "Malacca"
-                
-                print("🏨 Hotel location selection debug:")
-                print("   Full Display Name: \(fullDisplayName)")
-                print("   City Name: \(cityName)")
-                print("   Country Name: \(location.countryName)")
-                
-                // Update bindings
-                originLocation = fullDisplayName              // ✅ "Malacca, Malaysia"
-                originIATACode = cityName                     // ✅ "Malacca"
-                
-                print("🏨 Hotel location selected: \(fullDisplayName) (\(cityName))")
-                onLocationSelected(fullDisplayName, true, cityName)  // ✅ CORRECT
-                presentationMode.wrappedValue.dismiss()
-                return
-            }
+            // ✅ UPDATED: Use consistent formatting for hotel locations
+            let formattedDisplayName = LocationDisplayFormatter.formatDisplayName(for: location)
+            let cityName = location.cityName
+            
+            print("🏨 Hotel location selection debug:")
+            print("   Original Display Name: \(location.displayName)")
+            print("   Formatted Display Name: \(formattedDisplayName)")
+            print("   City Name: \(cityName)")
+            print("   Country Name: \(location.countryName)")
+            
+            // Update bindings
+            originLocation = formattedDisplayName
+            originIATACode = cityName
+            
+            print("🏨 Hotel location selected: \(formattedDisplayName) (\(cityName))")
+            onLocationSelected(formattedDisplayName, true, cityName)
+            presentationMode.wrappedValue.dismiss()
+            return
+        }
+        
+        // Rest of the method remains the same for flights and rentals
         if viewModel.isSelectingOrigin {
             originLocation = location.airportName
             originIATACode = location.iataCode
@@ -524,6 +527,62 @@ struct RecentLocationRowView: View {
     }
     
     private func removeDuplicateCityNamesForRecent(from fullName: String) -> String {
+        let components = fullName.components(separatedBy: ", ")
+        var uniqueComponents: [String] = []
+        var seenComponents: Set<String> = []
+        
+        for component in components {
+            let trimmed = component.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !seenComponents.contains(trimmed.lowercased()) {
+                uniqueComponents.append(trimmed)
+                seenComponents.insert(trimmed.lowercased())
+            }
+        }
+        
+        return uniqueComponents.joined(separator: ", ")
+    }
+}
+
+struct LocationDisplayFormatter {
+    
+    // MARK: - Format Display Name to Match LocationRowView
+    static func formatDisplayName(for location: Location) -> String {
+        switch location.type {
+        case "city":
+            return location.displayName
+            
+        case "airport":
+            // Remove duplicate city names from displayName
+            return removeDuplicateCityNames(from: location.displayName)
+            
+        case "hotel":
+            return location.displayName
+            
+        default:
+            return location.displayName
+        }
+    }
+    
+    // MARK: - Format Display Name from Raw String and Type
+    static func formatDisplayName(from displayName: String, type: String) -> String {
+        switch type {
+        case "city":
+            return displayName
+            
+        case "airport":
+            // Remove duplicate city names from displayName
+            return removeDuplicateCityNames(from: displayName)
+            
+        case "hotel":
+            return displayName
+            
+        default:
+            return displayName
+        }
+    }
+    
+    // MARK: - Helper Function to Remove Duplicate City Names
+    private static func removeDuplicateCityNames(from fullName: String) -> String {
         let components = fullName.components(separatedBy: ", ")
         var uniqueComponents: [String] = []
         var seenComponents: Set<String> = []
