@@ -36,9 +36,14 @@ struct HotelView: View {
     @StateObject private var recentLocationsManager = RecentLocationsManager.shared
     @State private var hasPrefilled = false
     
-    // ✅ UPDATED: Remove individual notification states, use WarningManager
+    //  UPDATED: Remove individual notification states, use WarningManager
     @StateObject private var warningManager = WarningManager.shared
     @State private var lastNetworkStatus = true
+    
+//    safari services
+    @State private var showingSafariView = false
+    @State private var selectedURL: String = ""
+    @State private var selectedProviderName: String? = nil
     
     
     var body: some View {
@@ -197,10 +202,12 @@ struct HotelView: View {
             }
         }
         // ✅ OPTIMIZED: Show web view with loading state
-        .sheet(isPresented: $showWebView) {
-            HotelSearchWebView(hotelSearchVM: hotelSearchVM)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.hidden)
+        .fullScreenCover(isPresented: $showingSafariView) {
+            SafariView(
+                url: selectedURL,
+                providerName: selectedProviderName,
+                providerImageURL: nil
+            )
         }
         .onAppear {
             if hotelLocation.isEmpty {
@@ -280,10 +287,9 @@ struct HotelView: View {
         saveCurrentSearch()
         
         print("🏨 Hotel search data analysis:")
-        print("   hotelLocation: '\(hotelLocation)'")      // Should be "Malacca, Malaysia"
-        print("   hotelIATACode: '\(hotelIATACode)'")      // Should be "Malacca"
+        print("   hotelLocation: '\(hotelLocation)'")
+        print("   hotelIATACode: '\(hotelIATACode)'")
         
-        // ✅ CORRECT: Extract country from full location name
         let countryName = extractCountryNameFromLocation(hotelLocation)
         
         print("🏨 Hotel search parameters (debugging):")
@@ -291,10 +297,10 @@ struct HotelView: View {
         print("   🏙️ City Name: '\(hotelIATACode)'")
         print("   🌍 Country Name: '\(countryName)'")
         
-        // ✅ CORRECT: Set proper values in ViewModel
-        hotelSearchVM.cityCode = hotelIATACode          // "Malacca"
-        hotelSearchVM.cityName = hotelIATACode          // "Malacca"
-        hotelSearchVM.countryName = countryName         // "Malaysia" ✅
+        // Set ViewModel properties for search
+        hotelSearchVM.cityCode = hotelIATACode
+        hotelSearchVM.cityName = hotelIATACode
+        hotelSearchVM.countryName = countryName
         hotelSearchVM.rooms = rooms
         hotelSearchVM.adults = adults
         hotelSearchVM.children = children
@@ -306,7 +312,17 @@ struct HotelView: View {
             hotelSearchVM.checkoutDate = selectedDates[1]
         }
         
-        showWebView = true
+        // Generate the deeplink for hotel search
+        hotelSearchVM.searchHotels()
+        
+        // Wait for deeplink to be generated, then open SafariView
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if let deeplink = hotelSearchVM.deeplink {
+                selectedURL = deeplink
+                selectedProviderName = "Hotel Search"
+                showingSafariView = true
+            }
+        }
     }
 
     
@@ -330,23 +346,19 @@ struct HotelView: View {
         }
     }
     
-    // ✅ OPTIMIZED: Popular Location Handler with Immediate Web View Opening
     private func handlePopularLocationTapped(_ location: MasonryImage) {
         print("🏨 Popular hotel location tapped: \(location.title) (\(location.iataCode))")
         
-        // ✅ UPDATED: Format the location title for consistent display
         let formattedTitle = LocationDisplayFormatter.formatDisplayName(
             from: location.title,
             type: "city"
         )
         
-        // Set hotel location to formatted popular location
         hotelLocation = formattedTitle
         hotelIATACode = location.iataCode
         
         print("🏨 Formatted popular location: \(formattedTitle)")
         
-        // ✅ Use SearchValidationHelper for validation
         if let warningType = SearchValidationHelper.validateHotelSearch(
             hotelIATACode: location.iataCode,
             hotelLocation: formattedTitle,
@@ -356,7 +368,6 @@ struct HotelView: View {
             return
         }
         
-        // Save search for recent locations
         savePopularHotelSearch(location: location)
         
         // Update ViewModel properties
@@ -378,7 +389,17 @@ struct HotelView: View {
             hotelSearchVM.checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: hotelSearchVM.checkinDate) ?? Date()
         }
         
-        showWebView = true
+        // Generate the deeplink for hotel search
+        hotelSearchVM.searchHotels()
+        
+        // Wait for deeplink to be generated, then open SafariView
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if let deeplink = hotelSearchVM.deeplink {
+                selectedURL = deeplink
+                selectedProviderName = "Hotel Search"
+                showingSafariView = true
+            }
+        }
     }
     
     // MARK: - Helper Methods
