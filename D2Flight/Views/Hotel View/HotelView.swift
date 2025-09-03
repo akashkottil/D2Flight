@@ -149,10 +149,52 @@ struct HotelView: View {
                 lastNetworkStatus: &lastNetworkStatus
             )
         }
-        // ✅ OPTIMIZED: Remove deeplink receiver - web view handles it directly
+        // Enhanced reactive observers with debugging
+        .onReceive(hotelSearchVM.$deeplink) { deeplink in
+            print("🔔 HotelView.$deeplink observer triggered:")
+            print("   Previous selectedURL: '\(selectedURL)'")
+            print("   New deeplink: '\(deeplink ?? "nil")'")
+            print("   deeplink.isEmpty: \(deeplink?.isEmpty ?? true)")
+            
+            if let deeplink = deeplink, !deeplink.isEmpty {
+                print("✅ Valid deeplink received - updating UI state")
+                selectedURL = deeplink
+                selectedProviderName = "Hotel Search"
+                
+                print("📊 UI state after setting values:")
+                print("   selectedURL: '\(selectedURL)'")
+                print("   selectedProviderName: '\(selectedProviderName ?? "nil")'")
+                print("   showingSafariView before: \(showingSafariView)")
+                
+                showingSafariView = true
+                
+                print("   showingSafariView after: \(showingSafariView)")
+                print("🌐 SafariView should now be presented")
+            } else {
+                print("❌ Invalid or empty deeplink received")
+                if let deeplink = deeplink {
+                    print("   Deeplink value: '\(deeplink)'")
+                    print("   Deeplink length: \(deeplink.count)")
+                }
+            }
+        }
+        .onReceive(hotelSearchVM.$isLoading) { isLoading in
+            print("🔔 HotelView.$isLoading observer triggered: \(isLoading)")
+            if isLoading {
+                print("🔄 Hotel search started - showing loading state")
+            } else {
+                print("✅ Hotel search completed - loading state finished")
+            }
+        }
         .onReceive(hotelSearchVM.$errorMessage) { errorMessage in
-            if let error = errorMessage {
+            print("🔔 HotelView.$errorMessage observer triggered: '\(errorMessage ?? "nil")'")
+            if let error = errorMessage, !error.isEmpty {
                 print("⚠️ HotelView received error: \(error)")
+                // Ensure SafariView doesn't show on error
+                if showingSafariView {
+                    print("❌ Hiding SafariView due to error")
+                    showingSafariView = false
+                }
             }
         }
         .sheet(isPresented: $showPassengerSheet) {
@@ -201,13 +243,48 @@ struct HotelView: View {
                 print("🔄 ViewModel state reset for new location")
             }
         }
-        // ✅ OPTIMIZED: Show web view with loading state
+        // Enhanced SafariView with debugging
         .fullScreenCover(isPresented: $showingSafariView) {
-            SafariView(
-                url: selectedURL,
-                providerName: selectedProviderName,
-                providerImageURL: nil
-            )
+//            print("🌐 SafariView .fullScreenCover triggered")
+//            print("   showingSafariView: \(showingSafariView)")
+//            print("   selectedURL: '\(selectedURL)'")
+//            print("   selectedURL.isEmpty: \(selectedURL.isEmpty)")
+            
+            if !selectedURL.isEmpty {
+                SafariView(
+                    url: selectedURL,
+                    providerName: selectedProviderName,
+                    providerImageURL: nil
+                )
+                .ignoresSafeArea()
+                .onAppear {
+                    print("🌐 SafariView appeared with URL: \(selectedURL)")
+                }
+                .onDisappear {
+                    print("🌐 SafariView disappeared")
+                    selectedURL = ""
+                    selectedProviderName = nil
+                }
+            } else {
+                VStack {
+                    Text("Loading hotel search...")
+                        .font(.title2)
+                        .padding()
+                    
+                    Text("URL: \(selectedURL)")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .padding()
+                    
+                    Button("Cancel") {
+                        showingSafariView = false
+                    }
+                    .padding()
+                }
+                .onAppear {
+                    print("❌ SafariView fallback view appeared - empty URL!")
+                }
+            }
         }
         .onAppear {
             if hotelLocation.isEmpty {
@@ -312,20 +389,28 @@ struct HotelView: View {
             hotelSearchVM.checkoutDate = selectedDates[1]
         }
         
+        // ENHANCED DEBUG: Check ViewModel state before search
+        print("📊 ViewModel state before search:")
+        print("   cityCode: '\(hotelSearchVM.cityCode)'")
+        print("   cityName: '\(hotelSearchVM.cityName)'")
+        print("   countryName: '\(hotelSearchVM.countryName)'")
+        print("   checkinDate: \(hotelSearchVM.checkinDate)")
+        print("   checkoutDate: \(hotelSearchVM.checkoutDate)")
+        print("   rooms: \(hotelSearchVM.rooms)")
+        print("   adults: \(hotelSearchVM.adults)")
+        print("   children: \(hotelSearchVM.children)")
+        print("   isLoading: \(hotelSearchVM.isLoading)")
+        print("   deeplink: \(hotelSearchVM.deeplink ?? "nil")")
+        
         // Generate the deeplink for hotel search
+        print("🚀 Calling hotelSearchVM.searchHotels()...")
         hotelSearchVM.searchHotels()
         
-        // Wait for deeplink to be generated, then open SafariView
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let deeplink = hotelSearchVM.deeplink {
-                selectedURL = deeplink
-                selectedProviderName = "Hotel Search"
-                showingSafariView = true
-            }
-        }
+        // Check state immediately after call
+        print("📊 ViewModel state immediately after searchHotels() call:")
+        print("   isLoading: \(hotelSearchVM.isLoading)")
+        print("   deeplink: \(hotelSearchVM.deeplink ?? "nil")")
     }
-
-    
     
     private func extractCityNameFromLocation(_ location: String) -> String {
         let components = location.components(separatedBy: ", ")
@@ -373,6 +458,7 @@ struct HotelView: View {
         // Update ViewModel properties
         hotelSearchVM.cityCode = location.iataCode
         hotelSearchVM.cityName = location.iataCode
+        hotelSearchVM.countryName = extractCountryNameFromLocation(formattedTitle)
         hotelSearchVM.rooms = rooms
         hotelSearchVM.adults = adults
         hotelSearchVM.children = children
@@ -389,17 +475,12 @@ struct HotelView: View {
             hotelSearchVM.checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: hotelSearchVM.checkinDate) ?? Date()
         }
         
+        // FIXED: Remove the old DispatchQueue.main.asyncAfter approach
         // Generate the deeplink for hotel search
+        print("🚀 Popular location - calling hotelSearchVM.searchHotels()...")
         hotelSearchVM.searchHotels()
         
-        // Wait for deeplink to be generated, then open SafariView
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let deeplink = hotelSearchVM.deeplink {
-                selectedURL = deeplink
-                selectedProviderName = "Hotel Search"
-                showingSafariView = true
-            }
-        }
+        // The reactive observer will handle showing SafariView
     }
     
     // MARK: - Helper Methods
@@ -601,9 +682,6 @@ struct HotelView: View {
         return "\(guestsText), \(roomsText)"
     }
 }
-
-
-
 
 #Preview {
     HotelView()
