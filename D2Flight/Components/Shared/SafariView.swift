@@ -1,39 +1,45 @@
 import SwiftUI
 import SafariServices
 
+
 // MARK: - Tiny bridge so SwiftUI loader can tell UIKit to hide
 final class LoaderState: ObservableObject {
     @Published var isVisible: Bool = true
     var onHide: (() -> Void)?
 }
 
+enum LoaderStyle {
+    case hotel
+    case result
+}
+
 struct SafariView: UIViewControllerRepresentable {
     let url: String
     let providerName: String?
     let providerImageURL: String?
-    @Environment(\.dismiss) private var dismiss
 
-    // Stable identifier so updates don't trample other instances
+    // NEW: decide which full-screen loader to show
+    var loaderStyle: LoaderStyle = .hotel
+
+    @Environment(\.dismiss) private var dismiss
     private let viewId = UUID()
 
-    init(url: String, providerName: String? = nil, providerImageURL: String? = nil) {
+    init(url: String, providerName: String? = nil, providerImageURL: String? = nil, loaderStyle: LoaderStyle = .hotel) {
         self.url = url
         self.providerName = providerName
         self.providerImageURL = providerImageURL
+        self.loaderStyle = loaderStyle
     }
 
     func makeUIViewController(context: Context) -> UIViewController {
-        print("🌐 Creating SafariView for: \(url)")
-
         let containerVC = UIViewController()
         containerVC.view.backgroundColor = UIColor.systemBackground
         context.coordinator.containerVC = containerVC
 
-        // Resolve final URL (with safe fallback)
-        let finalURL: URL = URL(string: url) ?? URL(string: "https://google.com")!
-
-        // Create & embed Safari VC
-        let safariVC = SFSafariViewController.createConfiguredSafariVC(url: finalURL)
+        let finalURL = URL(string: url) ?? URL(string: "https://google.com")!
+        let safariVC = SFSafariViewController(url: finalURL)
+        safariVC.dismissButtonStyle = .close        // optional, common default
+        safariVC.preferredControlTintColor = .systemBlue
         safariVC.delegate = context.coordinator
         containerVC.addChild(safariVC)
         containerVC.view.addSubview(safariVC.view)
@@ -46,8 +52,8 @@ struct SafariView: UIViewControllerRepresentable {
         ])
         safariVC.didMove(toParent: containerVC)
 
-        // --- 🔹 SwiftUI HOTEL LOADER overlay ---
-        let loadingView = createHotelLoaderOverlay(context: context)
+        // --- SwiftUI LOADER overlay (now style-aware) ---
+        let loadingView = createLoaderOverlay(context: context)
         containerVC.view.addSubview(loadingView)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -65,14 +71,11 @@ struct SafariView: UIViewControllerRepresentable {
         context.coordinator.providerName = providerName
         context.coordinator.viewId = viewId
 
-        // Track original domain for cross-domain redirect detection
         context.coordinator.initialDomain = URL(string: url)?
             .host?
             .replacingOccurrences(of: "^www\\.", with: "", options: .regularExpression) ?? ""
 
-        // Failsafe so loader never hangs
         context.coordinator.loadingTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: false) { [weak coordinator = context.coordinator] _ in
-            print("⏰ Loading timeout reached - hiding loading view (failsafe)")
             coordinator?.hideLoadingView()
         }
 
@@ -80,36 +83,38 @@ struct SafariView: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        guard context.coordinator.viewId == viewId else {
-            print("🌐 Skipping update for different view instance")
-            return
-        }
+        guard context.coordinator.viewId == viewId else { return }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    // MARK: - Create SwiftUI overlay (AnimatedHotelLoader)
-    private func createHotelLoaderOverlay(context: Context) -> UIView {
+    // MARK: - Create SwiftUI overlay (Hotel or Result loader)
+    private func createLoaderOverlay(context: Context) -> UIView {
         let state = LoaderState()
         state.isVisible = true
         context.coordinator.loaderState = state
 
-        // When the SwiftUI loader finishes (sets isVisible = false), hide overlay
+        // when SwiftUI loader hides, remove overlay in UIKit
         state.onHide = { [weak coordinator = context.coordinator] in
             coordinator?.hideLoadingView()
         }
 
-        // If you want to pass a specific image asset for the hotel icon, set hotelAssetName here.
-        let root = AnimatedHotelLoader(
-            hotelAssetName: "HotelIcon", // ⬅️ your asset; or leave to use SF Symbol fallback
-            isVisible: Binding(
+        // Choose the loader
+        let root: AnyView = {
+            let bind = Binding<Bool>(
                 get: { state.isVisible },
                 set: { newValue in
                     state.isVisible = newValue
                     if newValue == false { state.onHide?() }
                 }
             )
-        )
+            switch loaderStyle {
+            case .hotel:
+                return AnyView(AnimatedHotelLoader(isVisible: bind))
+            case .result:
+                return AnyView(AnimatedResultLoader(isVisible: bind))
+            }
+        }()
 
         let host = UIHostingController(rootView: root)
         host.view.backgroundColor = .clear
@@ -131,7 +136,7 @@ struct SafariView: UIViewControllerRepresentable {
         host.didMove(toParent: context.coordinator.containerVC)
 
         context.coordinator.loadingView = container
-        context.coordinator.hostingController = host
+        context.coordinator.hostingController = host          // now type-erased
         return container
     }
 
@@ -139,7 +144,7 @@ struct SafariView: UIViewControllerRepresentable {
     class Coordinator: NSObject, SFSafariViewControllerDelegate {
         // UI refs
         var loadingView: UIView?
-        var hostingController: UIHostingController<AnimatedHotelLoader>?
+        var hostingController: UIHostingController<AnyView>?  // <— generalized
         var safariViewController: SFSafariViewController?
         var containerVC: UIViewController?
         var dismissAction: (() -> Void)?
@@ -158,59 +163,41 @@ struct SafariView: UIViewControllerRepresentable {
         fileprivate var loadingTimer: Timer?
         private var isLoadingViewHidden = false
 
-        // MARK: SFSafariViewControllerDelegate
         func safariViewController(_ controller: SFSafariViewController,
                                   didCompleteInitialLoad didLoadSuccessfully: Bool) {
-            print("🌐 Safari didCompleteInitialLoad: \(didLoadSuccessfully)")
             hasCompletedInitialLoad = true
             loadingTimer?.invalidate()
-
-            guard didLoadSuccessfully else {
-                print("❌ Initial load failed - hiding loading view immediately")
-                hideLoadingViewImmediately()
-                return
-            }
-
+            guard didLoadSuccessfully else { hideLoadingViewImmediately(); return }
             if hasRedirectedToFinalDomain {
                 hideLoadingView()
             } else {
-                // Even without cross-domain redirect, hide shortly after first paint
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    self.hideLoadingView()
-                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.hideLoadingView() }
             }
         }
 
         func safariViewController(_ controller: SFSafariViewController,
-                                  initialLoadDidRedirectTo URL: URL) {
-            let currentDomain = extractDomain(from: URL.absoluteString)
-            print("🔄 Redirect: \(currentDomain) (initial: \(initialDomain))")
+                                  initialLoadDidRedirectTo url: URL) {
+            let currentDomain = extractDomain(from: url.absoluteString)
             if !currentDomain.isEmpty,
                currentDomain != initialDomain,
                !hasRedirectedToFinalDomain {
                 finalDomain = currentDomain
                 hasRedirectedToFinalDomain = true
-                // Small delay so landing page paints before revealing it
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    self.hideLoadingView()
-                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { self.hideLoadingView() }
             }
         }
 
         func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
-            print("✅ Safari dismissed")
             loadingTimer?.invalidate()
         }
 
-        // MARK: Helpers
         private func extractDomain(from urlString: String) -> String {
             guard let url = URL(string: urlString), let host = url.host else { return "" }
             return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
         }
 
-        // Immediate hide (failures)
         fileprivate func hideLoadingViewImmediately() {
-            guard let loadingView = self.loadingView, !isLoadingViewHidden else { return }
+            guard let loadingView, !isLoadingViewHidden else { return }
             loadingTimer?.invalidate()
             isLoadingViewHidden = true
             DispatchQueue.main.async {
@@ -219,13 +206,11 @@ struct SafariView: UIViewControllerRepresentable {
                 self.hostingController?.willMove(toParent: nil)
                 self.hostingController?.view.removeFromSuperview()
                 self.hostingController?.removeFromParent()
-                print("✅ Loader removed immediately")
             }
         }
 
-        // Animated hide (success)
         fileprivate func hideLoadingView() {
-            guard let loadingView = self.loadingView, !isLoadingViewHidden else { return }
+            guard let loadingView, !isLoadingViewHidden else { return }
             loadingTimer?.invalidate()
             isLoadingViewHidden = true
             DispatchQueue.main.async {
@@ -237,28 +222,8 @@ struct SafariView: UIViewControllerRepresentable {
                     self.hostingController?.willMove(toParent: nil)
                     self.hostingController?.view.removeFromSuperview()
                     self.hostingController?.removeFromParent()
-                    print("✅ Loader removed with fade")
                 }
             }
         }
-    }
-}
-
-// MARK: - Notification name (kept if you rely on it elsewhere)
-extension Notification.Name {
-    static let safariViewDidDismiss = Notification.Name("safariViewDidDismiss")
-}
-
-// MARK: - SFSafariViewController config
-extension SFSafariViewController {
-    static func createConfiguredSafariVC(url: URL) -> SFSafariViewController {
-        let config = SFSafariViewController.Configuration()
-        config.entersReaderIfAvailable = false
-        config.barCollapsingEnabled = true
-        let safariVC = SFSafariViewController(url: url, configuration: config)
-        safariVC.preferredControlTintColor = UIColor.systemOrange
-        safariVC.preferredBarTintColor = UIColor.systemBackground
-        safariVC.dismissButtonStyle = .close
-        return safariVC
     }
 }

@@ -6,19 +6,19 @@ struct ResultDetails: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var showAllDeals = false
-    @State private var showWebSheet = false
-    @State private var selectedDeeplink: URL? = nil
+
+    // NEW: full-screen flight webview state
+    @State private var showFlightSearchWebView = false
+    @State private var pendingDeeplink: String = ""
 
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button(action: {
-                    dismiss()
-                }) {
+                Button(action: { dismiss() }) {
                     Image("DefaultLeftArrow")
                         .padding(.trailing, 10)
-                        .frame(width: 24,height: 24)
+                        .frame(width: 24, height: 24)
                 }
 
                 Spacer()
@@ -27,7 +27,7 @@ struct ResultDetails: View {
                     // Share functionality
                 }) {
                     Image("ShareIcon")
-                        .frame(width: 24,height: 24)
+                        .frame(width: 24, height: 24)
                         .font(.system(size: 18))
                         .foregroundColor(.black)
                 }
@@ -108,9 +108,12 @@ struct ResultDetails: View {
                                     isFirst: index == 0,
                                     isLast: index == providersToShow.count - 1
                                 ) { url in
-                                    selectedDeeplink = url
-                                    showWebSheet = true
-                                    print("🔗 Presenting sheet for \(splitProvider.name): \(url.absoluteString)")
+                                    // Open full-screen like hotel flow
+                                    pendingDeeplink = url.absoluteString
+                                    withTransaction(Transaction(animation: nil)) {
+                                        showFlightSearchWebView = true
+                                    }
+                                    print("🔗 Open full-screen deeplink for \(splitProvider.name): \(url.absoluteString)")
                                 }
                             }
                         }
@@ -184,16 +187,13 @@ struct ResultDetails: View {
             print("📋 Displaying flight details for: \(flight.id)")
             printFlightProviders()
         }
-        // PRESENT THE BOTTOM SHEET
-        .sheet(isPresented: $showWebSheet, onDismiss: { selectedDeeplink = nil }) {
-            if let url = selectedDeeplink {
-                SafariSheet(url: url)
-                    .presentationDetents([.fraction(1.0)])
-                    .presentationDragIndicator(.visible)
-                    .ignoresSafeArea()
-            } else {
-                EmptyView()
-            }
+        // Full-screen FlightSearchWebView (no bounce animation)
+        .fullScreenCover(isPresented: $showFlightSearchWebView, onDismiss: {
+            pendingDeeplink = ""
+        }) {
+            FlightSearchWebView(urlString: pendingDeeplink)
+                .ignoresSafeArea()
+                .transaction { $0.disablesAnimations = true }   // avoid up/down slide inside
         }
     }
 
@@ -327,7 +327,7 @@ struct BookingPlatformRow: View {
                     cornerRadius: 6
                 ) {
                     if let url = URL(string: platform.deeplink) {
-                        onTapViewDeal(url)
+                        onTapViewDeal(url)  // bubble up to parent
                     } else {
                         print("❌ Invalid booking URL for \(platform.name)")
                     }
@@ -349,7 +349,7 @@ struct BookingPlatform {
     let ratingCount: Int?
 }
 
-// MARK: - Safari wrapper
+// (Optional) Old Safari sheet kept here if needed elsewhere
 struct SafariSheet: UIViewControllerRepresentable {
     let url: URL
 
