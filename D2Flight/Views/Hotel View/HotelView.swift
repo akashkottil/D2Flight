@@ -50,6 +50,15 @@ struct HotelView: View {
     
     @State private var lastPresentedDeeplink: String? = nil
     
+    private let CITY_META: [String: (city: String, country: String)] = [
+            "COK": ("Kochi", "India"),
+            "SYD": ("Sydney", "Australia"),
+            "MXP": ("Milan", "Italy"),
+            "BER": ("Berlin", "Germany"),
+            "GIG": ("Rio de Janeiro", "Brazil"),
+            "CAI": ("Cairo", "Egypt"),
+        ]
+    
     
     var body: some View {
         NavigationStack {
@@ -372,8 +381,6 @@ struct HotelView: View {
         hotelLocation = formattedTitle
         hotelIATACode = location.iataCode
         
-        print("🏨 Formatted popular location: \(formattedTitle)")
-        
         if let warningType = SearchValidationHelper.validateHotelSearch(
             hotelIATACode: location.iataCode,
             hotelLocation: formattedTitle,
@@ -383,35 +390,41 @@ struct HotelView: View {
             return
         }
         
+        // Persist to recents
         savePopularHotelSearch(location: location)
         
-        // Update ViewModel properties
+        // ✅ Correct city/country using metadata
+        let meta = CITY_META[location.iataCode]
         hotelSearchVM.cityCode = location.iataCode
-        hotelSearchVM.cityName = location.iataCode
-        hotelSearchVM.countryName = extractCountryNameFromLocation(formattedTitle)
+        hotelSearchVM.cityName = meta?.city ?? formattedTitle          // e.g. "Sydney"
+        hotelSearchVM.countryName = meta?.country ?? "Unknown"         // e.g. "Australia"
+        
+        // Guests / rooms
         hotelSearchVM.rooms = rooms
         hotelSearchVM.adults = adults
         hotelSearchVM.children = children
         
+        // Dates (ensure both exist)
         if selectedDates.count > 0 {
             hotelSearchVM.checkinDate = selectedDates[0]
         } else {
             hotelSearchVM.checkinDate = Date()
         }
-        
         if selectedDates.count > 1 {
             hotelSearchVM.checkoutDate = selectedDates[1]
         } else {
             hotelSearchVM.checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: hotelSearchVM.checkinDate) ?? Date()
         }
         
-        // FIXED: Remove the old DispatchQueue.main.asyncAfter approach
-        // Generate the deeplink for hotel search
-        print("🚀 Popular location - calling hotelSearchVM.searchHotels()...")
-        hotelSearchVM.searchHotels()
-        
-        // The reactive observer will handle showing SafariView
+        // ✅ Mirror the Search button flow (show loader, then call)
+        showHotelSearchWebView = true
+        hotelSearchVM.isLoading = true
+        DispatchQueue.main.async {
+            print("🚀 Popular location - calling hotelSearchVM.searchHotels() (grid flow)")
+            hotelSearchVM.searchHotels()
+        }
     }
+
     
     // MARK: - Helper Methods
     enum HotelDateType {
@@ -579,19 +592,21 @@ struct HotelView: View {
     }
     
     private func savePopularHotelSearch(location: MasonryImage) {
-        // ✅ UPDATED: Format the location title before saving
         let formattedTitle = LocationDisplayFormatter.formatDisplayName(
             from: location.title,
-            type: "city" // Popular locations are typically cities
+            type: "city"
         )
+        
+        // Use same meta so recents have a real country
+        let meta = CITY_META[location.iataCode]
         
         let hotelLocationObj = Location(
             iataCode: location.iataCode,
             airportName: formattedTitle,
             type: "city",
             displayName: formattedTitle,
-            cityName: location.iataCode, // Use iataCode as city name for consistency
-            countryName: extractCountryNameFromLocation(formattedTitle),
+            cityName: meta?.city ?? formattedTitle,          // human city name
+            countryName: meta?.country ?? "Unknown",         // real country
             countryCode: "",
             imageUrl: "",
             coordinates: Coordinates(latitude: "0", longitude: "0")
@@ -600,6 +615,7 @@ struct HotelView: View {
         recentLocationsManager.addSearchPair(origin: hotelLocationObj, destination: hotelLocationObj)
         print("💾 Saved popular hotel search with formatted name: \(formattedTitle)")
     }
+
     
     private func formatGuestsText(adults: Int, children: Int, rooms: Int) -> String {
         let totalGuests = adults + children
