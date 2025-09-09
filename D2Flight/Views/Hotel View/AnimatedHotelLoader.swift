@@ -28,6 +28,8 @@ struct AnimatedHotelLoader: View {
         "locking.in.top.deals.for.you".localized
     ]
 
+    var autoHide: Bool = true
+    
     // Visibility bridge (same as your flight loader)
     @Binding var isVisible: Bool
 
@@ -161,11 +163,13 @@ struct AnimatedHotelLoader: View {
     // MARK: - Animations (clouds + text only; hotel is static)
     private func startAnimations() {
         // Clouds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-            withAnimation(.linear(duration: baseCloudSpeed).repeatForever(autoreverses: false)) {
-                animateClouds = true
-            }
-        }
+        if autoHide {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.2 + 0.12 + 0.25) {
+                        withAnimation(.easeOut(duration: 0.35)) {
+                            isVisible = false
+                        }
+                    }
+                }
 
         // Text cycle
         loopTextAnimation()

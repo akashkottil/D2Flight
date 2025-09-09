@@ -26,17 +26,18 @@ struct HotelSearchWebView: View {
                     .transition(.opacity)
                 } else if hotelSearchVM.isLoading {
                     // Show loading state with timeout indicator
-                    LoadingStateView(
-                        title: "Searching Hotels...",
-                        subtitle: "Finding the best deals for you",
-                        hasTimedOut: hotelSearchVM.hasTimedOut,
-                        onRetry: {
-                            hotelSearchVM.searchHotels()
-                        },
-                        onCancel: {
-                            dismiss()
-                        }
+                    AnimatedHotelLoader(
+                        autoHide: false, // <- keep visible while VM is loading
+                        isVisible: Binding(
+                            get: { hotelSearchVM.isLoading },
+                            set: { newValue in
+                                // when loader asks to hide (e.g., user navigates), stop loading
+                                if !newValue { hotelSearchVM.isLoading = false }
+                            }
+                        )
                     )
+                    .ignoresSafeArea()
+                    .transition(.opacity)
                 } else if let error = hotelSearchVM.errorMessage {
                     // Show error state with retry option
                     ErrorStateView(

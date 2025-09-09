@@ -65,72 +65,44 @@ class HotelSearchViewModel: ObservableObject {
         print("🔄 Search state reset - ready for new location search")
     }
     
+    @MainActor
     func searchHotels() {
-        print("🏨 HotelSearchViewModel.searchHotels() called")
-        
-        print("🔍 Validating search parameters...")
-        
-        guard !cityCode.isEmpty else {
-            print("❌ cityCode is empty")
-            showError("Please select hotel location.")
-            return
-        }
-        
-        print("   ✅ cityCode: '\(cityCode)'")
-        
-        guard !cityName.isEmpty, !countryName.isEmpty else {
-            print("❌ Missing required data - cityName: '\(cityName)', countryName: '\(countryName)'")
-            showError("Missing location information. Please select a valid location.")
-            return
-        }
-        
-        print("   ✅ cityName: '\(cityName)'")
-        print("   ✅ countryName: '\(countryName)'")
-        
-        // Validate dates
-        guard checkinDate < checkoutDate else {
-            print("❌ Invalid dates - checkin: \(checkinDate), checkout: \(checkoutDate)")
-            showError("Check-out date must be after check-in date.")
-            return
-        }
-        
-        print("   ✅ Dates valid - checkin: \(checkinDate), checkout: \(checkoutDate)")
-        print("✅ All validation passed - calling startSearch()")
-        
-        startSearch()
-    }
-    
-    private func startSearch() {
-        print("🔄 HotelSearchViewModel.startSearch() called")
-        
-        print("📊 Setting initial state...")
+        // Flip loading immediately so UI can react
         isLoading = true
         errorMessage = nil
         deeplink = nil
         hasTimedOut = false
-        
-        print("📊 Initial state set:")
-        print("   isLoading: \(isLoading)")
-        print("   errorMessage: \(errorMessage ?? "nil")")
-        print("   deeplink: \(deeplink ?? "nil")")
-        print("   hasTimedOut: \(hasTimedOut)")
-        
+
+        // Validate quickly; if invalid, turn loading off and exit
+        guard !cityCode.isEmpty else {
+            showError("Please select hotel location.")
+            isLoading = false
+            return
+        }
+        guard !cityName.isEmpty, !countryName.isEmpty else {
+            showError("Missing location information. Please select a valid location.")
+            isLoading = false
+            return
+        }
+        guard checkinDate < checkoutDate else {
+            showError("Check-out date must be after check-in date.")
+            isLoading = false
+            return
+        }
+
+        // Defer actual search to next runloop so the loader can render
+        DispatchQueue.main.async {
+            self.startSearch()
+        }
+    }
+
+    
+    private func startSearch() {
+        // state already set in searchHotels()
         startTimeoutTimer()
         
-        let apiDateFormatter = DateFormatter()
-        apiDateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        let checkinString = apiDateFormatter.string(from: checkinDate)
-        let checkoutString = apiDateFormatter.string(from: checkoutDate)
-        
-        print("🏨 Creating HotelRequest with parameters:")
-        print("   ✅ City Name: '\(cityName)'")
-        print("   ✅ Country Name: '\(countryName)'")
-        print("   Check-in: \(checkinString)")
-        print("   Check-out: \(checkoutString)")
-        print("   Rooms: \(rooms)")
-        print("   Adults: \(adults)")
-        print("   Children: \(children)")
+        let checkinString  = Self.apiFormatter.string(from: checkinDate)
+        let checkoutString = Self.apiFormatter.string(from: checkoutDate)
         
         let request = HotelRequest(
             cityName: cityName,
@@ -142,16 +114,21 @@ class HotelSearchViewModel: ObservableObject {
             children: children > 0 ? children : nil
         )
         
-        print("🌐 Making API call...")
         HotelApi.shared.searchHotel(request: request) { [weak self] result in
-            print("📥 API response received - dispatching to main queue")
-            DispatchQueue.main.async {
-                self?.handleSearchResult(result)
-            }
+            guard let self else { return }
+            self.handleSearchResult(result) // already on main if your API returns on main; otherwise wrap in DispatchQueue.main.async
         }
-        
-        print("🌐 API call initiated, waiting for response...")
     }
+
+    // Cached date formatter
+    private static let apiFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        return f
+    }()
+
     
     private func handleSearchResult(_ result: Result<HotelResponse, Error>) {
         print("📋 HotelSearchViewModel.handleSearchResult() called")
