@@ -135,13 +135,13 @@ struct PopularLocationCard: View {
                             .padding(.bottom)
                             Spacer()
                         }
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.4)]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
+//                        .background(
+//                            LinearGradient(
+//                                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.4)]),
+//                                startPoint: .top,
+//                                endPoint: .bottom
+//                            )
+//                        )
                         .padding(8)
                     }
                     .cornerRadius(10)
