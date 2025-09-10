@@ -7,9 +7,12 @@ struct ResultDetails: View {
 
     @State private var showAllDeals = false
 
-    // NEW: full-screen flight webview state
-    @State private var showFlightSearchWebView = false
-    @State private var pendingDeeplink: String = ""
+    // NEW: item-driven full-screen presentation (prevents first-tap race)
+    struct WebSheetItem: Identifiable, Equatable {
+        let id = UUID()
+        let url: URL
+    }
+    @State private var webItem: WebSheetItem?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -108,12 +111,9 @@ struct ResultDetails: View {
                                     isFirst: index == 0,
                                     isLast: index == providersToShow.count - 1
                                 ) { url in
-                                    // Open full-screen like hotel flow
-                                    pendingDeeplink = url.absoluteString
-                                    withTransaction(Transaction(animation: nil)) {
-                                        showFlightSearchWebView = true
-                                    }
-                                    print("🔗 Open full-screen deeplink for \(splitProvider.name): \(url.absoluteString)")
+                                    print("🔗 ResultDetails: Opening deeplink for \(splitProvider.name)")
+                                    // Data-driven presentation: setting item triggers the sheet
+                                    webItem = WebSheetItem(url: url)
                                 }
                             }
                         }
@@ -187,13 +187,13 @@ struct ResultDetails: View {
             print("📋 Displaying flight details for: \(flight.id)")
             printFlightProviders()
         }
-        // Full-screen FlightSearchWebView (no bounce animation)
-        .fullScreenCover(isPresented: $showFlightSearchWebView, onDismiss: {
-            pendingDeeplink = ""
-        }) {
-            FlightSearchWebView(urlString: pendingDeeplink)
+        // Updated presentation: sheet shown only when webItem != nil
+        .fullScreenCover(item: $webItem, onDismiss: {
+            webItem = nil
+        }) { item in
+            // Require two redirects before hiding loader (lacsade → kayak → airasia)
+            FlightSearchWebView(url: item.url, requiredRedirects: 2)
                 .ignoresSafeArea()
-                .transaction { $0.disablesAnimations = true }   // avoid up/down slide inside
         }
     }
 
@@ -326,11 +326,39 @@ struct BookingPlatformRow: View {
                     verticalPadding: 12,
                     cornerRadius: 6
                 ) {
-                    if let url = URL(string: platform.deeplink) {
-                        onTapViewDeal(url)  // bubble up to parent
-                    } else {
-                        print("❌ Invalid booking URL for \(platform.name)")
+                    print("🔗 RAW DEEPLINK DEBUG:")
+                    print("   Provider: \(platform.name)")
+                    print("   Raw deeplink: '\(platform.deeplink)'")
+                    print("   Length: \(platform.deeplink.count)")
+                    print("   Is empty: \(platform.deeplink.isEmpty)")
+
+                    // Check for empty/whitespace-only deeplinks
+                    guard !platform.deeplink.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        print("❌ CRASH CAUSE: Empty deeplink for provider \(platform.name)")
+                        WarningManager.shared.showDeeplinkError(for: .flight,
+                                                                error: URLError(.badURL))
+                        return
                     }
+
+                    // Sanitize the deeplink
+                    let cleanDeeplink = FlightDeeplinkSanitizer.clean(platform.deeplink)
+                    print("   Cleaned deeplink: '\(cleanDeeplink)'")
+
+                    // Validate URL creation and scheme
+                    guard let url = URL(string: cleanDeeplink),
+                          let scheme = url.scheme?.lowercased(),
+                          scheme == "http" || scheme == "https" else {
+                        print("❌ CRASH CAUSE: Invalid URL scheme for provider \(platform.name)")
+                        print("   Attempted URL: '\(cleanDeeplink)'")
+                        print("   Scheme: \(URL(string: cleanDeeplink)?.scheme ?? "nil")")
+
+                        WarningManager.shared.showDeeplinkError(for: .flight,
+                                                                error: URLError(.unsupportedURL))
+                        return
+                    }
+
+                    print("✅ Valid URL created: \(url.absoluteString)")
+                    onTapViewDeal(url)  // bubble up to parent (item-driven sheet)
                 }
             }
             .padding(.vertical, 12)
