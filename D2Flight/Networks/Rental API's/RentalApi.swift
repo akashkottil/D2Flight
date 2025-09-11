@@ -33,9 +33,9 @@ class RentalApi {
         }
         
         let headers: HTTPHeaders = [
-            "accept": APIConstants.Headers.htmlAccept,
+            "accept": APIConstants.Headers.accept,  // Use JSON accept header
             "Accept-Language": request.languageCode,
-            "country": request.countryCode
+            "country": request.countryCode,
         ]
         
         print("🚗 Rental API Request with dynamic language:")
@@ -44,6 +44,7 @@ class RentalApi {
         print("   🌐 API Language: \(apiParams.language)")
         print("   💰 Currency Code: \(request.currencyCode)")
         print("   🌍 Country Code: \(request.countryCode)")
+        print("   📱 App Code: \(request.appCode)")  // ✅ Show app code in debug
         print("   Parameters: \(parameters)")
         print("   Headers: \(headers)")
         

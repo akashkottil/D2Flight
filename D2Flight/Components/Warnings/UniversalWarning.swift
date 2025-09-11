@@ -7,6 +7,7 @@ enum WarningType {
     case sameLocation
     case hotelSearchError
     case rentalSearchError
+    case rentalTimeError  // ✅ NEW: For rental time validation
     case deeplinkError
     case searchTimeout
     
@@ -22,6 +23,8 @@ enum WarningType {
             return "hotel.search.failed.try.again".localized
         case .rentalSearchError:
             return "rental.search.failed.try.again".localized
+        case .rentalTimeError:  // ✅ NEW: Rental time validation error
+            return "rental.minimum.time.error".localized
         case .deeplinkError:
             return "search.failed.please.try.again".localized
         case .searchTimeout:
@@ -37,7 +40,7 @@ enum WarningType {
             return "exclamationmark.triangle.fill"
         case .hotelSearchError:
             return "bed.double.fill"
-        case .rentalSearchError:
+        case .rentalSearchError, .rentalTimeError:  // ✅ UPDATED: Both rental errors use car icon
             return "car.fill"
         case .deeplinkError, .searchTimeout:
             return "exclamationmark.circle.fill"
@@ -51,7 +54,7 @@ enum WarningType {
             return false // Keep showing until network is restored
         case .emptySearch, .sameLocation:
             return true // Auto-dismiss after 3 seconds
-        case .hotelSearchError, .rentalSearchError, .deeplinkError, .searchTimeout:
+        case .hotelSearchError, .rentalSearchError, .rentalTimeError, .deeplinkError, .searchTimeout:  // ✅ UPDATED: Include rentalTimeError
             return true // Auto-dismiss after 4 seconds for error messages
         }
     }
@@ -60,7 +63,7 @@ enum WarningType {
         switch self {
         case .emptySearch, .sameLocation:
             return 3.0
-        case .hotelSearchError, .rentalSearchError, .deeplinkError, .searchTimeout:
+        case .hotelSearchError, .rentalSearchError, .rentalTimeError, .deeplinkError, .searchTimeout:  // ✅ UPDATED: Include rentalTimeError
             return 4.0
         default:
             return 3.0
@@ -181,8 +184,6 @@ class WarningManager: ObservableObject {
     }
 }
 
-
-
 // MARK: - Warning Overlay View (Enhanced)
 struct WarningOverlay: View {
     @ObservedObject var warningManager = WarningManager.shared
@@ -233,13 +234,17 @@ struct SearchValidationHelper {
         return nil // No validation errors
     }
     
-    // Validate rental search
+    // ✅ UPDATED: Enhanced Validate rental search with time validation
     static func validateRentalSearch(
         pickUpIATACode: String,
         dropOffIATACode: String,
         pickUpLocation: String,
         dropOffLocation: String,
         isSameDropOff: Bool,
+        pickUpDate: Date? = nil,
+        pickUpTime: Date? = nil,
+        dropOffDate: Date? = nil,
+        dropOffTime: Date? = nil,
         isConnected: Bool
     ) -> WarningType? {
         
@@ -263,7 +268,41 @@ struct SearchValidationHelper {
             return .sameLocation
         }
         
+        // ✅ NEW: Validate pick-up and drop-off time difference
+        if let pickUpDate = pickUpDate,
+           let pickUpTime = pickUpTime,
+           let dropOffDate = dropOffDate,
+           let dropOffTime = dropOffTime {
+            
+            let combinedPickUpDateTime = combineDateAndTime(date: pickUpDate, time: pickUpTime)
+            let combinedDropOffDateTime = combineDateAndTime(date: dropOffDate, time: dropOffTime)
+            
+            // Drop-off must be at least 1 hour after pick-up
+            let minimumRentalDuration: TimeInterval = 3600 // 1 hour in seconds
+            let timeDifference = combinedDropOffDateTime.timeIntervalSince(combinedPickUpDateTime)
+            
+            if timeDifference < minimumRentalDuration {
+                return .rentalTimeError
+            }
+        }
+        
         return nil // No validation errors
+    }
+    
+    // Helper function to combine date and time
+    private static func combineDateAndTime(date: Date, time: Date) -> Date {
+        let calendar = Calendar.current
+        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
+        let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
+        
+        var combinedComponents = DateComponents()
+        combinedComponents.year = dateComponents.year
+        combinedComponents.month = dateComponents.month
+        combinedComponents.day = dateComponents.day
+        combinedComponents.hour = timeComponents.hour
+        combinedComponents.minute = timeComponents.minute
+        
+        return calendar.date(from: combinedComponents) ?? date
     }
     
     // Validate hotel search

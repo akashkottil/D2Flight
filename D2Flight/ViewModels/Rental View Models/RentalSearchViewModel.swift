@@ -42,6 +42,18 @@ class RentalSearchViewModel: ObservableObject {
             return
         }
         
+        // ✅ NEW: Validate time difference before making API call
+        let combinedPickUpDateTime = combineDateAndTime(date: pickUpDate, time: pickUpTime)
+        let combinedDropOffDateTime = combineDateAndTime(date: dropOffDate, time: dropOffTime)
+        
+        let minimumRentalDuration: TimeInterval = 3600 // 1 hour
+        let timeDifference = combinedDropOffDateTime.timeIntervalSince(combinedPickUpDateTime)
+        
+        if timeDifference < minimumRentalDuration {
+            showError("Drop-off must be at least one hour after pick-up. Please adjust the dates and/or times for your search.")
+            return
+        }
+        
         startSearch()
     }
     

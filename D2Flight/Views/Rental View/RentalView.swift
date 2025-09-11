@@ -331,13 +331,17 @@ struct RentalView: View {
     private func handleSearchRentals() {
         print("🚗 Search Rentals button tapped!")
         
-        // ✅ Use SearchValidationHelper for validation
+        // ✅ Use SearchValidationHelper for validation with time parameters
         if let warningType = SearchValidationHelper.validateRentalSearch(
             pickUpIATACode: pickUpIATACode,
             dropOffIATACode: dropOffIATACode,
             pickUpLocation: pickUpLocation,
             dropOffLocation: dropOffLocation,
             isSameDropOff: isSameDropOff,
+            pickUpDate: selectedDates.first,
+            pickUpTime: selectedTimes.first,
+            dropOffDate: selectedDates.count > 1 ? selectedDates[1] : selectedDates.first,
+            dropOffTime: selectedTimes.count > 1 ? selectedTimes[1] : nil,
             isConnected: networkMonitor.isConnected
         ) {
             warningManager.showWarning(type: warningType)
@@ -378,13 +382,17 @@ struct RentalView: View {
         pickUpLocation = location.title
         pickUpIATACode = location.iataCode
         
-        // ✅ Use SearchValidationHelper for validation
+        // ✅ Use SearchValidationHelper for validation with time parameters
         if let warningType = SearchValidationHelper.validateRentalSearch(
             pickUpIATACode: location.iataCode,
             dropOffIATACode: isSameDropOff ? "" : dropOffIATACode,
             pickUpLocation: location.title,
             dropOffLocation: dropOffLocation,
             isSameDropOff: isSameDropOff,
+            pickUpDate: selectedDates.first ?? Date(),
+            pickUpTime: selectedTimes.first,
+            dropOffDate: selectedDates.count > 1 ? selectedDates[1] : (selectedDates.first ?? Date()),
+            dropOffTime: selectedTimes.count > 1 ? selectedTimes[1] : nil,
             isConnected: networkMonitor.isConnected
         ) {
             warningManager.showWarning(type: warningType)
