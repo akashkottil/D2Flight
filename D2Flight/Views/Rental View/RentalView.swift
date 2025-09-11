@@ -223,17 +223,16 @@ struct RentalView: View {
                 }
             }
         }
-        .sheet(isPresented: $showWebView) {
-            if let deeplink = currentDeeplink {
-                RentalWebView(url: deeplink)
+        .fullScreenCover(isPresented: $showWebView) {
+            if let deeplink = rentalSearchVM.deeplink {
+                RentalWebView(rentalSearchVM: rentalSearchVM)
             }
         }
         .onAppear {
-            if pickUpLocation.isEmpty {
-                hasPrefilled = false
+            if rentalSearchVM.deeplink == nil && !rentalSearchVM.isLoading {
+                rentalSearchVM.isLoading = true  // Trigger the loader visibility
+                rentalSearchVM.searchRentals()   // Start the rental search
             }
-            prefillRecentLocationsIfNeeded()
-            initializeDateTimes()
         }
     }
     
@@ -683,20 +682,6 @@ struct RentalView: View {
     }
 }
 
-// MARK: - Rental Web View
-struct RentalWebView: UIViewControllerRepresentable {
-    let url: String
-    
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let config = SFSafariViewController.Configuration()
-        let safari = SFSafariViewController(url: URL(string: url)!, configuration: config)
-        return safari
-    }
-    
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
-        // No updates needed
-    }
-}
 
 #Preview {
     RentalView()
