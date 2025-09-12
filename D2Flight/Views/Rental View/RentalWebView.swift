@@ -14,18 +14,18 @@ struct RentalWebView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                if let deeplink = rentalSearchVM.deeplink {
-                    // Show SafariWebView when URL is ready
+                if let deeplink = rentalSearchVM.deeplink, !rentalSearchVM.isLoading {
+                    // 🔥 CRITICAL FIX: Only show Safari when we have deeplink AND not loading
                     RentalSafariWebViewWrapper(
                         urlString: deeplink,
                         onLoadFailed: handleWebViewError
                     )
                     .transition(.opacity)
-                }else if rentalSearchVM.isLoading {
-                    // Show AnimatedRentalLoader while the rental search is loading
+                } else if rentalSearchVM.isLoading {
+                    // 🔥 CRITICAL FIX: Always prioritize showing the loader when isLoading = true
                     AnimatedRentalLoader(hotelAssetName: "RentalIcon", isVisible: $rentalSearchVM.isLoading)
                         .ignoresSafeArea()
-                        .transition(.opacity) // This adds a fade-in effect
+                        .transition(.opacity)
                 } else if let error = rentalSearchVM.errorMessage {
                     // Show error state with retry option
                     RentalErrorStateView(
@@ -34,6 +34,9 @@ struct RentalWebView: View {
                         primaryButtonTitle: "Try Again",
                         secondaryButtonTitle: "Cancel",
                         onPrimaryAction: {
+                            // 🔥 CRITICAL FIX: Set loading immediately on retry
+                            rentalSearchVM.isLoading = true
+                            rentalSearchVM.errorMessage = nil
                             rentalSearchVM.searchRentals()
                         },
                         onSecondaryAction: {
@@ -41,15 +44,15 @@ struct RentalWebView: View {
                         }
                     )
                 } else {
-                    // Initial state - start search immediately if no deeplink or loading
-                    RentalInitialLoadingView()
-                        .onAppear {
-                            // Auto-start search if not already loading and no deeplink
-                            if !rentalSearchVM.isLoading && rentalSearchVM.deeplink == nil {
-                                rentalSearchVM.isLoading = true // Start showing loader
-                                rentalSearchVM.searchRentals()
-                            }
-                        }
+                    // 🔥 CRITICAL FIX: Empty state - should not auto-start search
+                    VStack(spacing: 20) {
+                        Text("Ready to search rentals")
+                            .font(.title3)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(.systemBackground))
                 }
             }
             .navigationBarTitleDisplayMode(.inline)

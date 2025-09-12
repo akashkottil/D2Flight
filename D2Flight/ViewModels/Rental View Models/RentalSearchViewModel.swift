@@ -31,6 +31,7 @@ class RentalSearchViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     func searchRentals() {
+        isLoading = true
         guard !pickUpIATACode.isEmpty else {
             showError("Please select pick-up location.")
             return

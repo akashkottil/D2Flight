@@ -23,9 +23,9 @@ struct AnimatedRentalLoader: View {
 
     // Text
     let messages = [
-        "searching.best.hotels.for.your.stay".localized,
-        "checking.availability.and.reviews".localized,
-        "locking.in.top.deals.for.you".localized
+        "searching.best.hotels.for.your.stay",
+        "checking.availability.and.reviews",
+        "locking.in.top.deals.for.you"
     ]
 
     var autoHide: Bool = true
@@ -47,7 +47,6 @@ struct AnimatedRentalLoader: View {
                 Spacer()
 
                 ZStack {
-                    // CLOUD LAYERS (parallax + diagonal drift)
                     VStack(spacing: 56) {
                         HStack(spacing: 120) {
                             RentalCloudView(
@@ -123,7 +122,7 @@ struct AnimatedRentalLoader: View {
 
                 // TEXT
                 VStack(spacing: 10) {
-                    Text("looking.for.best.hotel.deals".localized)
+                    Text("looking.for.best.rental.deals")
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundColor(.white)
 

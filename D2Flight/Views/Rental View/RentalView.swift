@@ -184,7 +184,7 @@ struct RentalView: View {
         .onReceive(rentalSearchVM.$deeplink) { deeplink in
             if let deeplink = deeplink {
                 currentDeeplink = deeplink
-                showWebView = true
+                // 🔥 Don't change showWebView here - it's already shown for the loader
                 print("🔗 RentalView received deeplink: \(deeplink)")
             }
         }
@@ -224,15 +224,7 @@ struct RentalView: View {
             }
         }
         .fullScreenCover(isPresented: $showWebView) {
-            if let deeplink = rentalSearchVM.deeplink {
                 RentalWebView(rentalSearchVM: rentalSearchVM)
-            }
-        }
-        .onAppear {
-            if rentalSearchVM.deeplink == nil && !rentalSearchVM.isLoading {
-                rentalSearchVM.isLoading = true  // Trigger the loader visibility
-                rentalSearchVM.searchRentals()   // Start the rental search
-            }
         }
     }
     
@@ -326,11 +318,10 @@ struct RentalView: View {
         }
     }
     
-    // ✅ UPDATED: Search Handler with Universal Validation
     private func handleSearchRentals() {
         print("🚗 Search Rentals button tapped!")
         
-        // ✅ Use SearchValidationHelper for validation with time parameters
+        // ✅ Validation
         if let warningType = SearchValidationHelper.validateRentalSearch(
             pickUpIATACode: pickUpIATACode,
             dropOffIATACode: dropOffIATACode,
@@ -346,6 +337,13 @@ struct RentalView: View {
             warningManager.showWarning(type: warningType)
             return
         }
+        
+        // 🔥 Set loading state IMMEDIATELY to trigger AnimatedRentalLoader
+        rentalSearchVM.isLoading = true
+        
+        // Clear any existing deeplink to ensure loading state is shown
+        rentalSearchVM.deeplink = nil
+        rentalSearchVM.errorMessage = nil
         
         // Save search pair
         saveCurrentSearchPair()
@@ -370,10 +368,18 @@ struct RentalView: View {
         
         print("🎯 Rental search parameters validated and starting search")
         
+        // 🔥 Add delay to show loader before showing the web view
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // 0.5 second delay to ensure loader is visible
+            showWebView = true
+//        }
+        
+        // Start the background search
         rentalSearchVM.searchRentals()
     }
+
+
+
     
-    // ✅ UPDATED: Popular Location Handler with Universal Validation
     private func handlePopularLocationTapped(_ location: MasonryImage) {
         print("🚗 Popular rental location tapped: \(location.title) (\(location.iataCode))")
         
@@ -397,6 +403,13 @@ struct RentalView: View {
             warningManager.showWarning(type: warningType)
             return
         }
+        
+        // 🔥 CRITICAL FIX 1: Set loading state IMMEDIATELY to trigger AnimatedRentalLoader
+        rentalSearchVM.isLoading = true
+        
+        // 🔥 CRITICAL FIX 2: Clear any existing states to ensure clean search
+        rentalSearchVM.deeplink = nil
+        rentalSearchVM.errorMessage = nil
         
         // Save search for recent locations
         savePopularRentalSearch(location: location)
@@ -434,8 +447,12 @@ struct RentalView: View {
         }
         
         print("🎯 Popular rental search validated and starting")
+        print("🔥 Loading state set to: \(rentalSearchVM.isLoading)")
         
-        // Start the rental search
+        // 🔥 CRITICAL FIX 3: Show webview immediately to trigger the loader display
+        showWebView = true
+        
+        // Start the rental search in background
         rentalSearchVM.searchRentals()
     }
     
