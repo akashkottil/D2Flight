@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct SearchCard: View {
-    @Namespace private var animationNamespace
     
     // Trip type
     @Binding var isOneWay: Bool
@@ -87,6 +86,7 @@ struct SearchCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            
             // Location Input
             locationSection
             

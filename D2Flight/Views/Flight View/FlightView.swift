@@ -15,6 +15,16 @@ struct NavigationLazyView<Content: View>: View {
 
 // MARK: - Optimized FlightView with Performance Enhancements
 struct FlightView: View {
+    @Namespace private var heroNamespace               // NEW: shared namespace
+    @State private var offsetY: CGFloat = 0            // NEW: scroll offset
+    private let expandedHeaderHeight: CGFloat = 400    // tune to your SearchCard's full height
+    private let collapsedHeaderHeight: CGFloat = 86    // tune to your collapsed cell height
+    
+    private var collapseProgress: CGFloat {
+        let range = max(expandedHeaderHeight - collapsedHeaderHeight, 1)
+        return min(max(offsetY / range, 0), 1)         // 0 → expanded, 1 → collapsed
+    }
+
     @Namespace private var animationNamespace
     
     // MARK: - Core State Variables (Minimal @State usage)
@@ -59,37 +69,36 @@ struct FlightView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                // MARK: - Main Content (Optimized Layout)
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        // MARK: - Header Section
-                        headerSection
-                        
-                        // MARK: - Popular Locations (Lazy Loading)
-                        LazyVStack {
+            ZStack (alignment: .top) {
+                TrackableScrollView(offsetY: $offsetY) {
+                        VStack(spacing: 16) {
+                          // push content beneath sticky header
+                          Color.clear.frame(height: expandedHeaderHeight)
+
+                          // your existing content
+                          LazyVStack {
                             PopularLocationsGrid(
-                                searchType: .flight,
-                                selectedDates: selectedDates,
-                                adults: adults,
-                                children: children,
-                                infants: infants,
-                                selectedClass: selectedClass,
-                                rooms: 1,
-                                onLocationTapped: handlePopularLocationTapped
+                              searchType: .flight,
+                              selectedDates: selectedDates,
+                              adults: adults,
+                              children: children,
+                              infants: infants,
+                              selectedClass: selectedClass,
+                              rooms: 1,
+                              onLocationTapped: handlePopularLocationTapped
                             )
-                        }
-                        
-                        // MARK: - Additional Content (Lazy Loading)
-                        LazyVStack {
-//                            FlightExploreCard()
+                          }
+                          .padding(.top,40)
+                          LazyVStack {
                             AutoSlidingCardsView()
                             BottomBar()
+                          }
                         }
-                    }
-                }
-                .scrollIndicators(.hidden)
-                .ignoresSafeArea(.all, edges: .bottom)
+                      }
+                      .scrollIndicators(.hidden)
+                      .ignoresSafeArea(.all, edges: .bottom)
+                
+                headerSection
                 
                 // MARK: - Universal Warning Overlay
                 WarningOverlay()
@@ -192,24 +201,29 @@ struct FlightView: View {
             // Enhanced Tabs
             tripTypeSelector
             
-            // ExpandableSearchContainer
-            ExpandableSearchContainer(
-                isOneWay: $isOneWay,
-                originLocation: $originLocation,
-                destinationLocation: $destinationLocation,
-                originIATACode: $originIATACode,
-                destinationIATACode: $destinationIATACode,
-                selectedDates: $selectedDates,
-                travelersCount: $travelersCount,
-                showPassengerSheet: $showPassengerSheet,
-                adults: $adults,
-                children: $children,
-                infants: $infants,
-                selectedClass: $selectedClass,
-                navigateToLocationSelection: $navigateToLocationSelection,
-                navigateToDateSelection: $navigateToDateSelection,
-                onSearchFlights: handleSearchFlightsOptimized
-            )
+            StickySearchHeaderContainer(
+                    progress: collapseProgress,
+                    expandedHeight: expandedHeaderHeight,
+                    collapsedHeight: collapsedHeaderHeight,
+                    namespace: heroNamespace,
+
+                    // pass ALL bindings/actions your SearchCard needs:
+                    isOneWay: $isOneWay,
+                    originLocation: $originLocation,
+                    destinationLocation: $destinationLocation,
+                    originIATACode: $originIATACode,
+                    destinationIATACode: $destinationIATACode,
+                    selectedDates: $selectedDates,
+                    travelersCount: $travelersCount,
+                    showPassengerSheet: $showPassengerSheet,
+                    adults: $adults,
+                    children: $children,
+                    infants: $infants,
+                    selectedClass: $selectedClass,
+                    navigateToLocationSelection: $navigateToLocationSelection,
+                    navigateToDateSelection: $navigateToDateSelection,
+                    onSearchFlights: handleSearchFlightsOptimized
+                  )
         }
         .padding()
         .padding(.top, 50)
