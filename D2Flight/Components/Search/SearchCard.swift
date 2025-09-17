@@ -180,29 +180,42 @@ struct SearchCard: View {
 
             // FRONT LAYER: a single button that resizes based on progress
             GeometryReader { proxy in
-                let fullWidth = proxy.size.width
+                let fullWidth      = proxy.size.width
                 let currentWidth   = fullWidth - (fullWidth - smallWidth) * p
                 let currentVPad    = bigVPad - (bigVPad - smallVPad) * p
                 let currentCorner  = bigCorner - (bigCorner - smallCorner) * p
 
-                HStack {
-                    Spacer() // keep trailing alignment
-                    PrimaryButton(
-                        title: "search.flights".localized,
-                        font: CustomFont.font(.medium),
-                        fontWeight: .bold,
-                        textColor: .white,
-                        verticalPadding: currentVPad,
-                        cornerRadius: currentCorner,
-                        action: onSearchFlights
-                    )
-                    .frame(width: currentWidth)
-                    .clipShape(RoundedRectangle(cornerRadius: currentCorner, style: .continuous))
-                }
+                // Gradual padding only as we collapse (0 → 10)
+                let topPad: CGFloat      = CGFloat(10) * p
+                let trailingPad: CGFloat = CGFloat(10) * p
+
+                // Dynamic button text based on collapse progress
+                let buttonText = p > 0.5 ? "Search" : "search.flights".localized
+
+                // Vertical padding starts at currentVPad, ends at currentVPad - 4
+                let adjustedVPad = currentVPad - CGFloat(4) * p
+
+                PrimaryButton(
+                    title: buttonText,
+                    font: CustomFont.font(.medium),
+                    fontWeight: .bold,
+                    textColor: .white,
+                    verticalPadding: adjustedVPad,
+                    cornerRadius: currentCorner,
+                    action: onSearchFlights
+                )
+                .frame(width: currentWidth)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .clipShape(RoundedRectangle(cornerRadius: currentCorner, style: .continuous))
+                .padding(.top, topPad)          // apply gradually on collapse
+                .padding(.trailing, trailingPad) // apply gradually on collapse
+                .animation(.easeInOut(duration: 0.3), value: collapseProgress)
+                .animation(.easeInOut(duration: 0.3), value: buttonText) // keep your text change animation
             }
-            .frame(height: 60) // keep layout stable; tune if needed
+            .frame(height: 60) // keep layout stable
         }
     }
+
 
     // MARK: Location section with swap
     private var locationSection: some View {

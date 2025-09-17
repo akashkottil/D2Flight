@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct CollapsedSearch<ButtonContent: View>: View  {
+struct CollapsedSearch<ButtonContent: View>: View {
     // Display
     let originCode: String
     let destinationCode: String
@@ -17,7 +17,7 @@ struct CollapsedSearch<ButtonContent: View>: View  {
     let onEdit: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) { // Reduced spacing for better integration
             // Left area: edit
             Button(action: onEdit) {
                 HStack(spacing: 8) {
@@ -46,14 +46,22 @@ struct CollapsedSearch<ButtonContent: View>: View  {
             }
             .buttonStyle(PlainButtonStyle())
 
-            // Right-side small search button (separate, not nested)
-            button()
-                .matchedGeometryEffect(id: "searchButton", in: buttonNamespace)
+            // Right-side small search button container with proper alignment
+//            VStack {
+//                Spacer(minLength: 0)
+//                
+//                button()
+//                    .matchedGeometryEffect(id: "searchButton", in: buttonNamespace)
+//                
+//                Spacer(minLength: 0)
+//            }
+//            .frame(width: 120) // Fixed width to match small button
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 6)
+        .padding(.vertical, 8) // Consistent padding
+        .padding(.horizontal, 12)
         .background(Color.white)
         .cornerRadius(14)
         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .frame(height: 60) // Match the main button height exactly
     }
 }
