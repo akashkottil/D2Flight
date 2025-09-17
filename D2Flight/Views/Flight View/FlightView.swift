@@ -15,7 +15,6 @@ struct NavigationLazyView<Content: View>: View {
 
 // MARK: - Optimized FlightView with Performance Enhancements
 struct FlightView: View {
-    @Namespace private var heroNamespace               // NEW: shared namespace
     @State private var offsetY: CGFloat = 0            // NEW: scroll offset
     private let expandedHeaderHeight: CGFloat = 400    // tune to your SearchCard's full height
     private let collapsedHeaderHeight: CGFloat = 86    // tune to your collapsed cell height
@@ -26,6 +25,17 @@ struct FlightView: View {
     }
 
     @Namespace private var animationNamespace
+    
+    // one namespace for the button morph
+    @Namespace private var searchButtonNS
+    
+    // drive collapsed/expanded
+    @State private var searchHeaderIsCollapsed: Bool = false
+    
+    // tweak to taste so it flips once while scrolling
+    private let collapseThreshold: CGFloat = 160   // ≈ where you want it to switch
+    private let expandThreshold: CGFloat = 120     // hysteresis (avoid jitter)
+
     
     // MARK: - Core State Variables (Minimal @State usage)
     @State private var isOneWay = true
@@ -95,6 +105,18 @@ struct FlightView: View {
                           }
                         }
                       }
+                .onChange(of: offsetY) { y in
+                      // tiny hysteresis: collapse below/above different points
+                      if !searchHeaderIsCollapsed, y > collapseThreshold {
+                          withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                              searchHeaderIsCollapsed = true
+                          }
+                      } else if searchHeaderIsCollapsed, y < expandThreshold {
+                          withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                              searchHeaderIsCollapsed = false
+                          }
+                      }
+                  }
                       .scrollIndicators(.hidden)
                       .ignoresSafeArea(.all, edges: .bottom)
                 
@@ -201,29 +223,52 @@ struct FlightView: View {
             // Enhanced Tabs
             tripTypeSelector
             
-            StickySearchHeaderContainer(
-                    progress: collapseProgress,
-                    expandedHeight: expandedHeaderHeight,
-                    collapsedHeight: collapsedHeaderHeight,
-                    namespace: heroNamespace,
+//            StickySearchHeaderContainer(
+//                    progress: collapseProgress,
+//                    expandedHeight: expandedHeaderHeight,
+//                    collapsedHeight: collapsedHeaderHeight,
+//                    namespace: heroNamespace,
+//
+//                    // pass ALL bindings/actions your SearchCard needs:
+//                    isOneWay: $isOneWay,
+//                    originLocation: $originLocation,
+//                    destinationLocation: $destinationLocation,
+//                    originIATACode: $originIATACode,
+//                    destinationIATACode: $destinationIATACode,
+//                    selectedDates: $selectedDates,
+//                    travelersCount: $travelersCount,
+//                    showPassengerSheet: $showPassengerSheet,
+//                    adults: $adults,
+//                    children: $children,
+//                    infants: $infants,
+//                    selectedClass: $selectedClass,
+//                    navigateToLocationSelection: $navigateToLocationSelection,
+//                    navigateToDateSelection: $navigateToDateSelection,
+//                    onSearchFlights: handleSearchFlightsOptimized
+//                  )
+            
+            SearchCard(
+                isOneWay: $isOneWay,
+                originLocation: $originLocation,
+                destinationLocation: $destinationLocation,
+                originIATACode: $originIATACode,
+                destinationIATACode: $destinationIATACode,
+                selectedDates: $selectedDates,
+                travelersCount: $travelersCount,
+                showPassengerSheet: $showPassengerSheet,
+                adults: $adults,
+                children: $children,
+                infants: $infants,
+                selectedClass: $selectedClass,
+                navigateToLocationSelection: $navigateToLocationSelection,
+                navigateToDateSelection: $navigateToDateSelection,
+                collapseProgress: collapseProgress,         // ← pass 0…1
+                buttonNamespace: searchButtonNS,            // not strictly needed now; safe to keep
+                onSearchFlights: handleSearchFlightsOptimized
+            )
 
-                    // pass ALL bindings/actions your SearchCard needs:
-                    isOneWay: $isOneWay,
-                    originLocation: $originLocation,
-                    destinationLocation: $destinationLocation,
-                    originIATACode: $originIATACode,
-                    destinationIATACode: $destinationIATACode,
-                    selectedDates: $selectedDates,
-                    travelersCount: $travelersCount,
-                    showPassengerSheet: $showPassengerSheet,
-                    adults: $adults,
-                    children: $children,
-                    infants: $infants,
-                    selectedClass: $selectedClass,
-                    navigateToLocationSelection: $navigateToLocationSelection,
-                    navigateToDateSelection: $navigateToDateSelection,
-                    onSearchFlights: handleSearchFlightsOptimized
-                  )
+
+            
         }
         .padding()
         .padding(.top, 50)
@@ -600,6 +645,6 @@ struct FlightView: View {
     }
 }
 
-#Preview {
-    FlightView()
-}
+//#Preview {
+//    FlightView()
+//}

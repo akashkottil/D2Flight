@@ -1,16 +1,15 @@
 import SwiftUI
 
 struct SearchCard: View {
-    
     // Trip type
     @Binding var isOneWay: Bool
-    
+
     // Location states
     @Binding var originLocation: String
     @Binding var destinationLocation: String
     @Binding var originIATACode: String
     @Binding var destinationIATACode: String
-    
+
     // Date states
     @Binding var selectedDates: [Date]
     @State private var departureDate: String = {
@@ -19,7 +18,7 @@ struct SearchCard: View {
         return formatter.string(from: Date())
     }()
     @State private var returnDate: String = ""
-    
+
     // Passenger states
     @Binding var travelersCount: String
     @Binding var showPassengerSheet: Bool
@@ -27,27 +26,30 @@ struct SearchCard: View {
     @Binding var children: Int
     @Binding var infants: Int
     @Binding var selectedClass: TravelClass
-    
+
     // Navigation states
     @Binding var navigateToLocationSelection: Bool
     @Binding var navigateToDateSelection: Bool
-    
+
     // Animation state
     @State private var swapButtonRotationAngle: Double = 0
-    
-    // NEW: Animation and state properties for expandable functionality
-    let buttonAnimationNamespace: Namespace.ID
-    
-    // Action closure
+
+    // Continuous collapse progress (0 = expanded, 1 = collapsed)
+    var collapseProgress: CGFloat
+
+    // Namespace (kept for CollapsedSearch compatibility)
+    let buttonNamespace: Namespace.ID
+
+    // Action
     let onSearchFlights: () -> Void
-    
-    // Date type enum for formatting
+
+    // Date type enum
     enum DateType {
         case departure
         case `return`
     }
-    
-    // Updated initializer to include animation namespace
+
+    // MARK: - Init
     init(
         isOneWay: Binding<Bool>,
         originLocation: Binding<String>,
@@ -63,7 +65,8 @@ struct SearchCard: View {
         selectedClass: Binding<TravelClass>,
         navigateToLocationSelection: Binding<Bool>,
         navigateToDateSelection: Binding<Bool>,
-        buttonAnimationNamespace: Namespace.ID,
+        collapseProgress: CGFloat,
+        buttonNamespace: Namespace.ID,
         onSearchFlights: @escaping () -> Void
     ) {
         self._isOneWay = isOneWay
@@ -80,27 +83,26 @@ struct SearchCard: View {
         self._selectedClass = selectedClass
         self._navigateToLocationSelection = navigateToLocationSelection
         self._navigateToDateSelection = navigateToDateSelection
-        self.buttonAnimationNamespace = buttonAnimationNamespace
+        self.collapseProgress = collapseProgress
+        self.buttonNamespace = buttonNamespace
         self.onSearchFlights = onSearchFlights
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            
+
             // Location Input
             locationSection
-            
-            // Enhanced Date Section with Smooth Animations
+
+            // Date Section
             VStack(spacing: 0) {
                 HStack(spacing: 6) {
-                    // Departure Date - Always visible with stable identity
                     dateView(
                         label: formatSelectedDate(for: .departure),
                         icon: "CalenderIcon"
                     )
-                    .id("departure_date") // Stable identity prevents recreation
-                    
-                    // Return Date with smooth conditional visibility
+                    .id("departure_date")
+
                     Group {
                         if !isOneWay {
                             dateView(
@@ -129,11 +131,9 @@ struct SearchCard: View {
                 }
             }
             .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
-            
+
             // Passenger Section
-            Button(action: {
-                showPassengerSheet = true
-            }) {
+            Button(action: { showPassengerSheet = true }) {
                 HStack {
                     Image("PassengerIcon")
                         .foregroundColor(.gray)
@@ -148,31 +148,66 @@ struct SearchCard: View {
                 .background(Color.white)
                 .cornerRadius(12)
             }
-            
-            // Search Flights Button with matched geometry effect
-            PrimaryButton(title: "search.flights".localized,
-                          font: CustomFont.font(.medium),
-                          fontWeight: .bold,
-                          textColor: .white,
-                          verticalPadding: 20,
-                          cornerRadius: 16,
-                          action: onSearchFlights)
-            .matchedGeometryEffect(id: "searchButton", in: buttonAnimationNamespace)
+
+            // MARK: Curtain Reveal Button (continuous, scroll-driven)
+            curtainRevealSection
         }
-        .onAppear {
-            initializeReturnDate()
-        }
-        .onChange(of: selectedDates) { _ in
-            updateDateLabels()
+        .onAppear { initializeReturnDate() }
+        .onChange(of: selectedDates) { _ in updateDateLabels() }
+    }
+
+    // MARK: - Curtain Reveal Section
+    private var curtainRevealSection: some View {
+        // Constants to blend between expanded and collapsed looks
+        let smallWidth: CGFloat  = 120
+        let bigCorner: CGFloat   = 16
+        let smallCorner: CGFloat = 12
+        let bigVPad: CGFloat     = 20
+        let smallVPad: CGFloat   = 15
+        let p = max(0, min(1, collapseProgress)) // clamp 0…1
+
+        return ZStack {
+            // BACK LAYER: the compact search summary (revealed as the button shrinks)
+            CollapsedSearch(
+                originCode: originIATACode.isEmpty ? "NYC" : originIATACode,
+                destinationCode: destinationIATACode.isEmpty ? "LHR" : destinationIATACode,
+                travelDate: formatTravelDate(),
+                travelerInfo: travelersCount,
+                buttonNamespace: buttonNamespace,
+                button: { EmptyView() }, // no small button here; we're using a single front button
+                onEdit: { navigateToLocationSelection = true }
+            )
+
+            // FRONT LAYER: a single button that resizes based on progress
+            GeometryReader { proxy in
+                let fullWidth = proxy.size.width
+                let currentWidth   = fullWidth - (fullWidth - smallWidth) * p
+                let currentVPad    = bigVPad - (bigVPad - smallVPad) * p
+                let currentCorner  = bigCorner - (bigCorner - smallCorner) * p
+
+                HStack {
+                    Spacer() // keep trailing alignment
+                    PrimaryButton(
+                        title: "search.flights".localized,
+                        font: CustomFont.font(.medium),
+                        fontWeight: .bold,
+                        textColor: .white,
+                        verticalPadding: currentVPad,
+                        cornerRadius: currentCorner,
+                        action: onSearchFlights
+                    )
+                    .frame(width: currentWidth)
+                    .clipShape(RoundedRectangle(cornerRadius: currentCorner, style: .continuous))
+                }
+            }
+            .frame(height: 60) // keep layout stable; tune if needed
         }
     }
-    
+
     // MARK: Location section with swap
-    var locationSection: some View {
+    private var locationSection: some View {
         ZStack {
-            Button(action: {
-                navigateToLocationSelection = true
-            }) {
+            Button(action: { navigateToLocationSelection = true }) {
                 VStack(spacing: 1) {
                     HStack {
                         Image("DepartureIcon")
@@ -188,11 +223,12 @@ struct SearchCard: View {
                     .padding(.horizontal)
                     .contentShape(Rectangle())
                     .frame(maxWidth: .infinity)
+
                     Divider()
                         .background(Color.gray.opacity(0.5))
                         .padding(.leading)
                         .padding(.trailing, 70)
-                    
+
                     HStack {
                         Image("DestinationIcon")
                             .frame(width: 20, height: 20)
@@ -212,19 +248,17 @@ struct SearchCard: View {
             .buttonStyle(PlainButtonStyle())
             .background(Color.white)
             .cornerRadius(12)
-            
+
             Button(action: {
                 let temp = originLocation
                 originLocation = destinationLocation
                 destinationLocation = temp
-                
+
                 // Also swap IATA codes
                 let tempIATA = originIATACode
                 originIATACode = destinationIATACode
                 destinationIATACode = tempIATA
-                
-                print("🔄 Swapped locations - Origin: \(originLocation), Destination: \(destinationLocation)")
-                // Toggle rotation state
+
                 withAnimation(.easeInOut(duration: 0.3)) {
                     swapButtonRotationAngle -= 180
                 }
@@ -236,12 +270,10 @@ struct SearchCard: View {
             .shadow(color: .purple.opacity(0.3), radius: 5)
         }
     }
-    
+
     // MARK: Date View with Date Selection Integration
-    func dateView(label: String, icon: String) -> some View {
-        Button(action: {
-            navigateToDateSelection = true
-        }) {
+    private func dateView(label: String, icon: String) -> some View {
+        Button(action: { navigateToDateSelection = true }) {
             HStack {
                 Image(icon)
                     .frame(width: 20, height: 20)
@@ -256,8 +288,8 @@ struct SearchCard: View {
             .cornerRadius(12)
         }
     }
-    
-    // MARK: - NEW: Format Selected Date Function
+
+    // MARK: - Format Selected Date
     private func formatSelectedDate(for type: DateType) -> String {
         switch type {
         case .departure:
@@ -266,7 +298,6 @@ struct SearchCard: View {
             } else {
                 return LocalizedDateFormatter.formatShortDate(Date())
             }
-            
         case .return:
             if selectedDates.count > 1, let secondDate = selectedDates.last {
                 return LocalizedDateFormatter.formatShortDate(secondDate)
@@ -275,7 +306,7 @@ struct SearchCard: View {
             }
         }
     }
-    
+
     // MARK: Helper Methods
     private func initializeReturnDate() {
         if returnDate.isEmpty {
@@ -285,28 +316,35 @@ struct SearchCard: View {
             returnDate = formatter.string(from: twoDaysLater)
         }
     }
-    
+
     private func calculateDefaultReturnDate() -> String {
-        let baseDepartureDate: Date
-        if let selectedDepartureDate = selectedDates.first {
-            baseDepartureDate = selectedDepartureDate
-        } else {
-            baseDepartureDate = Date()
-        }
-        
-        let returnDate = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
-        return LocalizedDateFormatter.formatShortDate(returnDate)
+        let baseDepartureDate: Date = selectedDates.first ?? Date()
+        let ret = Calendar.current.date(byAdding: .day, value: 2, to: baseDepartureDate) ?? baseDepartureDate
+        return LocalizedDateFormatter.formatShortDate(ret)
     }
-    
+
     private func updateDateLabels() {
         if let firstDate = selectedDates.first {
             departureDate = LocalizedDateFormatter.formatShortDate(firstDate)
         }
-        
         if selectedDates.count > 1, let secondDate = selectedDates.last {
             returnDate = LocalizedDateFormatter.formatShortDate(secondDate)
         } else {
             returnDate = calculateDefaultReturnDate()
+        }
+    }
+
+    private func formatTravelDate() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM"
+
+        guard let firstDate = selectedDates.first else {
+            return formatter.string(from: Date())
+        }
+        if !isOneWay && selectedDates.count > 1 {
+            return "\(formatter.string(from: firstDate)) - \(formatter.string(from: selectedDates[1]))"
+        } else {
+            return formatter.string(from: firstDate)
         }
     }
 }
