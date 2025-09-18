@@ -42,6 +42,8 @@ struct SearchCard: View {
 
     // Action
     let onSearchFlights: () -> Void
+    
+    let onExpandSearchCard: () -> Void
 
     // Date type enum
     enum DateType {
@@ -67,7 +69,8 @@ struct SearchCard: View {
         navigateToDateSelection: Binding<Bool>,
         collapseProgress: CGFloat,
         buttonNamespace: Namespace.ID,
-        onSearchFlights: @escaping () -> Void
+        onSearchFlights: @escaping () -> Void,
+        onExpandSearchCard: @escaping () -> Void
     ) {
         self._isOneWay = isOneWay
         self._originLocation = originLocation
@@ -86,6 +89,7 @@ struct SearchCard: View {
         self.collapseProgress = collapseProgress
         self.buttonNamespace = buttonNamespace
         self.onSearchFlights = onSearchFlights
+        self.onExpandSearchCard = onExpandSearchCard
     }
 
     // MARK: - Helpers
@@ -217,16 +221,17 @@ struct SearchCard: View {
         let p = max(0, min(1, collapseProgress))
 
         return ZStack {
-            CollapsedSearch(
-                originCode: originIATACode.isEmpty ? "NYC" : originIATACode,
-                destinationCode: destinationIATACode.isEmpty ? "LHR" : destinationIATACode,
-                travelDate: formatTravelDate(),
-                travelerInfo: travelersCount,
-                buttonNamespace: buttonNamespace,
-                button: { EmptyView() },
-                onEdit: { navigateToLocationSelection = true }
-            )
-
+            if p > 0.7 {     //hides the existing reveal animation and make a smooth animation with button
+                CollapsedSearch(
+                    originCode: originIATACode.isEmpty ? "NYC" : originIATACode,
+                    destinationCode: destinationIATACode.isEmpty ? "LHR" : destinationIATACode,
+                    travelDate: formatTravelDate(),
+                    travelerInfo: travelersCount,
+                    buttonNamespace: buttonNamespace,
+                    button: { EmptyView() },
+                    onEdit: onExpandSearchCard
+                )
+            }
             GeometryReader { proxy in
                 let fullWidth      = proxy.size.width
                 let currentWidth   = fullWidth - (fullWidth - smallWidth) * p
@@ -251,8 +256,8 @@ struct SearchCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: currentCorner, style: .continuous))
                 .padding(.top, topPad)
                 .padding(.trailing, trailingPad)
-                .animation(.easeInOut(duration: 0.3), value: collapseProgress)
-                .animation(.easeInOut(duration: 0.3), value: buttonText)
+                .transition(.move(edge: .trailing)) // Smooth move transition
+                .animation(.easeInOut(duration: 0.02), value: collapseProgress)
             }
             .frame(height: 60)
         }

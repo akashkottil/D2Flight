@@ -97,7 +97,7 @@ struct FlightView: View {
         NavigationStack {
             ZStack (alignment: .top) {
                 TrackableScrollView(offsetY: $offsetY) {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 0) {
                         // push content beneath sticky header (now dynamic)
                         Color.clear.frame(height: headerHeight)
 
@@ -114,7 +114,7 @@ struct FlightView: View {
                                 onLocationTapped: handlePopularLocationTapped
                             )
                         }
-//                        .padding(.top, 40)
+//                        .padding(.top, -6)
 
                         LazyVStack {
                             AutoSlidingCardsView()
@@ -264,7 +264,8 @@ struct FlightView: View {
                 navigateToDateSelection: $navigateToDateSelection,
                 collapseProgress: collapseProgress, // 0…1 from scroll
                 buttonNamespace: searchButtonNS,
-                onSearchFlights: handleSearchFlightsOptimized
+                onSearchFlights: handleSearchFlightsOptimized,
+                onExpandSearchCard: expandSearchCard 
             )
         }
         .padding()
@@ -639,6 +640,14 @@ struct FlightView: View {
             "\(totalTravelers) \("traveller".localized)" :
             "\(totalTravelers) \("travellers".localized)"
         return "\(travelersText), \(selectedClass.displayName)"
+    }
+    // Add this new function in FlightView
+    private func expandSearchCard() {
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+            searchHeaderIsCollapsed = false
+            // Optionally scroll to top to show the expanded card
+            offsetY = 0
+        }
     }
 }
 
