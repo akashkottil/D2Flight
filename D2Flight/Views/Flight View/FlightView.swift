@@ -15,14 +15,26 @@ struct NavigationLazyView<Content: View>: View {
 
 // MARK: - Optimized FlightView with Performance Enhancements
 struct FlightView: View {
-    @State private var offsetY: CGFloat = 0            // NEW: scroll offset
-    private let expandedHeaderHeight: CGFloat = 400    // tune to your SearchCard's full height
-    private let collapsedHeaderHeight: CGFloat = 86    // tune to your collapsed cell height
-    
+    @State private var offsetY: CGFloat = 0
+
+    /// These are safer, closer to your SearchCard + paddings (tweak to taste).
+    /// Rough guide (expanded): title+tabs (~72) + SearchCard expanded (~240–260) + paddings (~48)
+    private let expandedHeaderHeight: CGFloat = 500
+    /// Rough guide (collapsed): title+tabs (~72) + SearchCard collapsed button (~60) + paddings (~48)
+    private let collapsedHeaderHeight: CGFloat = 280
+
+    /// 0 → expanded, 1 → collapsed
     private var collapseProgress: CGFloat {
         let range = max(expandedHeaderHeight - collapsedHeaderHeight, 1)
-        return min(max(offsetY / range, 0), 1)         // 0 → expanded, 1 → collapsed
+        return min(max(offsetY / range, 0), 1)
     }
+
+    /// Smoothly shrinking header height based on progress
+    private var headerHeight: CGFloat {
+        let p = collapseProgress
+        return expandedHeaderHeight - (expandedHeaderHeight - collapsedHeaderHeight) * p
+    }
+
 
     @Namespace private var animationNamespace
     
@@ -32,9 +44,13 @@ struct FlightView: View {
     // drive collapsed/expanded
     @State private var searchHeaderIsCollapsed: Bool = false
     
-    // tweak to taste so it flips once while scrolling
-    private let collapseThreshold: CGFloat = 160   // ≈ where you want it to switch
-    private let expandThreshold: CGFloat = 120     // hysteresis (avoid jitter)
+    // Relative thresholds based on actual header range
+    private var collapseThreshold: CGFloat {
+        (expandedHeaderHeight - collapsedHeaderHeight) * 0.45
+    }
+    private var expandThreshold: CGFloat {
+        (expandedHeaderHeight - collapsedHeaderHeight) * 0.30   // hysteresis
+    }
 
     
     // MARK: - Core State Variables (Minimal @State usage)
@@ -81,46 +97,54 @@ struct FlightView: View {
         NavigationStack {
             ZStack (alignment: .top) {
                 TrackableScrollView(offsetY: $offsetY) {
-                        VStack(spacing: 16) {
-                          // push content beneath sticky header
-                          Color.clear.frame(height: expandedHeaderHeight)
+                    VStack(spacing: 16) {
+                        // push content beneath sticky header (now dynamic)
+                        Color.clear.frame(height: headerHeight)
 
-                          // your existing content
-                          LazyVStack {
+                        // your existing content
+                        LazyVStack {
                             PopularLocationsGrid(
-                              searchType: .flight,
-                              selectedDates: selectedDates,
-                              adults: adults,
-                              children: children,
-                              infants: infants,
-                              selectedClass: selectedClass,
-                              rooms: 1,
-                              onLocationTapped: handlePopularLocationTapped
+                                searchType: .flight,
+                                selectedDates: selectedDates,
+                                adults: adults,
+                                children: children,
+                                infants: infants,
+                                selectedClass: selectedClass,
+                                rooms: 1,
+                                onLocationTapped: handlePopularLocationTapped
                             )
-                          }
-                          .padding(.top,40)
-                          LazyVStack {
+                        }
+//                        .padding(.top, 40)
+
+                        LazyVStack {
                             AutoSlidingCardsView()
                             BottomBar()
-                          }
                         }
-                      }
+                    }
+                }
+
                 .onChange(of: offsetY) { y in
-                      // tiny hysteresis: collapse below/above different points
-                      if !searchHeaderIsCollapsed, y > collapseThreshold {
-                          withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
-                              searchHeaderIsCollapsed = true
-                          }
-                      } else if searchHeaderIsCollapsed, y < expandThreshold {
-                          withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
-                              searchHeaderIsCollapsed = false
-                          }
-                      }
-                  }
+                    if !searchHeaderIsCollapsed, y > collapseThreshold {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                            searchHeaderIsCollapsed = true
+                        }
+                    } else if searchHeaderIsCollapsed, y < expandThreshold {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                            searchHeaderIsCollapsed = false
+                        }
+                    }
+                }
                       .scrollIndicators(.hidden)
                       .ignoresSafeArea(.all, edges: .bottom)
                 
                 headerSection
+                    .frame(height: headerHeight, alignment: .top)     // size FIRST
+                    .background(GradientColor.Primary)                // then background on the sized box
+                    .mask(RoundedRectangle(cornerRadius: 20, style: .continuous)) // keep your rounding
+                    .clipped()                                        // enforce the height
+                    .animation(.easeInOut(duration: 0.2), value: collapseProgress)
+
+
                 
                 // MARK: - Universal Warning Overlay
                 WarningOverlay()
@@ -219,34 +243,10 @@ struct FlightView: View {
                     .foregroundColor(Color.white)
             }
             .padding(.vertical, 10)
-            
+
             // Enhanced Tabs
             tripTypeSelector
-            
-//            StickySearchHeaderContainer(
-//                    progress: collapseProgress,
-//                    expandedHeight: expandedHeaderHeight,
-//                    collapsedHeight: collapsedHeaderHeight,
-//                    namespace: heroNamespace,
-//
-//                    // pass ALL bindings/actions your SearchCard needs:
-//                    isOneWay: $isOneWay,
-//                    originLocation: $originLocation,
-//                    destinationLocation: $destinationLocation,
-//                    originIATACode: $originIATACode,
-//                    destinationIATACode: $destinationIATACode,
-//                    selectedDates: $selectedDates,
-//                    travelersCount: $travelersCount,
-//                    showPassengerSheet: $showPassengerSheet,
-//                    adults: $adults,
-//                    children: $children,
-//                    infants: $infants,
-//                    selectedClass: $selectedClass,
-//                    navigateToLocationSelection: $navigateToLocationSelection,
-//                    navigateToDateSelection: $navigateToDateSelection,
-//                    onSearchFlights: handleSearchFlightsOptimized
-//                  )
-            
+
             SearchCard(
                 isOneWay: $isOneWay,
                 originLocation: $originLocation,
@@ -262,20 +262,17 @@ struct FlightView: View {
                 selectedClass: $selectedClass,
                 navigateToLocationSelection: $navigateToLocationSelection,
                 navigateToDateSelection: $navigateToDateSelection,
-                collapseProgress: collapseProgress,         // ← pass 0…1
-                buttonNamespace: searchButtonNS,            // not strictly needed now; safe to keep
+                collapseProgress: collapseProgress, // 0…1 from scroll
+                buttonNamespace: searchButtonNS,
                 onSearchFlights: handleSearchFlightsOptimized
             )
-
-
-            
         }
         .padding()
         .padding(.top, 50)
         .padding(.bottom, 10)
-        .background(GradientColor.Primary)
-        .cornerRadius(20)
+        
     }
+
     
     // MARK: - Trip Type Selector (Extracted)
     private var tripTypeSelector: some View {

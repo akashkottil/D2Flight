@@ -88,11 +88,53 @@ struct SearchCard: View {
         self.onSearchFlights = onSearchFlights
     }
 
+    // MARK: - Helpers
+    private func clamp(_ x: CGFloat, _ a: CGFloat = 0, _ b: CGFloat = 1) -> CGFloat {
+        min(max(x, a), b)
+    }
+
+    /// Maps p from [a, b] -> [0, 1] with clamping
+    private func stage(_ p: CGFloat, _ a: CGFloat, _ b: CGFloat) -> CGFloat {
+        guard a != b else { return p >= b ? 1 : 0 }
+        return clamp((p - a) / (b - a))
+    }
+
+    /// Smooth easing for fades
+    private func easeInOut(_ x: CGFloat) -> CGFloat {
+        let t = clamp(x)
+        return t * t * (3 - 2 * t)
+    }
+
+    // MARK: - Body
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        // Clamp once
+        let p = clamp(collapseProgress)
+
+        // Staged fades (Passenger → Date → Location)
+        let paxFade  = 1 - easeInOut(stage(p, 0.00, 0.35))
+        let dateFade = 1 - easeInOut(stage(p, 0.15, 0.60))
+        let locFade  = 1 - easeInOut(stage(p, 0.35, 0.85))
+
+        // Lift amounts (approximate heights of each section)
+        let liftFromPax:      CGFloat = 56
+        let liftFromDates:    CGFloat = 64
+        let liftFromLocation: CGFloat = 84
+
+        let yLift =
+            (-easeInOut(stage(p, 0.00, 0.35)) * liftFromPax) +
+            (-easeInOut(stage(p, 0.15, 0.60)) * liftFromDates) +
+            (-easeInOut(stage(p, 0.35, 0.85)) * liftFromLocation)
+
+        let stackSpacing = 6 - 4 * p
+
+        return VStack(alignment: .leading, spacing: stackSpacing) {
 
             // Location Input
             locationSection
+                .opacity(locFade)
+                .scaleEffect(0.96 + 0.04 * locFade)
+                .allowsHitTesting(locFade > 0.2)
+                .animation(.easeInOut(duration: 0.25), value: collapseProgress)
 
             // Date Section
             VStack(spacing: 0) {
@@ -130,6 +172,9 @@ struct SearchCard: View {
                     )
                 }
             }
+            .opacity(dateFade)
+            .scaleEffect(0.96 + 0.04 * dateFade)
+            .animation(.easeInOut(duration: 0.25), value: collapseProgress)
             .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isOneWay)
 
             // Passenger Section
@@ -148,51 +193,48 @@ struct SearchCard: View {
                 .background(Color.white)
                 .cornerRadius(12)
             }
+            .opacity(paxFade)
+            .scaleEffect(0.96 + 0.04 * paxFade)
+            .allowsHitTesting(paxFade > 0.2)
+            .animation(.easeInOut(duration: 0.25), value: collapseProgress)
 
-            // MARK: Curtain Reveal Button (continuous, scroll-driven)
+            // Curtain Reveal Button
             curtainRevealSection
+                .offset(y: yLift)
+                .animation(.easeInOut(duration: 0.25), value: collapseProgress)
         }
         .onAppear { initializeReturnDate() }
         .onChange(of: selectedDates) { _ in updateDateLabels() }
     }
 
-    // MARK: - Curtain Reveal Section
+    // MARK: - Curtain Reveal Section (unchanged)
     private var curtainRevealSection: some View {
-        // Constants to blend between expanded and collapsed looks
         let smallWidth: CGFloat  = 120
         let bigCorner: CGFloat   = 16
         let smallCorner: CGFloat = 12
         let bigVPad: CGFloat     = 20
         let smallVPad: CGFloat   = 15
-        let p = max(0, min(1, collapseProgress)) // clamp 0…1
+        let p = max(0, min(1, collapseProgress))
 
         return ZStack {
-            // BACK LAYER: the compact search summary (revealed as the button shrinks)
             CollapsedSearch(
                 originCode: originIATACode.isEmpty ? "NYC" : originIATACode,
                 destinationCode: destinationIATACode.isEmpty ? "LHR" : destinationIATACode,
                 travelDate: formatTravelDate(),
                 travelerInfo: travelersCount,
                 buttonNamespace: buttonNamespace,
-                button: { EmptyView() }, // no small button here; we're using a single front button
+                button: { EmptyView() },
                 onEdit: { navigateToLocationSelection = true }
             )
 
-            // FRONT LAYER: a single button that resizes based on progress
             GeometryReader { proxy in
                 let fullWidth      = proxy.size.width
                 let currentWidth   = fullWidth - (fullWidth - smallWidth) * p
                 let currentVPad    = bigVPad - (bigVPad - smallVPad) * p
                 let currentCorner  = bigCorner - (bigCorner - smallCorner) * p
-
-                // Gradual padding only as we collapse (0 → 10)
                 let topPad: CGFloat      = CGFloat(10) * p
                 let trailingPad: CGFloat = CGFloat(10) * p
-
-                // Dynamic button text based on collapse progress
                 let buttonText = p > 0.5 ? "Search" : "search.flights".localized
-
-                // Vertical padding starts at currentVPad, ends at currentVPad - 4
                 let adjustedVPad = currentVPad - CGFloat(4) * p
 
                 PrimaryButton(
@@ -207,15 +249,14 @@ struct SearchCard: View {
                 .frame(width: currentWidth)
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .clipShape(RoundedRectangle(cornerRadius: currentCorner, style: .continuous))
-                .padding(.top, topPad)          // apply gradually on collapse
-                .padding(.trailing, trailingPad) // apply gradually on collapse
+                .padding(.top, topPad)
+                .padding(.trailing, trailingPad)
                 .animation(.easeInOut(duration: 0.3), value: collapseProgress)
-                .animation(.easeInOut(duration: 0.3), value: buttonText) // keep your text change animation
+                .animation(.easeInOut(duration: 0.3), value: buttonText)
             }
-            .frame(height: 60) // keep layout stable
+            .frame(height: 60)
         }
     }
-
 
     // MARK: Location section with swap
     private var locationSection: some View {
@@ -267,7 +308,6 @@ struct SearchCard: View {
                 originLocation = destinationLocation
                 destinationLocation = temp
 
-                // Also swap IATA codes
                 let tempIATA = originIATACode
                 originIATACode = destinationIATACode
                 destinationIATACode = tempIATA
