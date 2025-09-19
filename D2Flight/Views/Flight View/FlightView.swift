@@ -15,6 +15,8 @@ struct NavigationLazyView<Content: View>: View {
 
 // MARK: - Optimized FlightView with Performance Enhancements
 struct FlightView: View {
+    
+    @State private var scrollView: UIScrollView? = nil
     @State private var offsetY: CGFloat = 0
 
     /// These are safer, closer to your SearchCard + paddings (tweak to taste).
@@ -96,7 +98,7 @@ struct FlightView: View {
     var body: some View {
         NavigationStack {
             ZStack (alignment: .top) {
-                TrackableScrollView(offsetY: $offsetY) {
+                TrackableScrollView(offsetY: $offsetY,  scrollView: $scrollView) {
                     VStack(spacing: 0) {
                         // push content beneath sticky header (now dynamic)
                         Color.clear.frame(height: headerHeight)
@@ -645,10 +647,15 @@ struct FlightView: View {
     private func expandSearchCard() {
         withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
             searchHeaderIsCollapsed = false
-            // Optionally scroll to top to show the expanded card
-            offsetY = 0
+        }
+        
+        // Scroll to top with slight delay to allow header to expand first
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            // Ensure smooth scrolling to the top only after the header has expanded
+            scrollView?.setContentOffset(.zero, animated: true)
         }
     }
+
 }
 
 //#Preview {

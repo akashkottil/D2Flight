@@ -27,7 +27,6 @@ struct CollapsedSearch<ButtonContent: View>: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
                             Text("\(originCode)-\(destinationCode)")
-                            Text("a".localized)
                             Text(travelDate)
                         }
                         .font(.system(size: 16))

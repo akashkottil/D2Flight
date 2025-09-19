@@ -9,33 +9,37 @@
 import SwiftUI
 import UIKit
 
-// UIKit-backed TrackableScrollView (unchanged from demo)
 struct TrackableScrollView<Content: View>: View {
     let showsIndicators: Bool
     let content: Content
     @Binding var offsetY: CGFloat
+    @Binding var scrollView: UIScrollView?  // New binding to scroll view
 
     init(showsIndicators: Bool = true,
          offsetY: Binding<CGFloat>,
+         scrollView: Binding<UIScrollView?>,  // Pass the scroll view reference here
          @ViewBuilder content: () -> Content) {
         self._offsetY = offsetY
         self.showsIndicators = showsIndicators
         self.content = content()
+        self._scrollView = scrollView
     }
 
     var body: some View {
-        Representable(showsIndicators: showsIndicators, offsetY: $offsetY, content: content)
+        Representable(showsIndicators: showsIndicators, offsetY: $offsetY, scrollView: $scrollView, content: content)
     }
 
     private struct Representable<Content: View>: UIViewRepresentable {
         let showsIndicators: Bool
         @Binding var offsetY: CGFloat
+        @Binding var scrollView: UIScrollView?  // Add binding for scrollView
         let content: Content
 
         func makeCoordinator() -> Coordinator { Coordinator(self) }
 
         func makeUIView(context: Context) -> UIScrollView {
             let scroll = UIScrollView()
+            self.scrollView = scroll  // Assign the scroll view reference here
             scroll.alwaysBounceVertical = true
             scroll.showsVerticalScrollIndicator = showsIndicators
             scroll.delegate = context.coordinator
@@ -66,18 +70,3 @@ struct TrackableScrollView<Content: View>: View {
         }
     }
 }
-
-// Visual blur used by the sticky header
-struct VisualEffectBlur: View {
-    var body: some View {
-        #if os(iOS)
-        Rectangle().fill(.ultraThinMaterial)
-        #else
-        Rectangle().fill(.regularMaterial)
-        #endif
-    }
-}
-
-// Linear interpolation
-@inline(__always)
-func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat { a + (b - a) * t }
