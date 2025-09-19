@@ -4,6 +4,11 @@ struct AccountSettings: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var authManager: AuthenticationManager
     
+    // Delete account states
+    @State private var showDeleteConfirmation = false
+    @State private var showDeleteError = false
+    @State private var deleteErrorMessage = ""
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -70,16 +75,27 @@ struct AccountSettings: View {
                         .cornerRadius(10)
                         
                         // Delete Account Section
-                        VStack(alignment: .leading) {
-                            HStack{
-                                Text("delete.account".localized)
-                                    .foregroundColor(.red)
-                                Spacer()
+                        Button(action: {
+                            showDeleteConfirmation = true
+                        }) {
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    if authManager.isLoading {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                            .foregroundColor(.red)
+                                    } else {
+                                        Text("delete.account".localized)
+                                            .foregroundColor(.red)
+                                    }
+                                    Spacer()
+                                }
                             }
+                            .padding()
+                            .background(Color("Light"))
+                            .cornerRadius(10)
                         }
-                        .padding()
-                        .background(Color("Light"))
-                        .cornerRadius(10)
+                        .disabled(authManager.isLoading)
                     }
                     .padding()
                 }
@@ -87,6 +103,23 @@ struct AccountSettings: View {
         }
         .navigationBarTitle("")
         .navigationBarHidden(true)
+        .confirmationDialog(
+            "delete.account.confirmation.title".localized,
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("delete.account.confirm".localized, role: .destructive) {
+                handleDeleteAccount()
+            }
+            Button("cancel".localized, role: .cancel) { }
+        } message: {
+            Text("delete.account.confirmation.message".localized)
+        }
+        .alert("delete.account.error.title".localized, isPresented: $showDeleteError) {
+            Button("ok".localized, role: .cancel) { }
+        } message: {
+            Text(deleteErrorMessage.isEmpty ? "delete.account.error.message".localized : deleteErrorMessage)
+        }
     }
     
     // MARK: - Helper Methods
@@ -121,6 +154,55 @@ struct AccountSettings: View {
         }
         
         return user.email.isEmpty ? "email.not.available".localized : user.email
+    }
+    
+    // MARK: - Delete Account Functionality
+    
+    private func handleDeleteAccount() {
+        Task {
+            await performDeleteAccount()
+        }
+    }
+    
+    @MainActor
+    private func performDeleteAccount() async {
+        do {
+            await authManager.deleteAccount()
+            
+            // Check if deletion was successful by checking authentication state
+            if !authManager.isAuthenticated {
+                // Account deleted successfully - dismiss view and return to main screen
+                presentationMode.wrappedValue.dismiss()
+            } else if let errorMessage = authManager.errorMessage {
+                // Show the specific error from AuthenticationManager
+                showDeleteError(message: errorMessage)
+            } else {
+                // Fallback error if deletion didn't work but no specific error
+                showDeleteError(message: nil)
+            }
+        }
+    }
+    
+    private func showDeleteError(message: String?) {
+        deleteErrorMessage = message ?? ""
+        
+        // Check if the error requires re-authentication
+        if let message = message, message.contains("requires recent login") || message.contains("sign in again") {
+            // Instead of showing re-auth dialog, sign out user and close screen
+            handleReAuthenticationRequired()
+        } else {
+            showDeleteError = true
+        }
+    }
+    
+    private func handleReAuthenticationRequired() {
+        // Sign out the user since re-authentication is required
+        Task {
+            authManager.signOut()
+            
+            // Close the account settings screen
+            presentationMode.wrappedValue.dismiss()
+        }
     }
 }
 
