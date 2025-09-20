@@ -406,3 +406,65 @@ struct SearchCard: View {
         }
     }
 }
+
+// MARK: - Preview
+struct RentalSearchCard_Previews: PreviewProvider {
+    @Namespace static var ns
+
+    @State static var isSameDropOff = true
+    @State static var pickUpLocation = "San Francisco"
+    @State static var dropOffLocation = "Los Angeles"
+    @State static var pickUpIATACode = "SFO"
+    @State static var dropOffIATACode = "LAX"
+    @State static var selectedDates: [Date] = [
+        Calendar.current.date(byAdding: .day, value: 1, to: Date())!,
+        Calendar.current.date(byAdding: .day, value: 3, to: Date())!
+    ]
+    @State static var selectedTimes: [Date] = [
+        Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: Date())!,
+        Calendar.current.date(bySettingHour: 16, minute: 0, second: 0, of: Date())!
+    ]
+    @State static var navigateToLocationSelection = false
+    @State static var navigateToDateTimeSelection = false
+
+    static var previews: some View {
+        Group {
+            RentalSearchCard(
+                isSameDropOff: $isSameDropOff,
+                pickUpLocation: $pickUpLocation,
+                dropOffLocation: $dropOffLocation,
+                pickUpIATACode: $pickUpIATACode,
+                dropOffIATACode: $dropOffIATACode,
+                selectedDates: $selectedDates,
+                selectedTimes: $selectedTimes,
+                navigateToLocationSelection: $navigateToLocationSelection,
+                navigateToDateTimeSelection: $navigateToDateTimeSelection,
+                collapseProgress: 0, // expanded
+                buttonNamespace: ns,
+                onSearchRentals: { print("Search tapped") },
+                onExpandSearchCard: { print("Expand tapped") }
+            )
+            .padding()
+            .previewDisplayName("Expanded")
+
+            RentalSearchCard(
+                isSameDropOff: $isSameDropOff,
+                pickUpLocation: $pickUpLocation,
+                dropOffLocation: $dropOffLocation,
+                pickUpIATACode: $pickUpIATACode,
+                dropOffIATACode: $dropOffIATACode,
+                selectedDates: $selectedDates,
+                selectedTimes: $selectedTimes,
+                navigateToLocationSelection: $navigateToLocationSelection,
+                navigateToDateTimeSelection: $navigateToDateTimeSelection,
+                collapseProgress: 1, // collapsed
+                buttonNamespace: ns,
+                onSearchRentals: { print("Search tapped") },
+                onExpandSearchCard: { print("Expand tapped") }
+            )
+            .padding()
+            .previewDisplayName("Collapsed")
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+}

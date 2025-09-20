@@ -4,12 +4,40 @@ import SafariServices
 // MARK: - Updated RentalView with Localized Date Display
 struct RentalView: View {
     @Namespace private var animationNamespace
-    
-    @State private var isSameDropOff = true
-    @State private var pickUpLocation = ""
-    @State private var dropOffLocation = ""
-    @State private var pickUpIATACode = ""
-    @State private var dropOffIATACode = ""
+        
+        // 🆕 Collapsing header state (like FlightView)
+        @State private var scrollView: UIScrollView? = nil
+        @State private var offsetY: CGFloat = 0
+
+        // Tune to your card heights (roughly mirrors FlightView)
+        private let expandedHeaderHeight: CGFloat = 500
+        private let collapsedHeaderHeight: CGFloat = 280
+
+        /// 0 → expanded, 1 → collapsed (driven by scroll)
+        private var collapseProgress: CGFloat {
+            let range = max(expandedHeaderHeight - collapsedHeaderHeight, 1)
+            return min(max(offsetY / range, 0), 1)
+        }
+
+        /// Smooth header height shrink
+        private var headerHeight: CGFloat {
+            let p = collapseProgress
+            return expandedHeaderHeight - (expandedHeaderHeight - collapsedHeaderHeight) * p
+        }
+
+        // Hysteresis to avoid jitter
+        @State private var searchHeaderIsCollapsed: Bool = false
+        private var collapseThreshold: CGFloat { (expandedHeaderHeight - collapsedHeaderHeight) * 0.45 }
+        private var expandThreshold: CGFloat { (expandedHeaderHeight - collapsedHeaderHeight) * 0.30 }
+
+        // Namespace for the primary button morph
+        @Namespace private var searchButtonNS
+
+        @State private var isSameDropOff = true
+        @State private var pickUpLocation = ""
+        @State private var dropOffLocation = ""
+        @State private var pickUpIATACode = ""
+        @State private var dropOffIATACode = ""
     
     // ✅ UPDATED: Remove default system formatter, let updateDateTimeLabels handle it
     @State private var checkInDateTime: String = ""
@@ -40,139 +68,56 @@ struct RentalView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 6) {
-                        // Header
-                        HStack {
-                            Image("HomeLogo")
-                                .frame(width: 32, height: 32)
-                            Text("Last Minute Flights".localized)
-                                .font(CustomFont.font(.large, weight: .bold))
-                                .foregroundColor(Color.white)
+            ZStack(alignment: .top) {
+                // 🆕 TrackableScrollView drives collapseProgress
+                TrackableScrollView(offsetY: $offsetY, scrollView: $scrollView) {
+                    VStack(spacing: 0) {
+                        // Push content beneath sticky header
+                        Color.clear.frame(height: headerHeight)
+
+                        // Your existing content below the card
+                        PopularLocationsGrid(
+                            searchType: .rental,
+                            selectedDates: selectedDates,
+                            adults: 1,
+                            children: 0,
+                            infants: 0,
+                            selectedClass: .economy,
+                            rooms: 1,
+                            onLocationTapped: handlePopularLocationTapped
+                        )
+                        AutoSlidingCardsView()
+                        BottomBar()
+                    }
+                }
+                .onChange(of: offsetY) { y in
+                    if !searchHeaderIsCollapsed, y > collapseThreshold {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                            searchHeaderIsCollapsed = true
                         }
-                        .padding(.vertical, 10)
-                        
-                        // Enhanced Tabs with coordinated animations
-                        HStack {
-                            Button(action: {
-                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                    let wasChanged = isSameDropOff != true
-                                    isSameDropOff = true
-                                    
-                                    if wasChanged {
-                                        selectedDates = []
-                                        selectedTimes = []
-                                        dropOffLocation = ""
-                                        dropOffIATACode = ""
-                                        print("🔄 Switched to SAME drop-off - cleared dates/times for smart defaults")
-                                    }
-                                }
-                            }) {
-                                Text("same.drop-off".localized)
-                                    .foregroundColor(isSameDropOff ? .white : .gray)
-                                    .font(CustomFont.font(.regular))
-                                    .fontWeight(.semibold)
-                                    .frame(width: 120, height: 31)
-                                    .background(
-                                        Group {
-                                            if isSameDropOff {
-                                                RoundedRectangle(cornerRadius: 100)
-                                                            .fill(Color("Violet"))
-                                                    .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
-                                            } else {
-                                                RoundedRectangle(cornerRadius: 100)
-                                                            .fill(Color("Violet").opacity(0.15))
-                                            }
-                                        }
-                                    )
-                                    .cornerRadius(100)
-                            }
-                            
-                            Button(action: {
-                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                    let wasChanged = isSameDropOff != false
-                                    isSameDropOff = false
-                                    
-                                    if wasChanged {
-                                        selectedDates = []
-                                        selectedTimes = []
-                                        print("🔄 Switched to DIFFERENT drop-off - cleared dates/times for smart defaults")
-                                    }
-                                }
-                            }) {
-                                Text("different.drop-off".localized)
-                                    .foregroundColor(!isSameDropOff ? .white : .gray)
-                                    .font(CustomFont.font(.small))
-                                    .fontWeight(.semibold)
-                                    .frame(width: 120, height: 31)
-                                    .background(
-                                        Group {
-                                            if !isSameDropOff {
-                                                RoundedRectangle(cornerRadius: 100)
-                                                            .fill(Color("Violet"))
-                                                    .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
-                                            } else {
-                                                RoundedRectangle(cornerRadius: 100)
-                                                            .fill(Color("Violet").opacity(0.15))
-                                            }
-                                        }
-                                    )
-                                    .cornerRadius(100)
-                            }
-                        }
-                        .padding(.vertical, 10)
-                        
-                        
-                        // Location Input Section
-                        locationSection
-                        
-                        
-                            dateTimeView(
-                                icon: "CalenderIcon",
-                                title: isSameDropOff ? "pick-up.same.drop-off".localized : "pick-up.drop-off".localized
-                            )
-                            .id("datetime_selector")
-                        
-                        
-                        // Search Rentals Button with validation
-                        PrimaryButton(
-                            title: "search.rentals".localized,
-                            font: CustomFont.font(.medium),
-                            fontWeight: .bold,
-                            textColor: .white,
-                            verticalPadding: 20,
-                            cornerRadius: 16
-                        ) {
-                            handleSearchRentals()
+                    } else if searchHeaderIsCollapsed, y < expandThreshold {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                            searchHeaderIsCollapsed = false
                         }
                     }
-                    .padding()
-                    .padding(.top, 50)
-                    .padding(.bottom, 10)
-                    .background(GradientColor.Primary)
-                    .cornerRadius(20)
-                    
-                    PopularLocationsGrid(
-                        searchType: .rental,
-                        selectedDates: selectedDates,
-                        adults: 1,
-                        children: 0,
-                        infants: 0,
-                        selectedClass: .economy,
-                        rooms: 1,
-                        onLocationTapped: handlePopularLocationTapped
-                    )
-                    AutoSlidingCardsView()
-                    BottomBar()
                 }
                 .scrollIndicators(.hidden)
-                
-                // ✅ UPDATED: Universal Warning Overlay
+                .ignoresSafeArea(.all, edges: .bottom)
+
+                // 🆕 Sticky header
+                headerSection
+                    .frame(height: headerHeight, alignment: .top)
+                    .background(GradientColor.Primary)
+                    .mask(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .clipped()
+                    .animation(.easeInOut(duration: 0.2), value: collapseProgress)
+
+                // Warning overlay stays on top
                 WarningOverlay()
             }
             .ignoresSafeArea()
         }
+
         // ✅ UPDATED: Use NetworkMonitor extension for centralized network handling
         .onReceive(networkMonitor.$isConnected) { isConnected in
             networkMonitor.handleNetworkChange(
@@ -697,6 +642,113 @@ struct RentalView: View {
             print("💾 Saved popular rental search: \(location.title) → \(dropOffLocation.isEmpty ? location.title : dropOffLocation)")
         }
     }
+    // MARK: - Header Section (sticky)
+    private var headerSection: some View {
+        VStack(alignment: .leading) {
+            // Header
+            HStack {
+                Image("HomeLogo")
+                    .frame(width: 32, height: 32)
+                Text("Last Minute Rentals".localized) // optional: update title
+                    .font(CustomFont.font(.large, weight: .bold))
+                    .foregroundColor(Color.white)
+            }
+            .padding(.vertical, 10)
+
+            // Tabs (same as your existing)
+            HStack {
+                Button(action: {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                        let wasChanged = isSameDropOff != true
+                        isSameDropOff = true
+                        if wasChanged {
+                            selectedDates = []; selectedTimes = []
+                            dropOffLocation = ""; dropOffIATACode = ""
+                        }
+                    }
+                }) {
+                    Text("same.drop-off".localized)
+                        .foregroundColor(isSameDropOff ? .white : .gray)
+                        .font(CustomFont.font(.regular))
+                        .fontWeight(.semibold)
+                        .frame(width: 120, height: 31)
+                        .background(
+                            Group {
+                                if isSameDropOff {
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .fill(Color("Violet"))
+                                        .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
+                                } else {
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .fill(Color("Violet").opacity(0.15))
+                                }
+                            }
+                        )
+                        .cornerRadius(100)
+                }
+
+                Button(action: {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                        let wasChanged = isSameDropOff != false
+                        isSameDropOff = false
+                        if wasChanged { selectedDates = []; selectedTimes = [] }
+                    }
+                }) {
+                    Text("different.drop-off".localized)
+                        .foregroundColor(!isSameDropOff ? .white : .gray)
+                        .font(CustomFont.font(.small))
+                        .fontWeight(.semibold)
+                        .frame(width: 120, height: 31)
+                        .background(
+                            Group {
+                                if !isSameDropOff {
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .fill(Color("Violet"))
+                                        .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
+                                } else {
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .fill(Color("Violet").opacity(0.15))
+                                }
+                            }
+                        )
+                        .cornerRadius(100)
+                }
+            }
+            .padding(.vertical, 10)
+
+            // 🆕 RentalSearchCard replaces (locationSection + dateTime + PrimaryButton)
+            RentalSearchCard(
+                isSameDropOff: $isSameDropOff,
+                pickUpLocation: $pickUpLocation,
+                dropOffLocation: $dropOffLocation,
+                pickUpIATACode: $pickUpIATACode,
+                dropOffIATACode: $dropOffIATACode,
+                selectedDates: $selectedDates,
+                selectedTimes: $selectedTimes,
+                navigateToLocationSelection: $navigateToLocationSelection,
+                navigateToDateTimeSelection: $navigateToDateTimeSelection,
+                collapseProgress: collapseProgress,   // 👈 driven by TrackableScrollView
+                buttonNamespace: searchButtonNS,
+                onSearchRentals: { handleSearchRentals() },
+                onExpandSearchCard: { expandSearchCard() } // 👈 see helper below
+            )
+        }
+        .padding()
+        .padding(.top, 50)
+        .padding(.bottom, 10)
+    }
+
+    // 🆕 Expand header and scroll to top when the collapsed chip is tapped
+    private func expandSearchCard() {
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+            searchHeaderIsCollapsed = false
+        }
+        // let the header expand first, then scroll to top
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            scrollView?.setContentOffset(.zero, animated: true)
+        }
+    }
+
 }
 
 
