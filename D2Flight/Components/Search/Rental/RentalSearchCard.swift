@@ -46,17 +46,21 @@ struct RentalSearchCard: View {
 
         // Staged fades (Location → DateTime)
         let dateFade = 1 - easeInOut(stage(p, 0.15, 0.60))
-        let locFade  = 1 - easeInOut(stage(p, 0.35, 0.85))
+        let locFade  = 1 - easeInOut(stage(p, 0.30, 0.80)) // slightly earlier to settle sooner in "same" mode
 
-        // Lift amounts (approximate heights)
-        let liftFromDates:    CGFloat = 64
-        let liftFromLocation: CGFloat = 84
+        // Mode-aware total lift (how far the chip + button should travel up)
+        // Smaller for Same drop-off because there's no second location row.
+        let totalLiftSame: CGFloat = 120    // tune ± a few pts if needed
+        let totalLiftDiff: CGFloat = 148   // matches visual you already liked
 
-        let yLift =
-            (-easeInOut(stage(p, 0.15, 0.60)) * liftFromDates) +
-            (-easeInOut(stage(p, 0.35, 0.85)) * liftFromLocation)
+        let targetLift = isSameDropOff ? totalLiftSame : totalLiftDiff
 
+        // Smooth single-curve lift and CLAMP it so it doesn't cross into the tab row
+        let yLift = -min(easeInOut(p) * targetLift, targetLift)
+
+        // Keep your nice shrinking of vertical gaps
         let stackSpacing = 6 - 4 * p
+
 
         return VStack(alignment: .leading, spacing: stackSpacing) {
 
@@ -77,10 +81,12 @@ struct RentalSearchCard: View {
             .scaleEffect(0.96 + 0.04 * dateFade)
             .animation(.easeInOut(duration: 0.25), value: collapseProgress)
 
-            // Curtain Reveal Button + CollapsedRentalSearch
             curtainRevealSection
                 .offset(y: yLift)
+                // A tiny top guard in collapsed state helps avoid hairline overlaps on dense devices
+                .padding(.top, p > 0.7 ? (isSameDropOff ? 6 : 0) : 0)
                 .animation(.easeInOut(duration: 0.25), value: collapseProgress)
+
         }
     }
 
