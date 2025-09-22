@@ -36,7 +36,6 @@ struct PopularLocationsGrid: View {
                 Text(sectionTitle)
                     .font(.system(size: 18))
                     .fontWeight(.bold)
-                    .padding(.top)
                 Spacer()
             }
             .padding(.horizontal, 20)

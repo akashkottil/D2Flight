@@ -22,26 +22,29 @@ struct ProfileLists: View {
     @StateObject private var countryManager = CountryManager.shared
     @StateObject private var currencyManager = CurrencyManager.shared
     
+    // MARK: - Logout Confirmation State
+    @State private var showLogoutConfirmation = false
+    
     private var topItems: [ProfileItem] {
-            [
-                ProfileItem(
-                    icon: "RegionIcon",
-                    // ✅ LOCALIZED: Using localized title
-                    title: "region".localized,
-                    trailing: settingsManager.getSelectedCountryName(),
-                    destination: AnyView(Country()),
-                    showsArrow: true
-                ),
-                ProfileItem(
-                    icon: "CurrencyIcon",
-                    // ✅ LOCALIZED: Using localized title
-                    title: "currency".localized,
-                    trailing: settingsManager.getSelectedCurrencyCode(),
-                    destination: AnyView(Currency()),
-                    showsArrow: true
-                )
-            ]
-        }
+        [
+            ProfileItem(
+                icon: "RegionIcon",
+                // ✅ LOCALIZED: Using localized title
+                title: "region".localized,
+                trailing: settingsManager.getSelectedCountryName(),
+                destination: AnyView(Country()),
+                showsArrow: true
+            ),
+            ProfileItem(
+                icon: "CurrencyIcon",
+                // ✅ LOCALIZED: Using localized title
+                title: "currency".localized,
+                trailing: settingsManager.getSelectedCurrencyCode(),
+                destination: AnyView(Currency()),
+                showsArrow: true
+            )
+        ]
+    }
     
     var bottomItems: [ProfileItem] {
         var items: [ProfileItem] = [
@@ -120,6 +123,23 @@ struct ProfileLists: View {
             profileCard(items: bottomItems)
         }
         .padding()
+        .confirmationDialog(
+            "logout.confirmation.title".localized,
+            isPresented: $showLogoutConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("logout.confirm".localized, role: .destructive) {
+                Task {
+                    await authManager.signOut()
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isLoggedIn = false
+                    }
+                }
+            }
+            Button("cancel".localized, role: .cancel) { }
+        } message: {
+            Text("logout.confirmation.message".localized)
+        }
         .onAppear {
             // Ensure managers are loaded when view appears
             print("📱 ProfileLists appeared - Current selections:")
@@ -153,12 +173,8 @@ struct ProfileLists: View {
                     } else {
                         Button {
                             if item.title == "logout".localized {
-                                Task {
-                                    await authManager.signOut()
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        isLoggedIn = false
-                                    }
-                                }
+                                // Show confirmation dialog instead of immediate logout
+                                showLogoutConfirmation = true
                             } else {
                                 print("Tapped on \(item.title)")
                             }
