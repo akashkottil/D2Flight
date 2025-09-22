@@ -4,6 +4,11 @@ import SafariServices
 // MARK: - Enhanced Hotel Search Web View with Better Error Handling
 struct HotelSearchWebView: View {
     @ObservedObject var hotelSearchVM: HotelSearchViewModel
+    
+    // ✅ NEW: Track location changes
+        @State private var lastSearchedCity: String = ""
+        @State private var lastSearchedCountry: String = ""
+    
     @Environment(\.dismiss) private var dismiss
     @State private var showingAlert = false
     @State private var alertTitle = ""
@@ -21,17 +26,18 @@ struct HotelSearchWebView: View {
                     .transition(.opacity)
                 } else if hotelSearchVM.isLoading {
                     // Show loading state with timeout indicator
-                    LoadingStateView(
-                        title: "Searching Hotels...",
-                        subtitle: "Finding the best deals for you",
-                        hasTimedOut: hotelSearchVM.hasTimedOut,
-                        onRetry: {
-                            hotelSearchVM.searchHotels()
-                        },
-                        onCancel: {
-                            dismiss()
-                        }
+                    AnimatedHotelLoader(
+                        autoHide: false, // <- keep visible while VM is loading
+                        isVisible: Binding(
+                            get: { hotelSearchVM.isLoading },
+                            set: { newValue in
+                                // when loader asks to hide (e.g., user navigates), stop loading
+                                if !newValue { hotelSearchVM.isLoading = false }
+                            }
+                        )
                     )
+                    .ignoresSafeArea()
+                    .transition(.opacity)
                 } else if let error = hotelSearchVM.errorMessage {
                     // Show error state with retry option
                     ErrorStateView(
@@ -77,7 +83,29 @@ struct HotelSearchWebView: View {
         // Also show the universal warning
         WarningManager.shared.showDeeplinkError(for: .hotel, error: error)
     }
-}
+    
+    private func startSearchIfNeeded() {
+            let currentCity = hotelSearchVM.cityName
+            let currentCountry = hotelSearchVM.countryName
+            
+            // Only search if location actually changed or it's the first search
+            if currentCity != lastSearchedCity || currentCountry != lastSearchedCountry {
+                print("🔍 Location changed - starting new search:")
+                print("   Previous: \(lastSearchedCity), \(lastSearchedCountry)")
+                print("   Current: \(currentCity), \(currentCountry)")
+                
+                lastSearchedCity = currentCity
+                lastSearchedCountry = currentCountry
+                
+                // Start new search
+                hotelSearchVM.searchHotels()
+            } else {
+                print("📍 Same location - skipping search")
+            }
+        }
+    }
+
+
 
 // MARK: - Enhanced Safari Web View Wrapper with Error Handling
 struct SafariWebViewWrapper: UIViewControllerRepresentable {

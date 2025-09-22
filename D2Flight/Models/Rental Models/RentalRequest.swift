@@ -22,8 +22,8 @@ struct RentalRequest {
         countryCode: String? = nil,
         currencyCode: String? = nil,
         languageCode: String? = nil,
-        appCode: String = APIConstants.DefaultParams.testAppCode,
-        userId: String? = nil, // ✅ UPDATED: Allow override but use dynamic by default
+        appCode: String = APIConstants.DefaultParams.rentalTestAppCode,
+        userId: String? = nil, 
         id: String = APIConstants.DefaultParams.rentalProviderId
     ) {
         // Get dynamic values from settings if not provided

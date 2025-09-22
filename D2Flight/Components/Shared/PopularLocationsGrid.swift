@@ -36,7 +36,6 @@ struct PopularLocationsGrid: View {
                 Text(sectionTitle)
                     .font(.system(size: 18))
                     .fontWeight(.bold)
-                    .padding(.top)
                 Spacer()
             }
             .padding(.horizontal, 20)
@@ -135,13 +134,13 @@ struct PopularLocationCard: View {
                             .padding(.bottom)
                             Spacer()
                         }
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.4)]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
+//                        .background(
+//                            LinearGradient(
+//                                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.4)]),
+//                                startPoint: .top,
+//                                endPoint: .bottom
+//                            )
+//                        )
                         .padding(8)
                     }
                     .cornerRadius(10)

@@ -263,13 +263,14 @@ struct ResultHeader: View {
                filterViewModel.isPriceFilterActive() // ✅ Include price filter
     }
     
-     func clearAllFilters() {
+    func clearAllFilters() {
         print("\n🗑️ ===== CLEAR ALL FILTERS =====")
         print("🔄 Clearing all filters and resetting to default state...")
         
-        // Clear all filter values to proper defaults
         filterViewModel.selectedSortOption = .best
         filterViewModel.maxStops = 3
+        filterViewModel.exactStops = nil               // ✅ ADD: Reset exact stops
+        filterViewModel.isExactStopsFilter = false     // ✅ ADD: Reset exact filter flag
         filterViewModel.departureTimeRange = 0...86400
         filterViewModel.arrivalTimeRange = 0...86400
         filterViewModel.returnDepartureTimeRange = 0...86400
@@ -278,14 +279,11 @@ struct ResultHeader: View {
         filterViewModel.selectedAirlines.removeAll()
         filterViewModel.excludedAirlines.removeAll()
         filterViewModel.selectedClass = .economy
-        
-        // ✅ CRITICAL: Reset price filter to API values (not hardcoded values)
         filterViewModel.resetPriceFilter()
         
-        print("✅ All filters cleared to default values")
+        print("✅ All filters cleared including exact stops reset")
         print("🗑️ ===== END CLEAR ALL FILTERS =====\n")
         
-        // Apply empty filters
         let emptyRequest = PollRequest()
         onClearAllFilters()
         onFiltersChanged(emptyRequest)
@@ -296,6 +294,11 @@ struct ResultHeader: View {
     }
     
     private func applyFilters() {
+        if selectedFilterType == .airlines || !filterViewModel.selectedAirlines.isEmpty {
+                filterViewModel.applyAirlineFiltersAndUpdateOrdering()
+                print("✅ Applied airline filter ordering updates")
+            }
+        
         let pollRequest = filterViewModel.buildPollRequest()
         onFiltersChanged(pollRequest)
         

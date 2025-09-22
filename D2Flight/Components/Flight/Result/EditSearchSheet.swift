@@ -276,7 +276,8 @@ struct EditSearchSheet: View {
         .fullScreenCover(isPresented: $navigateToLocationSelection) {
             LocationSelectionView(
                 originLocation: $originLocation,
-                destinationLocation: $destinationLocation
+                destinationLocation: $destinationLocation,
+                serviceType: .flight
             ) { selectedLocation, isOrigin, iataCode in
                 if isOrigin {
                     originLocation = selectedLocation

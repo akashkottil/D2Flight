@@ -69,23 +69,42 @@ class AuthenticationManager: ObservableObject {
     }
     
     func deleteAccount() async {
-        guard let firebaseUser = Auth.auth().currentUser else { return }
+        guard let firebaseUser = Auth.auth().currentUser else {
+            errorMessage = "No authenticated user found"
+            return
+        }
         
         isLoading = true
+        errorMessage = nil // Clear previous errors
         
         do {
-            // Delete Firebase account
+            // Step 1: Delete Firebase account
             try await firebaseUser.delete()
             
-            // Clear local data
+            // Step 2: Sign out from Google
+            GIDSignIn.sharedInstance.signOut()
+            
+            // Step 3: Clear all local data
             clearStoredUser()
             
-            // Update state
+            // Step 4: Clear UserManager data (analytics/tracking data)
+            UserManager.shared.clearUserData()
+            
+            // Step 5: Clear any other relevant app data
+            clearAllAppUserData()
+            
+            // Step 6: Update authentication state
             currentUser = nil
             isAuthenticated = false
             
             print("✅ Account deleted successfully")
+            
+        } catch let authError as NSError {
+            // Handle specific Firebase Auth errors
+            handleDeleteAccountError(authError)
+            print("❌ Account deletion failed: \(authError)")
         } catch {
+            // Handle other errors
             errorMessage = "Failed to delete account: \(error.localizedDescription)"
             print("❌ Account deletion failed: \(error)")
         }
@@ -213,5 +232,121 @@ class AuthenticationManager: ObservableObject {
         userDefaults.removeObject(forKey: Keys.isLoggedIn)
         userDefaults.removeObject(forKey: Keys.currentUser)
         keychain.deleteAccessToken()
+    }
+    
+    // MARK: - Private Helper Methods for Account Deletion
+    
+    private func handleDeleteAccountError(_ error: NSError) {
+        // Firebase Auth error codes
+        switch error.code {
+        case AuthErrorCode.requiresRecentLogin.rawValue:
+            errorMessage = "For security reasons, please sign in again before deleting your account."
+            // Sign out user since re-authentication is required
+            signOutSilently()
+        case AuthErrorCode.networkError.rawValue:
+            errorMessage = "Network connection error. Please check your internet connection and try again."
+        case AuthErrorCode.tooManyRequests.rawValue:
+            errorMessage = "Too many requests. Please try again later."
+        case AuthErrorCode.userTokenExpired.rawValue:
+            errorMessage = "Your session has expired. Please sign in again and try deleting your account."
+            // Sign out user since session expired
+            signOutSilently()
+        case AuthErrorCode.userNotFound.rawValue:
+            errorMessage = "User account not found."
+            // Sign out user since account doesn't exist
+            signOutSilently()
+        case AuthErrorCode.userDisabled.rawValue:
+            errorMessage = "This user account has been disabled."
+            // Sign out user since account is disabled
+            signOutSilently()
+        case AuthErrorCode.operationNotAllowed.rawValue:
+            errorMessage = "Account deletion is not allowed."
+        default:
+            errorMessage = "Failed to delete account: \(error.localizedDescription)"
+        }
+    }
+    
+    // Silent sign out without loading state (used for error scenarios)
+    private func signOutSilently() {
+        do {
+            // Sign out from Firebase
+            try Auth.auth().signOut()
+            
+            // Sign out from Google
+            GIDSignIn.sharedInstance.signOut()
+            
+            // Clear stored data
+            clearStoredUser()
+            
+            // Update state
+            currentUser = nil
+            isAuthenticated = false
+            
+            print("✅ User signed out silently due to auth error")
+        } catch {
+            print("❌ Silent sign out error: \(error)")
+        }
+    }
+    
+    private func clearAllAppUserData() {
+        // Clear any other app-specific user data
+        // This can include:
+        
+        // Clear recent locations
+        RecentLocationsManager.shared.clearAllRecentLocations()
+        
+        // Clear any cached search data or preferences
+        clearSearchPreferences()
+        
+        // Clear any other user-specific cached data
+        clearUserCache()
+        
+        print("🗑️ All app user data cleared")
+    }
+    
+    private func clearSearchPreferences() {
+        // Clear search-related preferences
+        let searchKeys = [
+            "LastSearchOrigin",
+            "LastSearchDestination",
+            "LastSearchParameters",
+            "SavedSearches"
+        ]
+        
+        for key in searchKeys {
+            userDefaults.removeObject(forKey: key)
+        }
+    }
+    
+    private func clearUserCache() {
+        // Clear any cached user data, images, etc.
+        if let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            let userCacheURL = cacheURL.appendingPathComponent("UserData")
+            try? FileManager.default.removeItem(at: userCacheURL)
+        }
+    }
+}
+
+// MARK: - RecentLocationsManager Extension
+extension RecentLocationsManager {
+    func clearAllRecentLocations() {
+        // Clear recent locations from UserDefaults
+        if let bundleId = Bundle.main.bundleIdentifier {
+            let recentLocationsKey = "\(bundleId).RecentLocations"
+            let recentSearchPairsKey = "\(bundleId).RecentSearchPairs"
+            
+            UserDefaults.standard.removeObject(forKey: recentLocationsKey)
+            UserDefaults.standard.removeObject(forKey: recentSearchPairsKey)
+        }
+        
+        // Clear in-memory data if applicable
+        // If you have published properties like @Published var recentLocations: [RecentLocation] = []
+        // Reset them here:
+        // DispatchQueue.main.async {
+        //     self.recentLocations = []
+        //     self.recentSearchPairs = []
+        // }
+        
+        print("🗑️ Recent locations cleared")
     }
 }

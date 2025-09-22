@@ -10,6 +10,8 @@ class LocationViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var showingRecentLocations: Bool = true // NEW: Track if showing recent vs autocomplete
     
+    var serviceType: LocationService = .flight
+    
     private var cancellables = Set<AnyCancellable>()
     private let locationApi = LocationApi.shared
     private let recentLocationsManager = RecentLocationsManager.shared
@@ -56,35 +58,35 @@ class LocationViewModel: ObservableObject {
         print("📍 Showing \(recentLocations.count) recent locations")
     }
     
-    // UPDATED: Search locations (autocomplete)
     func searchLocations(query: String) {
-        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else {
-            showRecentLocations()
-            return
-        }
-        
-        showingRecentLocations = false
-        isLoading = true
-        errorMessage = nil
-        
-        print("🔍 Searching autocomplete for: '\(query)'")
-        
-        locationApi.searchLocations(query: query) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.isLoading = false
-                
-                switch result {
-                case .success(let response):
-                    self?.locations = response.data
-                    print("✅ Found \(response.data.count) autocomplete results")
-                case .failure(let error):
-                    self?.errorMessage = "Failed to fetch locations: \(error.localizedDescription)"
-                    self?.locations = []
-                    print("❌ Autocomplete search failed: \(error)")
+            guard !query.trimmingCharacters(in: .whitespaces).isEmpty else {
+                showRecentLocations()
+                return
+            }
+            
+            showingRecentLocations = false
+            isLoading = true
+            errorMessage = nil
+            
+            print("🔍 Searching \(serviceType.serviceName) locations for: '\(query)'")
+            
+            // ✅ Pass service type to get correct URL
+            locationApi.searchLocations(query: query, service: serviceType) { [weak self] result in
+                DispatchQueue.main.async {
+                    self?.isLoading = false
+                    
+                    switch result {
+                    case .success(let response):
+                        self?.locations = response.data
+                        print("✅ Found \(response.data.count) \(self?.serviceType.serviceName ?? "") location results")
+                    case .failure(let error):
+                        self?.errorMessage = "Failed to fetch locations: \(error.localizedDescription)"
+                        self?.locations = []
+                        print("❌ \(self?.serviceType.serviceName ?? "") location search failed: \(error)")
+                    }
                 }
             }
         }
-    }
     
     // NEW: Load recent locations
     private func loadRecentLocations() {
