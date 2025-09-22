@@ -1,5 +1,3 @@
-
-
 import SwiftUI
 
 struct HotelSearchCard: View {
@@ -22,7 +20,7 @@ struct HotelSearchCard: View {
     @Binding var navigateToLocationSelection: Bool
     @Binding var navigateToDateTimeSelection: Bool
 
-    // Animation (kept for consistency with your layout)
+    // Animation
     var collapseProgress: CGFloat
     let buttonNamespace: Namespace.ID
 
@@ -30,7 +28,6 @@ struct HotelSearchCard: View {
     let onSearchHotels: () -> Void
     let onExpandSearchCard: () -> Void
 
-    // MARK: - Body
     var body: some View {
         let p = clamp(collapseProgress)
         let dateFade = 1 - easeInOut(stage(p, 0.10, 0.60))
@@ -45,6 +42,9 @@ struct HotelSearchCard: View {
             (-easeInOut(stage(p, 0.15, 0.60)) * liftFromDates) +
             (-easeInOut(stage(p, 0.35, 0.85)) * liftFromLocation) +
             (-easeInOut(stage(p, 0.00, 0.35)) * liftFromPax)
+        
+        // Add a gentle downshift only near-collapsed → collapsed
+        let collapsedTopInset: CGFloat = 24 * easeInOut(stage(p, 0.70, 1.00))
 
         let stackSpacing = 6 - 4 * p
 
@@ -100,9 +100,9 @@ struct HotelSearchCard: View {
             .allowsHitTesting(paxFade > 0.2)
             .animation(.easeInOut(duration: 0.25), value: collapseProgress)
 
-            // Search button (curtain area)
+            // Curtain / Search button (+ CollapsedHotelSearch just like flights)
             curtainRevealSection
-                .offset(y: yLift)
+                .offset(y: yLift + collapsedTopInset)
                 .animation(.easeInOut(duration: 0.25), value: collapseProgress)
         }
     }
@@ -153,7 +153,7 @@ struct HotelSearchCard: View {
         }
     }
 
-    // MARK: - Curtain / Search button
+    // MARK: - Curtain / Search button (now shows CollapsedHotelSearch when collapsed)
     private var curtainRevealSection: some View {
         let smallWidth: CGFloat  = 120
         let bigCorner: CGFloat   = 16
@@ -163,12 +163,26 @@ struct HotelSearchCard: View {
         let p = clamp(collapseProgress)
 
         return ZStack {
+            if p > 0.7 {
+                let collapsedTopInset = 20 * easeInOut(stage(p, 0.70, 1.00))
+                CollapsedHotelSearch(
+                    cityCode: hotelIATACode.isEmpty ? "NYC" : hotelIATACode,
+                    dateRange: formatCollapsedDateRange(),
+                    guestsSummary: guestsCount,
+                    buttonNamespace: buttonNamespace,
+                    button: { EmptyView() },
+                    onEdit: onExpandSearchCard
+                )
+                .padding(.top, collapsedTopInset)   // 👈 extra top padding only in collapsed state
+            }
+
+
             GeometryReader { proxy in
                 let fullWidth      = proxy.size.width
                 let currentWidth   = fullWidth - (fullWidth - smallWidth) * p
                 let currentVPad    = bigVPad - (bigVPad - smallVPad) * p
                 let currentCorner  = bigCorner - (bigCorner - smallCorner) * p
-                let topPad: CGFloat      = CGFloat(10) * p
+                let topPad: CGFloat      = CGFloat(20) * p
                 let trailingPad: CGFloat = CGFloat(10) * p
                 let buttonText = p > 0.5 ? "Search" : "search.hotels".localized
                 let adjustedVPad = currentVPad - CGFloat(4) * p
@@ -215,6 +229,13 @@ struct HotelSearchCard: View {
         }
     }
 
+    // 👉 Single-line range used by CollapsedHotelSearch (e.g., "Fri 20 Sep, 15:00 • Sat 21 Sep, 11:00")
+    private func formatCollapsedDateRange() -> String {
+        let inLabel  = formatSelectedDateTime(for: .checkin)
+        let outLabel = formatSelectedDateTime(for: .checkout)
+        return "\(inLabel) • \(outLabel)"
+    }
+
     private func formatLocalizedDateTime(_ date: Date) -> String {
         let calendar = Calendar.current
         let weekdayIndex = calendar.component(.weekday, from: date) - 1
@@ -249,7 +270,7 @@ struct HotelSearchCard: View {
         return cal.date(from: c) ?? date
     }
 
-    // MARK: - Math helpers (same easing you used)
+    // MARK: - Math helpers
     private func clamp(_ x: CGFloat, _ a: CGFloat = 0, _ b: CGFloat = 1) -> CGFloat { min(max(x, a), b) }
     private func stage(_ p: CGFloat, _ a: CGFloat, _ b: CGFloat) -> CGFloat {
         guard a != b else { return p >= b ? 1 : 0 }
@@ -257,47 +278,5 @@ struct HotelSearchCard: View {
     }
     private func easeInOut(_ x: CGFloat) -> CGFloat {
         let t = clamp(x); return t * t * (3 - 2 * t)
-    }
-}
-
-struct HotelSearchCard_Previews: PreviewProvider {
-    @State static var hotelLocation = "New York"
-    @State static var hotelIATACode = "NYC"
-    @State static var selectedDates: [Date] = [
-        Date(),
-        Calendar.current.date(byAdding: .day, value: 3, to: Date())!
-    ]
-    @State static var selectedTimes: [Date] = [Date(), Date()]
-    @State static var guestsCount = "2 Adults, 1 Room"
-    @State static var showPassengerSheet = false
-    @State static var adults = 2
-    @State static var children = 0
-    @State static var rooms = 1
-    @State static var navigateToLocationSelection = false
-    @State static var navigateToDateTimeSelection = false
-
-    @Namespace static var ns
-
-    static var previews: some View {
-        HotelSearchCard(
-            hotelLocation: $hotelLocation,
-            hotelIATACode: $hotelIATACode,
-            selectedDates: $selectedDates,
-            selectedTimes: $selectedTimes,
-            guestsCount: $guestsCount,
-            showPassengerSheet: $showPassengerSheet,
-            adults: $adults,
-            children: $children,
-            rooms: $rooms,
-            navigateToLocationSelection: $navigateToLocationSelection,
-            navigateToDateTimeSelection: $navigateToDateTimeSelection,
-            collapseProgress: 0,
-            buttonNamespace: ns,
-            onSearchHotels: { print("Search tapped") },
-            onExpandSearchCard: { }
-        )
-        .padding()
-        .background(Color(.systemGroupedBackground))
-        .previewLayout(.sizeThatFits)
     }
 }
