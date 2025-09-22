@@ -192,10 +192,9 @@ struct DateTimeSelectionView: View {
             
             // Calendar and Content
             ZStack {
-                // ✅ UPDATED: Use LocalizedSimplifiedCalendar instead of SimplifiedCalendar
                 LocalizedSimplifiedCalendar(
                     selectedDates: $selectedDates,
-                    isRoundTrip: !isSameDropOff || isFromHotel // Hotel always shows two dates
+                    isRoundTrip: isFromHotel ? true : true
                 )
                 
                 // Bottom section overlay
@@ -213,28 +212,26 @@ struct DateTimeSelectionView: View {
                                 isSelected: !selectedDates.isEmpty,
                                 onTimeTap: {
                                     activeTimeSelection = .pickup
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        showTimePicker = true
-                                    }
+                                    withAnimation(.easeInOut(duration: 0.3)) { showTimePicker = true }
                                 }
                             )
-                            
-                            Image("RoundedArrow")
-                                .frame(width: 16, height: 16)
-                            
-                            // Second Card (Check-out/Drop-off)
-                            DateTimeCard(
-                                title: secondCardTitle,
-                                dateText: formatSecondDate(),
-                                timeText: formatSecondTime(),
-                                isSelected: selectedDates.count > 1 || isSameDropOff || isFromHotel,
-                                onTimeTap: {
-                                    activeTimeSelection = .dropoff
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        showTimePicker = true
+
+                            if selectedDates.count > 1 {
+                                Image("RoundedArrow")
+                                    .frame(width: 16, height: 16)
+
+                                // Second Card (Check-out/Drop-off)
+                                DateTimeCard(
+                                    title: secondCardTitle,
+                                    dateText: formatSecondDate(),
+                                    timeText: formatSecondTime(),
+                                    isSelected: true,
+                                    onTimeTap: {
+                                        activeTimeSelection = .dropoff
+                                        withAnimation(.easeInOut(duration: 0.3)) { showTimePicker = true }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                         .padding()
                         

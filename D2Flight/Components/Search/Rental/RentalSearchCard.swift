@@ -256,17 +256,13 @@ struct RentalSearchCard: View {
         if selectedDates.isEmpty || selectedTimes.isEmpty {
             return "tap.to.select".localized
         }
-        let pickup = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
-        let dropoff = (selectedDates.count > 1 && selectedTimes.count > 1)
-            ? combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
-            : pickup
-
-        let isSameDay = Calendar.current.isDate(pickup, inSameDayAs: dropoff)
-        if isSameDropOff || isSameDay {
+        if selectedDates.count < 2 || selectedTimes.count < 2 {
+            let pickup = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
             return formatLocalizedDateTime(pickup)
-        } else {
-            return "\(formatLocalizedDateTime(pickup)) • \(formatLocalizedDateTime(dropoff))"
         }
+        let pickup = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
+        let dropoff = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
+        return "\(formatLocalizedDateTime(pickup)) • \(formatLocalizedDateTime(dropoff))"
     }
 
     private func formatLocalizedDateTime(_ date: Date) -> String {
