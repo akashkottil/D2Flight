@@ -15,7 +15,45 @@ struct NavigationLazyView<Content: View>: View {
 
 // MARK: - Optimized FlightView with Performance Enhancements
 struct FlightView: View {
+    
+    @State private var scrollView: UIScrollView? = nil
+    @State private var offsetY: CGFloat = 0
+
+    /// These are safer, closer to your SearchCard + paddings (tweak to taste).
+    /// Rough guide (expanded): title+tabs (~72) + SearchCard expanded (~240–260) + paddings (~48)
+    private let expandedHeaderHeight: CGFloat = 500
+    /// Rough guide (collapsed): title+tabs (~72) + SearchCard collapsed button (~60) + paddings (~48)
+    private let collapsedHeaderHeight: CGFloat = 280
+
+    /// 0 → expanded, 1 → collapsed
+    private var collapseProgress: CGFloat {
+        let range = max(expandedHeaderHeight - collapsedHeaderHeight, 1)
+        return min(max(offsetY / range, 0), 1)
+    }
+
+    /// Smoothly shrinking header height based on progress
+    private var headerHeight: CGFloat {
+        let p = collapseProgress
+        return expandedHeaderHeight - (expandedHeaderHeight - collapsedHeaderHeight) * p
+    }
+
+
     @Namespace private var animationNamespace
+    
+    // one namespace for the button morph
+    @Namespace private var searchButtonNS
+    
+    // drive collapsed/expanded
+    @State private var searchHeaderIsCollapsed: Bool = false
+    
+    // Relative thresholds based on actual header range
+    private var collapseThreshold: CGFloat {
+        (expandedHeaderHeight - collapsedHeaderHeight) * 0.45
+    }
+    private var expandThreshold: CGFloat {
+        (expandedHeaderHeight - collapsedHeaderHeight) * 0.30   // hysteresis
+    }
+
     
     // MARK: - Core State Variables (Minimal @State usage)
     @State private var isOneWay = true
@@ -59,14 +97,13 @@ struct FlightView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                // MARK: - Main Content (Optimized Layout)
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        // MARK: - Header Section
-                        headerSection
-                        
-                        // MARK: - Popular Locations (Lazy Loading)
+            ZStack (alignment: .top) {
+                TrackableScrollView(offsetY: $offsetY,  scrollView: $scrollView) {
+                    VStack(spacing: 0) {
+                        // push content beneath sticky header (now dynamic)
+                        Color.clear.frame(height: headerHeight)
+
+                        // your existing content
                         LazyVStack {
                             PopularLocationsGrid(
                                 searchType: .flight,
@@ -79,17 +116,37 @@ struct FlightView: View {
                                 onLocationTapped: handlePopularLocationTapped
                             )
                         }
-                        
-                        // MARK: - Additional Content (Lazy Loading)
+//                        .padding(.top, -6)
+
                         LazyVStack {
-//                            FlightExploreCard()
                             AutoSlidingCardsView()
                             BottomBar()
                         }
                     }
                 }
-                .scrollIndicators(.hidden)
-                .ignoresSafeArea(.all, edges: .bottom)
+
+                .onChange(of: offsetY) { y in
+                    if !searchHeaderIsCollapsed, y > collapseThreshold {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                            searchHeaderIsCollapsed = true
+                        }
+                    } else if searchHeaderIsCollapsed, y < expandThreshold {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                            searchHeaderIsCollapsed = false
+                        }
+                    }
+                }
+                      .scrollIndicators(.hidden)
+                      .ignoresSafeArea(.all, edges: .bottom)
+                
+                headerSection
+                    .frame(height: headerHeight, alignment: .top)     // size FIRST
+                    .background(GradientColor.Primary)                // then background on the sized box
+                    .mask(RoundedRectangle(cornerRadius: 20, style: .continuous)) // keep your rounding
+                    .clipped()                                        // enforce the height
+                    .animation(.easeInOut(duration: 0.2), value: collapseProgress)
+
+
                 
                 // MARK: - Universal Warning Overlay
                 WarningOverlay()
@@ -188,12 +245,11 @@ struct FlightView: View {
                     .foregroundColor(Color.white)
             }
             .padding(.vertical, 10)
-            
+
             // Enhanced Tabs
             tripTypeSelector
-            
-            // ExpandableSearchContainer
-            ExpandableSearchContainer(
+
+            SearchCard(
                 isOneWay: $isOneWay,
                 originLocation: $originLocation,
                 destinationLocation: $destinationLocation,
@@ -208,15 +264,18 @@ struct FlightView: View {
                 selectedClass: $selectedClass,
                 navigateToLocationSelection: $navigateToLocationSelection,
                 navigateToDateSelection: $navigateToDateSelection,
-                onSearchFlights: handleSearchFlightsOptimized
+                collapseProgress: collapseProgress, // 0…1 from scroll
+                buttonNamespace: searchButtonNS,
+                onSearchFlights: handleSearchFlightsOptimized,
+                onExpandSearchCard: expandSearchCard 
             )
         }
         .padding()
         .padding(.top, 50)
         .padding(.bottom, 10)
-        .background(GradientColor.Primary)
-        .cornerRadius(20)
+        
     }
+
     
     // MARK: - Trip Type Selector (Extracted)
     private var tripTypeSelector: some View {
@@ -584,8 +643,21 @@ struct FlightView: View {
             "\(totalTravelers) \("travellers".localized)"
         return "\(travelersText), \(selectedClass.displayName)"
     }
+    // Add this new function in FlightView
+    private func expandSearchCard() {
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+            searchHeaderIsCollapsed = false
+        }
+        
+        // Scroll to top with slight delay to allow header to expand first
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            // Ensure smooth scrolling to the top only after the header has expanded
+            scrollView?.setContentOffset(.zero, animated: true)
+        }
+    }
+
 }
 
-#Preview {
-    FlightView()
-}
+//#Preview {
+//    FlightView()
+//}

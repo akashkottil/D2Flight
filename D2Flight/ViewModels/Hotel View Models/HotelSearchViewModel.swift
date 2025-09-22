@@ -3,94 +3,110 @@ import Combine
 
 class HotelSearchViewModel: ObservableObject {
     @Published var cityCode: String = ""
-        @Published var cityName: String = "" {
-            didSet {
-                // ✅ Reset state when city name changes
-                if oldValue != cityName && !oldValue.isEmpty {
-                    print("🔄 City changed from '\(oldValue)' to '\(cityName)' - resetting state")
-                    resetSearchState()
-                }
+    @Published var cityName: String = "" {
+        didSet {
+            // ✅ Reset state when city name changes
+            if oldValue != cityName && !oldValue.isEmpty {
+                print("🔄 City changed from '\(oldValue)' to '\(cityName)' - resetting state")
+                resetSearchState()
             }
         }
-        @Published var countryName: String = "" {
-            didSet {
-                // ✅ Reset state when country changes
-                if oldValue != countryName && !oldValue.isEmpty {
-                    print("🔄 Country changed from '\(oldValue)' to '\(countryName)' - resetting state")
-                    resetSearchState()
-                }
+    }
+    @Published var countryName: String = "" {
+        didSet {
+            // ✅ Reset state when country changes
+            if oldValue != countryName && !oldValue.isEmpty {
+                print("🔄 Country changed from '\(oldValue)' to '\(countryName)' - resetting state")
+                resetSearchState()
             }
         }
-        @Published var checkinDate: Date = Date()
-        @Published var checkoutDate: Date = {
-            let calendar = Calendar.current
-            return calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-        }()
-        @Published var rooms: Int = 1
-        @Published var adults: Int = 2
-        @Published var children: Int = 0
-        
-        @Published var deeplink: String? = nil
-        @Published var isLoading: Bool = false
-        @Published var errorMessage: String? = nil
-        @Published var hasTimedOut: Bool = false
-        
-        private var searchTimeout: Timer?
-        private let searchTimeoutDuration: TimeInterval = 30.0
-        private var cancellables = Set<AnyCancellable>()
+    }
+    @Published var checkinDate: Date = Date()
+    @Published var checkoutDate: Date = {
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+    }()
+    @Published var rooms: Int = 1
+    @Published var adults: Int = 2
+    @Published var children: Int = 0
+    
+    @Published var deeplink: String? = nil {
+        didSet {
+            print("🔔 HotelSearchViewModel.deeplink changed:")
+            print("   From: '\(oldValue ?? "nil")'")
+            print("   To: '\(deeplink ?? "nil")'")
+            
+            if let newDeeplink = deeplink, !newDeeplink.isEmpty {
+                print("✅ Valid deeplink set - should trigger UI update")
+            } else {
+                print("❌ Deeplink set to nil/empty")
+            }
+        }
+    }
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String? = nil
+    @Published var hasTimedOut: Bool = false
+    
+    private var searchTimeout: Timer?
+    private let searchTimeoutDuration: TimeInterval = 30.0
+    private var cancellables = Set<AnyCancellable>()
     
     
     private func resetSearchState() {
-            deeplink = nil
-            isLoading = false
-            errorMessage = nil
-            hasTimedOut = false
-            
-            // Cancel any ongoing search
-            searchTimeout?.invalidate()
-            searchTimeout = nil
-            
-            print("🔄 Search state reset - ready for new location search")
-        }
-    
-    func searchHotels() {
-        guard !cityCode.isEmpty else {
-            showError("Please select hotel location.")
-            return
-        }
+        deeplink = nil
+        isLoading = false
+        errorMessage = nil
+        hasTimedOut = false
         
-        // Validate dates
-        guard checkinDate < checkoutDate else {
-            showError("Check-out date must be after check-in date.")
-            return
-        }
+        // Cancel any ongoing search
+        searchTimeout?.invalidate()
+        searchTimeout = nil
         
-        startSearch()
+        print("🔄 Search state reset - ready for new location search")
     }
     
-    private func startSearch() {
+    @MainActor
+    func searchHotels() {
+        // Flip loading immediately so UI can react
         isLoading = true
         errorMessage = nil
         deeplink = nil
         hasTimedOut = false
-        
+
+        // Validate quickly; if invalid, turn loading off and exit
+        guard !cityCode.isEmpty else {
+            showError("Please select hotel location.")
+            isLoading = false
+            return
+        }
+        guard !cityName.isEmpty, !countryName.isEmpty else {
+            showError("Missing location information. Please select a valid location.")
+            isLoading = false
+            return
+        }
+        guard checkinDate < checkoutDate else {
+            showError("Check-out date must be after check-in date.")
+            isLoading = false
+            return
+        }
+
+        // Defer actual search to next runloop so the loader can render
+        DispatchQueue.main.async {
+            self.startSearch()
+        }
+    }
+
+    
+    private func startSearch() {
+        // state already set in searchHotels()
         startTimeoutTimer()
         
-        let apiDateFormatter = DateFormatter()
-        apiDateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        let checkinString = apiDateFormatter.string(from: checkinDate)
-        let checkoutString = apiDateFormatter.string(from: checkoutDate)
-        
-        print("🏨 Creating HotelRequest with parameters:")
-        print("   ✅ City Name: '\(cityName)'")        // "Malacca"
-        print("   ✅ Country Name: '\(countryName)'")  // "Malaysia"
-        print("   Check-in: \(checkinString)")
-        print("   Check-out: \(checkoutString)")
+        let checkinString  = Self.apiFormatter.string(from: checkinDate)
+        let checkoutString = Self.apiFormatter.string(from: checkoutDate)
         
         let request = HotelRequest(
             cityName: cityName,
-            countryName: countryName,       // ✅ Move before checkin
+            countryName: countryName,
             checkin: checkinString,
             checkout: checkoutString,
             rooms: rooms,
@@ -99,37 +115,74 @@ class HotelSearchViewModel: ObservableObject {
         )
         
         HotelApi.shared.searchHotel(request: request) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.handleSearchResult(result)
-            }
+            guard let self else { return }
+            self.handleSearchResult(result) // already on main if your API returns on main; otherwise wrap in DispatchQueue.main.async
         }
     }
+
+    // Cached date formatter
+    private static let apiFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        return f
+    }()
+
     
     private func handleSearchResult(_ result: Result<HotelResponse, Error>) {
+        print("📋 HotelSearchViewModel.handleSearchResult() called")
+        
         // Cancel timeout timer since we got a response
         cancelTimeoutTimer()
         
+        print("📊 Setting isLoading to false...")
         isLoading = false
+        print("   isLoading is now: \(isLoading)")
         
         switch result {
         case .success(let response):
+            print("✅ API Success - received response:")
+            print("   deeplink: '\(response.deeplink)'")
+            print("   status: '\(response.status)'")
+            print("   message: '\(response.message)'")
+            
             // Validate the deeplink
-            guard SearchValidationHelper.validateDeeplink(response.deeplink) else {
+            print("🔍 Validating deeplink...")
+            let isValid = SearchValidationHelper.validateDeeplink(response.deeplink)
+            print("   Validation result: \(isValid)")
+            
+            guard isValid else {
                 print("❌ Invalid deeplink received: \(response.deeplink)")
                 showDeeplinkError()
                 return
             }
             
-            self.deeplink = response.deeplink
-            self.errorMessage = nil
+            print("🔗 About to set deeplink property...")
+            print("   Current deeplink value: '\(self.deeplink ?? "nil")'")
             
-            print("✅ Hotel search successful!")
-            print("   Deeplink: \(response.deeplink)")
+            // CRITICAL: Ensure this is on main thread
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else {
+                    print("❌ Self is nil in DispatchQueue.main.async")
+                    return
+                }
+                
+                print("🔗 Setting deeplink on main thread...")
+                self.deeplink = response.deeplink
+                self.errorMessage = nil
+                
+                print("📊 Final ViewModel state after setting deeplink:")
+                print("   deeplink: '\(self.deeplink ?? "nil")'")
+                print("   errorMessage: '\(self.errorMessage ?? "nil")'")
+                print("   isLoading: \(self.isLoading)")
+            }
             
             // Track successful hotel search
             UserManager.shared.trackHotelSearch()
             
         case .failure(let error):
+            print("❌ API Failure: \(error.localizedDescription)")
             handleSearchError(error)
         }
     }
@@ -150,7 +203,7 @@ class HotelSearchViewModel: ObservableObject {
             // Check if it's a hostname error (server configuration issue)
             let errorMessage = error.localizedDescription.lowercased()
             if errorMessage.contains("hostname could not be found") ||
-               errorMessage.contains("could not connect to the server") {
+                errorMessage.contains("could not connect to the server") {
                 showServerError()
             } else {
                 showGenericError(error)
@@ -171,6 +224,31 @@ class HotelSearchViewModel: ObservableObject {
         case .clientError, .serverError, .apiError:
             showGenericError(error)
         }
+    }
+    
+    // MARK: - Timer Management
+    
+    private func startTimeoutTimer() {
+        print("⏰ Starting timeout timer (\(searchTimeoutDuration) seconds)")
+        searchTimeout?.invalidate()
+        searchTimeout = Timer.scheduledTimer(withTimeInterval: searchTimeoutDuration, repeats: false) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.handleTimeout()
+            }
+        }
+    }
+    
+    private func cancelTimeoutTimer() {
+        print("⏰ Canceling timeout timer")
+        searchTimeout?.invalidate()
+        searchTimeout = nil
+    }
+    
+    private func handleTimeout() {
+        print("⏰ Hotel search timeout occurred")
+        hasTimedOut = true
+        isLoading = false
+        showTimeoutError()
     }
     
     // MARK: - Error Display Methods
@@ -210,98 +288,29 @@ class HotelSearchViewModel: ObservableObject {
         WarningManager.shared.showDeeplinkError(for: .hotel)
     }
     
-    // MARK: - Timeout Management
+    // MARK: - Debug Methods
     
-    private func startTimeoutTimer() {
-        cancelTimeoutTimer() // Cancel any existing timer
-        
-        searchTimeout = Timer.scheduledTimer(withTimeInterval: searchTimeoutDuration, repeats: false) { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.handleTimeout()
-            }
+    func testSetDeeplink() {
+        print("🧪 Testing deeplink assignment...")
+        DispatchQueue.main.async { [weak self] in
+            self?.deeplink = "https://www.google.com"
+            print("✅ Test deeplink set")
         }
     }
     
-    private func cancelTimeoutTimer() {
-        searchTimeout?.invalidate()
-        searchTimeout = nil
-    }
-    
-    private func handleTimeout() {
-        print("⏰ Hotel search timed out after \(searchTimeoutDuration) seconds")
-        
-        hasTimedOut = true
-        isLoading = false
-        showTimeoutError()
-    }
-    
-    // MARK: - Helper Methods (unchanged)
-    
-    func getSearchParameters() -> HotelSearchParameters {
-        return HotelSearchParameters(
-            cityCode: cityCode,
-            cityName: cityName,
-            checkinDate: checkinDate,
-            checkoutDate: checkoutDate,
-            rooms: rooms,
-            adults: adults,
-            children: children
-        )
-    }
-    
-    func validateSearchParameters() -> Bool {
-        guard !cityCode.isEmpty else {
-            showError("Please select a hotel location")
-            return false
-        }
-        
-        guard checkinDate < checkoutDate else {
-            showError("Check-out date must be after check-in date")
-            return false
-        }
-        
-        guard rooms > 0 else {
-            showError("Please select at least 1 room")
-            return false
-        }
-        
-        guard adults > 0 else {
-            showError("Please select at least 1 adult")
-            return false
-        }
-        
-        return true
-    }
-    
-    func getNumberOfNights() -> Int {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.day], from: checkinDate, to: checkoutDate)
-        return max(1, components.day ?? 1)
-    }
-    
-    func getFormattedDateRange() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd MMM"
-        return "\(formatter.string(from: checkinDate)) - \(formatter.string(from: checkoutDate))"
-    }
-    
-    func getFormattedGuestInfo() -> String {
-        let totalGuests = adults + children
-        let guestsText = "\(totalGuests) Guest\(totalGuests > 1 ? "s" : "")"
-        let roomsText = "\(rooms) Room\(rooms > 1 ? "s" : "")"
-        return "\(guestsText), \(roomsText)"
-    }
-    
-    
-    private func extractCountryNameFromCityName(_ cityName: String) -> String {
-        // If cityName is just "Dubai", we need to get country from the full display name
-        // This should be handled by passing it from HotelView instead
-        return "United Arab Emirates" // Placeholder - should come from HotelView
-    }
-    
-    // MARK: - Cleanup
-    
-    deinit {
-        cancelTimeoutTimer()
+    func printDebugInfo() {
+        print("🔍 HotelSearchViewModel Debug Info:")
+        print("   cityCode: '\(cityCode)'")
+        print("   cityName: '\(cityName)'")
+        print("   countryName: '\(countryName)'")
+        print("   checkinDate: \(checkinDate)")
+        print("   checkoutDate: \(checkoutDate)")
+        print("   rooms: \(rooms)")
+        print("   adults: \(adults)")
+        print("   children: \(children)")
+        print("   deeplink: '\(deeplink ?? "nil")'")
+        print("   isLoading: \(isLoading)")
+        print("   errorMessage: '\(errorMessage ?? "nil")'")
+        print("   hasTimedOut: \(hasTimedOut)")
     }
 }

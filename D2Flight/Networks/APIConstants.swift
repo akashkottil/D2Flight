@@ -26,13 +26,16 @@ struct APIConstants {
     }
     
     // MARK: - Default Parameters
+    // MARK: - Default Parameters
     struct DefaultParams {
         static let fallbackLanguage = "en-GB"  // Fallback if LocalizationManager fails
-        static let appCode = "D1WF"
+        static let appCode = "D1WF"  // For flight API
+        static let rentalAppCode = "D2WC"  // For rental API
         static let fallbackUserId = "123" // Fallback if UserManager fails
         static let hotelProviderId = "0"
         static let rentalProviderId = "0"
         static let testAppCode = "D1WF"
+        static let rentalTestAppCode = "D2WC"  // Rental specific app code
     }
     
     // MARK: - Headers

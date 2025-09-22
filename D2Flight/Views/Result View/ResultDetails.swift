@@ -6,19 +6,22 @@ struct ResultDetails: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var showAllDeals = false
-    @State private var showWebSheet = false
-    @State private var selectedDeeplink: URL? = nil
+
+    // NEW: item-driven full-screen presentation (prevents first-tap race)
+    struct WebSheetItem: Identifiable, Equatable {
+        let id = UUID()
+        let url: URL
+    }
+    @State private var webItem: WebSheetItem?
 
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button(action: {
-                    dismiss()
-                }) {
+                Button(action: { dismiss() }) {
                     Image("DefaultLeftArrow")
                         .padding(.trailing, 10)
-                        .frame(width: 24,height: 24)
+                        .frame(width: 24, height: 24)
                 }
 
                 Spacer()
@@ -27,7 +30,7 @@ struct ResultDetails: View {
                     // Share functionality
                 }) {
                     Image("ShareIcon")
-                        .frame(width: 24,height: 24)
+                        .frame(width: 24, height: 24)
                         .font(.system(size: 18))
                         .foregroundColor(.black)
                 }
@@ -108,9 +111,9 @@ struct ResultDetails: View {
                                     isFirst: index == 0,
                                     isLast: index == providersToShow.count - 1
                                 ) { url in
-                                    selectedDeeplink = url
-                                    showWebSheet = true
-                                    print("🔗 Presenting sheet for \(splitProvider.name): \(url.absoluteString)")
+                                    print("🔗 ResultDetails: Opening deeplink for \(splitProvider.name)")
+                                    // Data-driven presentation: setting item triggers the sheet
+                                    webItem = WebSheetItem(url: url)
                                 }
                             }
                         }
@@ -184,16 +187,13 @@ struct ResultDetails: View {
             print("📋 Displaying flight details for: \(flight.id)")
             printFlightProviders()
         }
-        // PRESENT THE BOTTOM SHEET
-        .sheet(isPresented: $showWebSheet, onDismiss: { selectedDeeplink = nil }) {
-            if let url = selectedDeeplink {
-                SafariSheet(url: url)
-                    .presentationDetents([.fraction(1.0)])
-                    .presentationDragIndicator(.visible)
-                    .ignoresSafeArea()
-            } else {
-                EmptyView()
-            }
+        // Updated presentation: sheet shown only when webItem != nil
+        .fullScreenCover(item: $webItem, onDismiss: {
+            webItem = nil
+        }) { item in
+            // Require two redirects before hiding loader (lacsade → kayak → airasia)
+            FlightSearchWebView(url: item.url, requiredRedirects: 2)
+                .ignoresSafeArea()
         }
     }
 
@@ -326,11 +326,39 @@ struct BookingPlatformRow: View {
                     verticalPadding: 12,
                     cornerRadius: 6
                 ) {
-                    if let url = URL(string: platform.deeplink) {
-                        onTapViewDeal(url)
-                    } else {
-                        print("❌ Invalid booking URL for \(platform.name)")
+                    print("🔗 RAW DEEPLINK DEBUG:")
+                    print("   Provider: \(platform.name)")
+                    print("   Raw deeplink: '\(platform.deeplink)'")
+                    print("   Length: \(platform.deeplink.count)")
+                    print("   Is empty: \(platform.deeplink.isEmpty)")
+
+                    // Check for empty/whitespace-only deeplinks
+                    guard !platform.deeplink.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        print("❌ CRASH CAUSE: Empty deeplink for provider \(platform.name)")
+                        WarningManager.shared.showDeeplinkError(for: .flight,
+                                                                error: URLError(.badURL))
+                        return
                     }
+
+                    // Sanitize the deeplink
+                    let cleanDeeplink = FlightDeeplinkSanitizer.clean(platform.deeplink)
+                    print("   Cleaned deeplink: '\(cleanDeeplink)'")
+
+                    // Validate URL creation and scheme
+                    guard let url = URL(string: cleanDeeplink),
+                          let scheme = url.scheme?.lowercased(),
+                          scheme == "http" || scheme == "https" else {
+                        print("❌ CRASH CAUSE: Invalid URL scheme for provider \(platform.name)")
+                        print("   Attempted URL: '\(cleanDeeplink)'")
+                        print("   Scheme: \(URL(string: cleanDeeplink)?.scheme ?? "nil")")
+
+                        WarningManager.shared.showDeeplinkError(for: .flight,
+                                                                error: URLError(.unsupportedURL))
+                        return
+                    }
+
+                    print("✅ Valid URL created: \(url.absoluteString)")
+                    onTapViewDeal(url)  // bubble up to parent (item-driven sheet)
                 }
             }
             .padding(.vertical, 12)
@@ -349,7 +377,7 @@ struct BookingPlatform {
     let ratingCount: Int?
 }
 
-// MARK: - Safari wrapper
+// (Optional) Old Safari sheet kept here if needed elsewhere
 struct SafariSheet: UIViewControllerRepresentable {
     let url: URL
 

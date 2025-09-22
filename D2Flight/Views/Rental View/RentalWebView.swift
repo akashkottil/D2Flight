@@ -1,13 +1,10 @@
 import SwiftUI
 import SafariServices
 
-// MARK: - Enhanced Hotel Search Web View with Better Error Handling
-struct HotelSearchWebView: View {
-    @ObservedObject var hotelSearchVM: HotelSearchViewModel
+// MARK: - Rental WebView with Enhanced Error Handling
+struct RentalWebView: View {
+    @ObservedObject var rentalSearchVM: RentalSearchViewModel
     
-    // ✅ NEW: Track location changes
-        @State private var lastSearchedCity: String = ""
-        @State private var lastSearchedCountry: String = ""
     
     @Environment(\.dismiss) private var dismiss
     @State private var showingAlert = false
@@ -17,54 +14,48 @@ struct HotelSearchWebView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                if let deeplink = hotelSearchVM.deeplink {
-                    // Show Safari when URL is ready
-                    SafariWebViewWrapper(
+                if let deeplink = rentalSearchVM.deeplink, !rentalSearchVM.isLoading {
+                    // 🔥 CRITICAL FIX: Only show Safari when we have deeplink AND not loading
+                    RentalSafariWebViewWrapper(
                         urlString: deeplink,
                         onLoadFailed: handleWebViewError
                     )
                     .transition(.opacity)
-                } else if hotelSearchVM.isLoading {
-                    // Show loading state with timeout indicator
-                    AnimatedHotelLoader(
-                        autoHide: false, // <- keep visible while VM is loading
-                        isVisible: Binding(
-                            get: { hotelSearchVM.isLoading },
-                            set: { newValue in
-                                // when loader asks to hide (e.g., user navigates), stop loading
-                                if !newValue { hotelSearchVM.isLoading = false }
-                            }
-                        )
-                    )
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-                } else if let error = hotelSearchVM.errorMessage {
+                } else if rentalSearchVM.isLoading {
+                    // 🔥 CRITICAL FIX: Always prioritize showing the loader when isLoading = true
+                    AnimatedRentalLoader(hotelAssetName: "RentalIcon", isVisible: $rentalSearchVM.isLoading)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                } else if let error = rentalSearchVM.errorMessage {
                     // Show error state with retry option
-                    ErrorStateView(
-                        title: "Hotel Search Failed",
+                    RentalErrorStateView(
+                        title: "Rental Search Failed",
                         message: error,
                         primaryButtonTitle: "Try Again",
                         secondaryButtonTitle: "Cancel",
                         onPrimaryAction: {
-                            hotelSearchVM.searchHotels()
+                            // 🔥 CRITICAL FIX: Set loading immediately on retry
+                            rentalSearchVM.isLoading = true
+                            rentalSearchVM.errorMessage = nil
+                            rentalSearchVM.searchRentals()
                         },
                         onSecondaryAction: {
                             dismiss()
                         }
                     )
                 } else {
-                    // Initial state - should start search immediately
-                    InitialLoadingView()
-                        .onAppear {
-                            // Auto-start search if not already loading and no deeplink
-                            if !hotelSearchVM.isLoading && hotelSearchVM.deeplink == nil {
-                                hotelSearchVM.searchHotels()
-                            }
-                        }
+                    // 🔥 CRITICAL FIX: Empty state - should not auto-start search
+                    VStack(spacing: 20) {
+                        Text("Ready to search rentals")
+                            .font(.title3)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(.systemBackground))
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
-            
         }
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK") {
@@ -77,38 +68,18 @@ struct HotelSearchWebView: View {
     
     private func handleWebViewError(_ error: Error) {
         alertTitle = "Unable to Load"
-        alertMessage = "The hotel search page could not be loaded. Please try again."
+        alertMessage = "The rental search page could not be loaded. Please try again."
         showingAlert = true
         
-        // Also show the universal warning
-        WarningManager.shared.showDeeplinkError(for: .hotel, error: error)
+        // Show a warning using a shared manager
+        WarningManager.shared.showDeeplinkError(for: .rental, error: error)
     }
     
-    private func startSearchIfNeeded() {
-            let currentCity = hotelSearchVM.cityName
-            let currentCountry = hotelSearchVM.countryName
-            
-            // Only search if location actually changed or it's the first search
-            if currentCity != lastSearchedCity || currentCountry != lastSearchedCountry {
-                print("🔍 Location changed - starting new search:")
-                print("   Previous: \(lastSearchedCity), \(lastSearchedCountry)")
-                print("   Current: \(currentCity), \(currentCountry)")
-                
-                lastSearchedCity = currentCity
-                lastSearchedCountry = currentCountry
-                
-                // Start new search
-                hotelSearchVM.searchHotels()
-            } else {
-                print("📍 Same location - skipping search")
-            }
-        }
-    }
+}
 
 
-
-// MARK: - Enhanced Safari Web View Wrapper with Error Handling
-struct SafariWebViewWrapper: UIViewControllerRepresentable {
+// MARK: - Safari WebView Wrapper for Rental Search
+struct RentalSafariWebViewWrapper: UIViewControllerRepresentable {
     let urlString: String
     let onLoadFailed: ((Error) -> Void)?
     
@@ -143,9 +114,9 @@ struct SafariWebViewWrapper: UIViewControllerRepresentable {
     }
     
     class Coordinator: NSObject, SFSafariViewControllerDelegate {
-        let parent: SafariWebViewWrapper
+        let parent: RentalSafariWebViewWrapper
         
-        init(_ parent: SafariWebViewWrapper) {
+        init(_ parent: RentalSafariWebViewWrapper) {
             self.parent = parent
         }
         
@@ -158,8 +129,9 @@ struct SafariWebViewWrapper: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Loading State View with Timeout Handling
-struct LoadingStateView: View {
+
+// MARK: - Loading State View
+struct RentalLoadingStateView: View {
     let title: String
     let subtitle: String
     let hasTimedOut: Bool
@@ -231,8 +203,9 @@ struct LoadingStateView: View {
     }
 }
 
+
 // MARK: - Error State View
-struct ErrorStateView: View {
+struct RentalErrorStateView: View {
     let title: String
     let message: String
     let primaryButtonTitle: String
@@ -284,8 +257,9 @@ struct ErrorStateView: View {
     }
 }
 
+
 // MARK: - Initial Loading View
-struct InitialLoadingView: View {
+struct RentalInitialLoadingView: View {
     var body: some View {
         VStack(spacing: 20) {
             ProgressView()

@@ -1,17 +1,45 @@
 import SwiftUI
 import SafariServices
 
+// MARK: - Small height reader helper (no visual impact)
+private struct HeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+private extension View {
+    func readHeight(_ onChange: @escaping (CGFloat) -> Void) -> some View {
+        background(
+            GeometryReader { g in
+                Color.clear.preference(key: HeightPreferenceKey.self, value: g.size.height)
+            }
+        )
+        .onPreferenceChange(HeightPreferenceKey.self, perform: onChange)
+    }
+}
+
 // MARK: - Updated RentalView with Localized Date Display
 struct RentalView: View {
     @Namespace private var animationNamespace
-    
+        
+    // Collapsing header state (like FlightView)
+    @State private var scrollView: UIScrollView? = nil
+    @State private var offsetY: CGFloat = 0
+
+    // Legacy fallbacks (kept, used only until real measurements arrive)
+    private let fallbackExpandedSame: CGFloat = 380
+    private let fallbackCollapsedSame: CGFloat = 280
+    private let fallbackExpandedDiff: CGFloat = 440   // a bit taller for different drop-off
+    private let fallbackCollapsedDiff: CGFloat = 300  // a bit taller for different drop-off
+
+    // Namespace for the primary button morph
+    @Namespace private var searchButtonNS
+
     @State private var isSameDropOff = true
     @State private var pickUpLocation = ""
     @State private var dropOffLocation = ""
     @State private var pickUpIATACode = ""
     @State private var dropOffIATACode = ""
     
-    // ✅ UPDATED: Remove default system formatter, let updateDateTimeLabels handle it
     @State private var checkInDateTime: String = ""
     @State private var checkOutDateTime: String = ""
     
@@ -33,147 +61,101 @@ struct RentalView: View {
     @StateObject private var recentLocationsManager = RecentLocationsManager.shared
     @State private var hasPrefilled = false
     
-    // ✅ UPDATED: Remove individual notification states, use WarningManager
     @StateObject private var warningManager = WarningManager.shared
     @State private var lastNetworkStatus = true
     @State private var swapButtonRotationAngle: Double = 0
-    
+
+    // MARK: - Measured heights (expanded/collapsed × same/different)
+    @State private var expandedHeightSame: CGFloat = 0
+    @State private var expandedHeightDiff: CGFloat = 0
+    @State private var collapsedHeightSame: CGFloat = 0
+    @State private var collapsedHeightDiff: CGFloat = 0
+
+    // MARK: - Smooth header state
+    @State private var searchHeaderIsCollapsed: Bool = false
+
+    // Computed heights for current tab (fall back to your constants until measured)
+    private var expandedHeaderHeightForTab: CGFloat {
+        isSameDropOff
+        ? (expandedHeightSame > 0 ? expandedHeightSame : fallbackExpandedSame)
+        : (expandedHeightDiff > 0 ? expandedHeightDiff : fallbackExpandedDiff)
+    }
+    private var collapsedHeaderHeightForTab: CGFloat {
+        isSameDropOff
+        ? (collapsedHeightSame > 0 ? collapsedHeightSame : fallbackCollapsedSame)
+        : (collapsedHeightDiff > 0 ? collapsedHeightDiff : fallbackCollapsedDiff)
+    }
+
+    // Collapse progress + interpolated header height, using the RIGHT pair for the selected tab
+    private var collapseRange: CGFloat { max(expandedHeaderHeightForTab - collapsedHeaderHeightForTab, 1) }
+    /// 0 → expanded, 1 → collapsed (driven by scroll)
+    private var collapseProgress: CGFloat {
+        min(max(offsetY / collapseRange, 0), 1)
+    }
+    /// Smooth header height shrink
+    private var headerHeight: CGFloat {
+        let exp = expandedHeaderHeightForTab
+        let col = collapsedHeaderHeightForTab
+        return col * collapseProgress + exp * (1 - collapseProgress)
+    }
+    // Hysteresis to avoid jitter (based on current tab’s range)
+    private var collapseThreshold: CGFloat { collapseRange * 0.45 }
+    private var expandThreshold: CGFloat { collapseRange * 0.30 }
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 6) {
-                        // Header
-                        HStack {
-                            Image("HomeLogo")
-                                .frame(width: 32, height: 32)
-                            Text("Last Minute Flights".localized)
-                                .font(CustomFont.font(.large, weight: .bold))
-                                .foregroundColor(Color.white)
+            ZStack(alignment: .top) {
+                // TrackableScrollView drives collapseProgress
+                TrackableScrollView(offsetY: $offsetY, scrollView: $scrollView) {
+                    VStack(spacing: 0) {
+                        // Push content beneath sticky header
+                        Color.clear.frame(height: headerHeight)
+
+                        // Your existing content below the card
+                        PopularLocationsGrid(
+                            searchType: .rental,
+                            selectedDates: selectedDates,
+                            adults: 1,
+                            children: 0,
+                            infants: 0,
+                            selectedClass: .economy,
+                            rooms: 1,
+                            onLocationTapped: handlePopularLocationTapped
+                        )
+                        AutoSlidingCardsView()
+                        BottomBar()
+                    }
+                }
+                .onChange(of: offsetY) { y in
+                    if !searchHeaderIsCollapsed, y > collapseThreshold {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                            searchHeaderIsCollapsed = true
                         }
-                        .padding(.vertical, 10)
-                        
-                        // Enhanced Tabs with coordinated animations
-                        HStack {
-                            Button(action: {
-                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                    let wasChanged = isSameDropOff != true
-                                    isSameDropOff = true
-                                    
-                                    if wasChanged {
-                                        selectedDates = []
-                                        selectedTimes = []
-                                        dropOffLocation = ""
-                                        dropOffIATACode = ""
-                                        print("🔄 Switched to SAME drop-off - cleared dates/times for smart defaults")
-                                    }
-                                }
-                            }) {
-                                Text("same.drop-off".localized)
-                                    .foregroundColor(isSameDropOff ? .white : .gray)
-                                    .font(CustomFont.font(.regular))
-                                    .fontWeight(.semibold)
-                                    .frame(width: 120, height: 31)
-                                    .background(
-                                        Group {
-                                            if isSameDropOff {
-                                                RoundedRectangle(cornerRadius: 100)
-                                                            .fill(Color("Violet"))
-                                                    .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
-                                            } else {
-                                                RoundedRectangle(cornerRadius: 100)
-                                                            .fill(Color("Violet").opacity(0.15))
-                                            }
-                                        }
-                                    )
-                                    .cornerRadius(100)
-                            }
-                            
-                            Button(action: {
-                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                    let wasChanged = isSameDropOff != false
-                                    isSameDropOff = false
-                                    
-                                    if wasChanged {
-                                        selectedDates = []
-                                        selectedTimes = []
-                                        print("🔄 Switched to DIFFERENT drop-off - cleared dates/times for smart defaults")
-                                    }
-                                }
-                            }) {
-                                Text("different.drop-off".localized)
-                                    .foregroundColor(!isSameDropOff ? .white : .gray)
-                                    .font(CustomFont.font(.small))
-                                    .fontWeight(.semibold)
-                                    .frame(width: 120, height: 31)
-                                    .background(
-                                        Group {
-                                            if !isSameDropOff {
-                                                RoundedRectangle(cornerRadius: 100)
-                                                            .fill(Color("Violet"))
-                                                    .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
-                                            } else {
-                                                RoundedRectangle(cornerRadius: 100)
-                                                            .fill(Color("Violet").opacity(0.15))
-                                            }
-                                        }
-                                    )
-                                    .cornerRadius(100)
-                            }
-                        }
-                        .padding(.vertical, 10)
-                        
-                        
-                        // Location Input Section
-                        locationSection
-                        
-                        
-                            dateTimeView(
-                                icon: "CalenderIcon",
-                                title: isSameDropOff ? "pick-up.same.drop-off".localized : "pick-up.drop-off".localized
-                            )
-                            .id("datetime_selector")
-                        
-                        
-                        // Search Rentals Button with validation
-                        PrimaryButton(
-                            title: "search.rentals".localized,
-                            font: CustomFont.font(.medium),
-                            fontWeight: .bold,
-                            textColor: .white,
-                            verticalPadding: 20,
-                            cornerRadius: 16
-                        ) {
-                            handleSearchRentals()
+                    } else if searchHeaderIsCollapsed, y < expandThreshold {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+                            searchHeaderIsCollapsed = false
                         }
                     }
-                    .padding()
-                    .padding(.top, 50)
-                    .padding(.bottom, 10)
-                    .background(GradientColor.Primary)
-                    .cornerRadius(20)
-                    
-                    PopularLocationsGrid(
-                        searchType: .rental,
-                        selectedDates: selectedDates,
-                        adults: 1,
-                        children: 0,
-                        infants: 0,
-                        selectedClass: .economy,
-                        rooms: 1,
-                        onLocationTapped: handlePopularLocationTapped
-                    )
-                    AutoSlidingCardsView()
-                    BottomBar()
                 }
                 .scrollIndicators(.hidden)
-                
-                // ✅ UPDATED: Universal Warning Overlay
+                .ignoresSafeArea(.all, edges: .bottom)
+
+                // Sticky header (unchanged design)
+                headerSection
+                    .frame(height: headerHeight, alignment: .top)
+                    .background(GradientColor.Primary)
+                    .mask(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .clipped()
+                    .animation(.easeInOut(duration: 0.2), value: collapseProgress)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.85), value: isSameDropOff)
+
+                // Warning overlay stays on top
                 WarningOverlay()
             }
             .ignoresSafeArea()
         }
-        // ✅ UPDATED: Use NetworkMonitor extension for centralized network handling
+
+        // Network handling
         .onReceive(networkMonitor.$isConnected) { isConnected in
             networkMonitor.handleNetworkChange(
                 isConnected: isConnected,
@@ -184,7 +166,6 @@ struct RentalView: View {
         .onReceive(rentalSearchVM.$deeplink) { deeplink in
             if let deeplink = deeplink {
                 currentDeeplink = deeplink
-                showWebView = true
                 print("🔗 RentalView received deeplink: \(deeplink)")
             }
         }
@@ -210,7 +191,7 @@ struct RentalView: View {
                 destinationLocation: $dropOffLocation,
                 isFromRental: true,
                 isSameDropOff: isSameDropOff,
-                serviceType: .rental 
+                serviceType: .rental
             ) { selectedLocation, isOrigin, iataCode in
                 if isOrigin {
                     pickUpLocation = selectedLocation
@@ -223,21 +204,14 @@ struct RentalView: View {
                 }
             }
         }
-        .sheet(isPresented: $showWebView) {
-            if let deeplink = currentDeeplink {
-                RentalWebView(url: deeplink)
-            }
+        .fullScreenCover(isPresented: $showWebView) {
+            RentalWebView(rentalSearchVM: rentalSearchVM)
         }
-        .onAppear {
-            if pickUpLocation.isEmpty {
-                hasPrefilled = false
-            }
-            prefillRecentLocationsIfNeeded()
-            initializeDateTimes()
-        }
+        // Keep measurements warm (no design change)
+        .background(offscreenMeasuringCopies)
     }
     
-    // MARK: - Location Section (same as before but with updated validation)
+    // MARK: - Location Section (kept as-is)
     private var locationSection: some View {
         ZStack {
             Button(action: {
@@ -327,22 +301,30 @@ struct RentalView: View {
         }
     }
     
-    // ✅ UPDATED: Search Handler with Universal Validation
     private func handleSearchRentals() {
         print("🚗 Search Rentals button tapped!")
         
-        // ✅ Use SearchValidationHelper for validation
+        // Validation
         if let warningType = SearchValidationHelper.validateRentalSearch(
             pickUpIATACode: pickUpIATACode,
             dropOffIATACode: dropOffIATACode,
             pickUpLocation: pickUpLocation,
             dropOffLocation: dropOffLocation,
             isSameDropOff: isSameDropOff,
+            pickUpDate: selectedDates.first,
+            pickUpTime: selectedTimes.first,
+            dropOffDate: selectedDates.count > 1 ? selectedDates[1] : selectedDates.first,
+            dropOffTime: selectedTimes.count > 1 ? selectedTimes[1] : nil,
             isConnected: networkMonitor.isConnected
         ) {
             warningManager.showWarning(type: warningType)
             return
         }
+        
+        // Set loading state IMMEDIATELY to trigger AnimatedRentalLoader
+        rentalSearchVM.isLoading = true
+        rentalSearchVM.deeplink = nil
+        rentalSearchVM.errorMessage = nil
         
         // Save search pair
         saveCurrentSearchPair()
@@ -366,11 +348,10 @@ struct RentalView: View {
         }
         
         print("🎯 Rental search parameters validated and starting search")
-        
+        showWebView = true
         rentalSearchVM.searchRentals()
     }
-    
-    // ✅ UPDATED: Popular Location Handler with Universal Validation
+
     private func handlePopularLocationTapped(_ location: MasonryImage) {
         print("🚗 Popular rental location tapped: \(location.title) (\(location.iataCode))")
         
@@ -378,18 +359,26 @@ struct RentalView: View {
         pickUpLocation = location.title
         pickUpIATACode = location.iataCode
         
-        // ✅ Use SearchValidationHelper for validation
         if let warningType = SearchValidationHelper.validateRentalSearch(
             pickUpIATACode: location.iataCode,
             dropOffIATACode: isSameDropOff ? "" : dropOffIATACode,
             pickUpLocation: location.title,
             dropOffLocation: dropOffLocation,
             isSameDropOff: isSameDropOff,
+            pickUpDate: selectedDates.first ?? Date(),
+            pickUpTime: selectedTimes.first,
+            dropOffDate: selectedDates.count > 1 ? selectedDates[1] : (selectedDates.first ?? Date()),
+            dropOffTime: selectedTimes.count > 1 ? selectedTimes[1] : nil,
             isConnected: networkMonitor.isConnected
         ) {
             warningManager.showWarning(type: warningType)
             return
         }
+        
+        // Loader
+        rentalSearchVM.isLoading = true
+        rentalSearchVM.deeplink = nil
+        rentalSearchVM.errorMessage = nil
         
         // Save search for recent locations
         savePopularRentalSearch(location: location)
@@ -399,7 +388,7 @@ struct RentalView: View {
         rentalSearchVM.dropOffIATACode = isSameDropOff ? "" : dropOffIATACode
         rentalSearchVM.isSameDropOff = isSameDropOff
         
-        // Set dates and times
+        // Dates & times defaults if missing
         if selectedDates.count > 0 {
             rentalSearchVM.pickUpDate = selectedDates[0]
         } else {
@@ -427,12 +416,13 @@ struct RentalView: View {
         }
         
         print("🎯 Popular rental search validated and starting")
+        print("🔥 Loading state set to: \(rentalSearchVM.isLoading)")
         
-        // Start the rental search
+        showWebView = true
         rentalSearchVM.searchRentals()
     }
     
-    // ✅ UPDATED: Date Time View with localized formatting
+    // MARK: - Date Time View with localized formatting
     private func dateTimeView(icon: String, title: String) -> some View {
         let displayText: String
         
@@ -440,8 +430,8 @@ struct RentalView: View {
             displayText = "tap.to.select".localized
         } else {
             let actualPickUp = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
-            let actualDropOff = selectedDates.count > 1 && selectedTimes.count > 1 ?
-            combineDateAndTime(date: selectedDates[1], time: selectedTimes[1]) : actualPickUp
+            let actualDropOff = selectedDates.count > 1 && selectedTimes.count > 1
+            ? combineDateAndTime(date: selectedDates[1], time: selectedTimes[1]) : actualPickUp
             
             let isSameDay = Calendar.current.isDate(actualPickUp, inSameDayAs: actualDropOff)
             
@@ -474,24 +464,15 @@ struct RentalView: View {
         }
     }
     
-    // ✅ NEW: Format date with localized weekday and month
+    // Format date with localized weekday and month
     private func formatLocalizedDateTime(_ date: Date) -> String {
         let calendar = Calendar.current
-        
-        // Get weekday index (0 = Sunday, 1 = Monday, etc.)
         let weekdayIndex = calendar.component(.weekday, from: date) - 1
         let localizedWeekday = CalendarLocalization.getLocalizedWeekdayName(for: weekdayIndex)
-        
-        // Get day number
         let dayNumber = calendar.component(.day, from: date)
-        
-        // Get month using custom localization
         let localizedMonth = CalendarLocalization.getLocalizedMonthName(for: date, isShort: true)
-        
-        // Get time
         let hour = calendar.component(.hour, from: date)
         let minute = calendar.component(.minute, from: date)
-        
         return "\(localizedWeekday) \(dayNumber) \(localizedMonth), \(String(format: "%02d:%02d", hour, minute))"
     }
     
@@ -499,27 +480,22 @@ struct RentalView: View {
         if !selectedDates.isEmpty && !selectedTimes.isEmpty {
             updateDateTimeLabels()
         } else {
-            // Initialize with default values
             initializeDefaultDateTimes()
         }
-        
         print("📅 RentalView initializeDateTimes completed. Mode: \(isSameDropOff ? "Same" : "Different") drop-off")
     }
     
-    // ✅ NEW: Initialize default date/times with localized formatting
     private func initializeDefaultDateTimes() {
         let now = Date()
         let calendar = Calendar.current
         
         if isSameDropOff {
-            // Same location: today with 2-hour difference
             let pickupTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
             let dropoffTime = calendar.date(byAdding: .hour, value: 2, to: pickupTime) ?? pickupTime
             
             checkInDateTime = formatLocalizedDateTime(pickupTime)
             checkOutDateTime = formatLocalizedDateTime(dropoffTime)
         } else {
-            // Different location: 2 days apart
             let pickupDate = now
             let dropoffDate = calendar.date(byAdding: .day, value: 2, to: now) ?? now
             
@@ -532,13 +508,7 @@ struct RentalView: View {
     }
     
     private func calculateDefaultCheckoutDateTime() -> String {
-        let baseCheckinDate: Date
-        if selectedDates.count > 0 {
-            baseCheckinDate = selectedDates[0]
-        } else {
-            baseCheckinDate = Date()
-        }
-        
+        let baseCheckinDate: Date = selectedDates.first ?? Date()
         let checkoutDate = Calendar.current.date(byAdding: .day, value: 1, to: baseCheckinDate) ?? baseCheckinDate
         let defaultTime = Calendar.current.date(bySettingHour: 11, minute: 0, second: 0, of: checkoutDate) ?? checkoutDate
         return formatLocalizedDateTime(defaultTime)
@@ -574,21 +544,15 @@ struct RentalView: View {
     }
     
     private func prefillRecentLocationsIfNeeded() {
-        guard !hasPrefilled, pickUpLocation.isEmpty else {
-            return
-        }
-        
+        guard !hasPrefilled, pickUpLocation.isEmpty else { return }
         let recentPairs = recentLocationsManager.getRecentSearchPairs()
-        
         if let lastPair = recentPairs.first {
             pickUpLocation = lastPair.origin.displayName
             pickUpIATACode = lastPair.origin.iataCode
-            
             if !isSameDropOff && lastPair.origin.iataCode != lastPair.destination.iataCode {
                 dropOffLocation = lastPair.destination.displayName
                 dropOffIATACode = lastPair.destination.iataCode
             }
-            
             hasPrefilled = true
             print("✅ RentalView: Auto-prefilled from recent searches")
         }
@@ -673,23 +637,211 @@ struct RentalView: View {
             print("💾 Saved popular rental search: \(location.title) → \(dropOffLocation.isEmpty ? location.title : dropOffLocation)")
         }
     }
+
+    // MARK: - Header Section (sticky)
+    private var headerSection: some View {
+        VStack(alignment: .leading) {
+            // Header
+            HStack {
+                Image("HomeLogo")
+                    .frame(width: 32, height: 32)
+                Text("Last Minute Rentals".localized) // optional: update title
+                    .font(CustomFont.font(.large, weight: .bold))
+                    .foregroundColor(Color.white)
+            }
+            .padding(.vertical, 10)
+
+            // Tabs (same as your existing)
+            HStack {
+                Button(action: {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                        let wasChanged = isSameDropOff != true
+                        isSameDropOff = true
+                        if wasChanged {
+                            selectedDates = []; selectedTimes = []
+                            dropOffLocation = ""; dropOffIATACode = ""
+                            // When switching tabs, gently keep header in view
+                            scrollView?.setContentOffset(.zero, animated: true)
+                        }
+                    }
+                }) {
+                    Text("same.drop-off".localized)
+                        .foregroundColor(isSameDropOff ? .white : .gray)
+                        .font(CustomFont.font(.regular))
+                        .fontWeight(.semibold)
+                        .frame(width: 120, height: 31)
+                        .background(
+                            Group {
+                                if isSameDropOff {
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .fill(Color("Violet"))
+                                        .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
+                                } else {
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .fill(Color("Violet").opacity(0.15))
+                                }
+                            }
+                        )
+                        .cornerRadius(100)
+                }
+
+                Button(action: {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                        let wasChanged = isSameDropOff != false
+                        isSameDropOff = false
+                        if wasChanged {
+                            selectedDates = []; selectedTimes = []
+                            scrollView?.setContentOffset(.zero, animated: true)
+                        }
+                    }
+                }) {
+                    Text("different.drop-off".localized)
+                        .foregroundColor(!isSameDropOff ? .white : .gray)
+                        .font(CustomFont.font(.small))
+                        .fontWeight(.semibold)
+                        .frame(width: 120, height: 31)
+                        .background(
+                            Group {
+                                if !isSameDropOff {
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .fill(Color("Violet"))
+                                        .matchedGeometryEffect(id: "rental_tab", in: animationNamespace)
+                                } else {
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .fill(Color("Violet").opacity(0.15))
+                                }
+                            }
+                        )
+                        .cornerRadius(100)
+                }
+            }
+            .padding(.vertical, 10)
+
+            // RentalSearchCard (design unchanged)
+            RentalSearchCard(
+                isSameDropOff: $isSameDropOff,
+                pickUpLocation: $pickUpLocation,
+                dropOffLocation: $dropOffLocation,
+                pickUpIATACode: $pickUpIATACode,
+                dropOffIATACode: $dropOffIATACode,
+                selectedDates: $selectedDates,
+                selectedTimes: $selectedTimes,
+                navigateToLocationSelection: $navigateToLocationSelection,
+                navigateToDateTimeSelection: $navigateToDateTimeSelection,
+                collapseProgress: collapseProgress,   // driven by TrackableScrollView
+                buttonNamespace: searchButtonNS,
+                onSearchRentals: { handleSearchRentals() },
+                onExpandSearchCard: { expandSearchCard() }
+            )
+        }
+        .padding()
+        .padding(.top, 50)
+        .padding(.bottom, 10)
+    }
+
+    // Expand header and scroll to top when the collapsed chip is tapped
+    private func expandSearchCard() {
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) {
+            searchHeaderIsCollapsed = false
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            scrollView?.setContentOffset(.zero, animated: true)
+        }
+    }
+
+    // MARK: - Invisible off-screen measuring copies (NO design changes)
+    // We render RentalSearchCard in both states (expanded/collapsed) for both tabs to get exact heights.
+    private var offscreenMeasuringCopies: some View {
+        Group {
+            // SAME drop-off — Expanded
+            RentalSearchCard(
+                isSameDropOff: .constant(true),
+                pickUpLocation: .constant(pickUpLocation),
+                dropOffLocation: .constant(dropOffLocation),
+                pickUpIATACode: .constant(pickUpIATACode),
+                dropOffIATACode: .constant(dropOffIATACode),
+                selectedDates: .constant(selectedDates),
+                selectedTimes: .constant(selectedTimes),
+                navigateToLocationSelection: .constant(false),
+                navigateToDateTimeSelection: .constant(false),
+                collapseProgress: 0,
+                buttonNamespace: searchButtonNS,
+                onSearchRentals: {},
+                onExpandSearchCard: {}
+            )
+            .readHeight { expandedHeightSame = $0 }
+            .opacity(0.001)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+
+            // SAME drop-off — Collapsed
+            RentalSearchCard(
+                isSameDropOff: .constant(true),
+                pickUpLocation: .constant(pickUpLocation),
+                dropOffLocation: .constant(dropOffLocation),
+                pickUpIATACode: .constant(pickUpIATACode),
+                dropOffIATACode: .constant(dropOffIATACode),
+                selectedDates: .constant(selectedDates),
+                selectedTimes: .constant(selectedTimes),
+                navigateToLocationSelection: .constant(false),
+                navigateToDateTimeSelection: .constant(false),
+                collapseProgress: 1,
+                buttonNamespace: searchButtonNS,
+                onSearchRentals: {},
+                onExpandSearchCard: {}
+            )
+            .readHeight { collapsedHeightSame = $0 }
+            .opacity(0.001)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+
+            // DIFFERENT drop-off — Expanded
+            RentalSearchCard(
+                isSameDropOff: .constant(false),
+                pickUpLocation: .constant(pickUpLocation),
+                dropOffLocation: .constant(dropOffLocation),
+                pickUpIATACode: .constant(pickUpIATACode),
+                dropOffIATACode: .constant(dropOffIATACode),
+                selectedDates: .constant(selectedDates),
+                selectedTimes: .constant(selectedTimes),
+                navigateToLocationSelection: .constant(false),
+                navigateToDateTimeSelection: .constant(false),
+                collapseProgress: 0,
+                buttonNamespace: searchButtonNS,
+                onSearchRentals: {},
+                onExpandSearchCard: {}
+            )
+            .readHeight { expandedHeightDiff = $0 }
+            .opacity(0.001)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+
+            // DIFFERENT drop-off — Collapsed
+            RentalSearchCard(
+                isSameDropOff: .constant(false),
+                pickUpLocation: .constant(pickUpLocation),
+                dropOffLocation: .constant(dropOffLocation),
+                pickUpIATACode: .constant(pickUpIATACode),
+                dropOffIATACode: .constant(dropOffIATACode),
+                selectedDates: .constant(selectedDates),
+                selectedTimes: .constant(selectedTimes),
+                navigateToLocationSelection: .constant(false),
+                navigateToDateTimeSelection: .constant(false),
+                collapseProgress: 1,
+                buttonNamespace: searchButtonNS,
+                onSearchRentals: {},
+                onExpandSearchCard: {}
+            )
+            .readHeight { collapsedHeightDiff = $0 }
+            .opacity(0.001)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+        .frame(width: 0, height: 0) // ensures no layout impact
+    }
 }
 
-// MARK: - Rental Web View
-struct RentalWebView: UIViewControllerRepresentable {
-    let url: String
-    
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let config = SFSafariViewController.Configuration()
-        let safari = SFSafariViewController(url: URL(string: url)!, configuration: config)
-        return safari
-    }
-    
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
-        // No updates needed
-    }
-}
-
+// MARK: - Preview
 #Preview {
     RentalView()
 }
