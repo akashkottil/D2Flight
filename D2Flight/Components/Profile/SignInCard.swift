@@ -34,7 +34,7 @@ struct SignInCard: View {
         HStack(spacing: 12) {
             if authManager.isAuthenticated, let user = authManager.currentUser {
                 // User Profile
-                ProfileImageView(imageURL: user.profileImageURL)
+                ProfileImageView(imageURL: user.profileImageURL, userName: user.name)
                 
                 userInfoView(user: user)
             } else {
@@ -126,6 +126,7 @@ struct SignInCard: View {
 // MARK: - Profile Image View with Shimmer
 struct ProfileImageView: View {
     let imageURL: String?
+    let userName: String?
     @State private var isLoading = true
     
     private let imageSize: CGFloat = 56
@@ -142,10 +143,8 @@ struct ProfileImageView: View {
                     }
                     
             case .failure(_):
-                // Fallback to default profile image
-                Image("ProfileImg")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                // Fallback to user initials instead of default profile image
+                UserInitialsView(userName: userName, size: imageSize)
                     .onAppear {
                         isLoading = false
                     }
@@ -163,6 +162,54 @@ struct ProfileImageView: View {
         }
         .frame(width: imageSize, height: imageSize)
         .clipShape(Circle())
+    }
+}
+
+// MARK: - User Initials View
+struct UserInitialsView: View {
+    let userName: String?
+    let size: CGFloat
+    
+    var body: some View {
+        ZStack {
+            // Background circle with gradient
+            Circle()
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color("Violet"), Color("Violet").opacity(0.7)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+            
+            // User initials text
+            Text(getUserInitials())
+                .font(.system(size: size * 0.4, weight: .semibold, design: .rounded))
+                .foregroundColor(.white)
+        }
+        .frame(width: size, height: size)
+    }
+    
+    private func getUserInitials() -> String {
+        guard let userName = userName, !userName.isEmpty else {
+            return "U" // Default fallback if no name
+        }
+        
+        let nameComponents = userName.components(separatedBy: " ")
+            .filter { !$0.isEmpty }
+        
+        if nameComponents.count >= 2 {
+            // Get first letter of first name and first letter of last name
+            let firstName = nameComponents.first?.prefix(1).uppercased() ?? ""
+            let lastName = nameComponents.last?.prefix(1).uppercased() ?? ""
+            return firstName + lastName
+        } else if nameComponents.count == 1 {
+            // If only one name component, take first two letters or just first letter
+            let singleName = nameComponents.first ?? ""
+            return String(singleName.prefix(2)).uppercased()
+        }
+        
+        return "U" // Ultimate fallback
     }
 }
 
@@ -197,50 +244,11 @@ struct ShimmerView: View {
                         )
                     )
                     .scaleEffect(x: 0.3, y: 1, anchor: .leading)
-                    .offset(x: isAnimating ? 100 : -100)
-                    .animation(
-                        Animation.linear(duration: 1.2)
-                            .repeatForever(autoreverses: false),
-                        value: isAnimating
-                    )
+                    .offset(x: isAnimating ? UIScreen.main.bounds.width : -UIScreen.main.bounds.width)
+                    .animation(Animation.linear(duration: 1.5).repeatForever(autoreverses: false), value: isAnimating)
             )
             .onAppear {
                 isAnimating = true
             }
-            .onDisappear {
-                isAnimating = false
-            }
     }
 }
-
-// MARK: - Alternative Shimmer Effect (iOS 17+)
-@available(iOS 17.0, *)
-struct ModernShimmerView: View {
-    var body: some View {
-        Rectangle()
-            .fill(Color.gray.opacity(0.3))
-            .overlay(
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                .clear,
-                                .white.opacity(0.4),
-                                .clear
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .phaseAnimator([false, true]) { content, phase in
-                        content
-                            .scaleEffect(x: 0.3)
-                            .offset(x: phase ? 100 : -100)
-                    } animation: { _ in
-                        .linear(duration: 1.2).repeatForever(autoreverses: false)
-                    }
-            )
-    }
-}
-
-
