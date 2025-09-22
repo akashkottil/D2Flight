@@ -7,6 +7,7 @@ import FirebaseAuth
 struct D2FlightApp: App {
     @StateObject private var userManager = UserManager.shared
     @StateObject private var authManager = AuthenticationManager.shared
+    @StateObject private var loginTrackingManager = LoginTrackingManager.shared // Add this
     
     init() {
         setupUserTracking()
@@ -18,8 +19,10 @@ struct D2FlightApp: App {
             AppEntryView()
                 .environmentObject(userManager)
                 .environmentObject(authManager)
+                .environmentObject(loginTrackingManager) // Add this
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-                    // Track app becoming active
+                    // Track app becoming active and check login requirements
+                    loginTrackingManager.checkLoginRequirement()
                 }
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)

@@ -118,13 +118,12 @@ class AuthenticationManager: ObservableObject {
         Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
             Task { @MainActor in
                 if let firebaseUser = firebaseUser {
-                    
                     let user = User(
                         id: firebaseUser.uid,
                         email: firebaseUser.email ?? "",
                         name: firebaseUser.displayName ?? "User",
                         profileImageURL: firebaseUser.photoURL?.absoluteString,
-                        provider: .google, // You can determine this based on provider data
+                        provider: .google,
                         createdAt: firebaseUser.metadata.creationDate ?? Date(),
                         lastLoginAt: firebaseUser.metadata.lastSignInDate ?? Date()
                     )
@@ -132,6 +131,10 @@ class AuthenticationManager: ObservableObject {
                     self?.currentUser = user
                     self?.isAuthenticated = true
                     self?.storeUser(user)
+                    
+                    // ADD THIS LINE:
+                    self?.handleSuccessfulAuthentication()
+                    
                 } else {
                     // User is signed out
                     self?.currentUser = nil
@@ -141,6 +144,13 @@ class AuthenticationManager: ObservableObject {
             }
         }
     }
+
+    private func handleSuccessfulAuthentication() {
+        // This should be called after successful authentication
+        LoginTrackingManager.shared.userDidSignIn()
+        print("🔐 AuthenticationManager: Successful authentication tracked")
+    }
+
     
     private func performAuthentication(_ authAction: @escaping () async throws -> User) async {
         isLoading = true
