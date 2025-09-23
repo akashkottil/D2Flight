@@ -4,3 +4,7 @@ D2Flight.xcodeproj/**/xcuserdata/
 =======
 D2Flight.xcodeproj/project.xcworkspace/xcuserdata/
 >>>>>>> 8d1b5fb9da2bc7a8ac80694e44efb29a69ff39ce
+
+# Xcode user files
+*.xcuserstate
+*.xcuserdata/

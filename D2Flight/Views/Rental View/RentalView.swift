@@ -428,18 +428,13 @@ struct RentalView: View {
         
         if selectedDates.isEmpty || selectedTimes.isEmpty {
             displayText = "tap.to.select".localized
+        } else if selectedDates.count < 2 || selectedTimes.count < 2 {
+            let actualPickUp = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
+            displayText = formatLocalizedDateTime(actualPickUp)
         } else {
             let actualPickUp = combineDateAndTime(date: selectedDates[0], time: selectedTimes[0])
-            let actualDropOff = selectedDates.count > 1 && selectedTimes.count > 1
-            ? combineDateAndTime(date: selectedDates[1], time: selectedTimes[1]) : actualPickUp
-            
-            let isSameDay = Calendar.current.isDate(actualPickUp, inSameDayAs: actualDropOff)
-            
-            if isSameDropOff || isSameDay {
-                displayText = formatLocalizedDateTime(actualPickUp)
-            } else {
-                displayText = "\(formatLocalizedDateTime(actualPickUp)) • \(formatLocalizedDateTime(actualDropOff))"
-            }
+            let actualDropOff = combineDateAndTime(date: selectedDates[1], time: selectedTimes[1])
+            displayText = "\(formatLocalizedDateTime(actualPickUp)) • \(formatLocalizedDateTime(actualDropOff))"
         }
         
         return Button(action: {

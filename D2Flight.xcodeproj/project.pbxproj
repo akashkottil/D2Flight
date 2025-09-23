@@ -12,6 +12,7 @@
 		8CB27B992E41F3D0002CE17F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 8CB27B982E41F3D0002CE17F /* FirebaseAuth */; };
 		8CB27B9B2E41F3D0002CE17F /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8CB27B9A2E41F3D0002CE17F /* FirebaseCore */; };
 		8CB27B9D2E41F3EE002CE17F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 8CB27B9C2E41F3EE002CE17F /* GoogleSignIn */; };
+		8CCFB29B2E816FA200E34295 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8CCFB29A2E816FA200E34295 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8CCFB29A2E816FA200E34295 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8CD5352F2DE0410900F3FD75 /* D2Flight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = D2Flight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CD5353C2DE0410B00F3FD75 /* D2FlightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = D2FlightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CD535462DE0410B00F3FD75 /* D2FlightUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = D2FlightUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -121,6 +123,7 @@
 		8CD535262DE0410900F3FD75 = {
 			isa = PBXGroup;
 			children = (
+				8CCFB29A2E816FA200E34295 /* LaunchScreen.storyboard */,
 				8CD535312DE0410900F3FD75 /* D2Flight */,
 				8CD5353F2DE0410B00F3FD75 /* D2FlightTests */,
 				8CD535492DE0410B00F3FD75 /* D2FlightUITests */,
@@ -296,6 +299,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8CCFB29B2E816FA200E34295 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,13 +484,14 @@
 				CODE_SIGN_ENTITLEMENTS = D2Flight/D2FlightDebug.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J48UCV8X2N;
+				DEVELOPMENT_TEAM = 756N4HCWVK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = D2Flight/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -494,7 +499,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lascade.D2Flight;
+				PRODUCT_BUNDLE_IDENTIFIER = com.swalih.test.AllFlights2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -516,6 +521,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (

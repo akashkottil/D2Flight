@@ -61,23 +61,35 @@ struct AutoSlidingCardsView: View {
             .padding(.vertical, 16)
             .padding(.horizontal, 10)
 
-            // Main card container with infinite scroll
+            // Main card container with infinite scroll - FIXED VERSION
             GeometryReader { geometry in
-                let cardWidth = geometry.size.width - 60
+                // Safe frame calculation with device-aware minimums
+                let availableWidth = geometry.size.width
+                let horizontalPadding: CGFloat = 60
+                let minimumCardWidth: CGFloat = 280 // Reasonable minimum for card content
+                
+                // Calculate card width safely
+                let cardWidth = availableWidth > horizontalPadding + minimumCardWidth
+                    ? availableWidth - horizontalPadding
+                    : minimumCardWidth
+                
                 let spacing: CGFloat = 20
                 let totalWidth = cardWidth + spacing
                 
-                HStack(spacing: spacing) {
-                    ForEach(0..<infiniteCards.count, id: \.self) { index in
-                        CardView(card: infiniteCards[index])
-                            .frame(width: cardWidth)
+                // Only render if we have valid dimensions
+                if availableWidth > 0 && cardWidth > 0 {
+                    HStack(spacing: spacing) {
+                        ForEach(0..<infiniteCards.count, id: \.self) { index in
+                            CardView(card: infiniteCards[index])
+                                .frame(width: cardWidth)
+                        }
                     }
-                }
-                .offset(x: -(currentIndex * totalWidth) + dragOffset)
-                .animation(.easeInOut(duration: 0.5), value: currentIndex)
-                .onAppear {
-                    // Start from the middle set to allow smooth infinite scrolling
-                    currentIndex = CGFloat(cards.count)
+                    .offset(x: -(currentIndex * totalWidth) + dragOffset)
+                    .animation(.easeInOut(duration: 0.5), value: currentIndex)
+                    .onAppear {
+                        // Start from the middle set to allow smooth infinite scrolling
+                        currentIndex = CGFloat(cards.count)
+                    }
                 }
             }
             .frame(height: 200)
@@ -110,22 +122,18 @@ struct CardView: View {
     
     var body: some View {
         ZStack {
-            
             RoundedRectangle(cornerRadius: 20)
             Image(card.backgroundImageName)
-                    .resizable()
-//                    .scaledToFill()
-                    .frame(height: 180)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-            
-            
+                .resizable()
+                // .scaledToFill() // Kept commented as in original
+                .frame(height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
             
             // Content
             HStack {
                 VStack(alignment: .leading, spacing: 16) {
                     // Icon circle
                     ZStack {
-                        
                         Image(card.iconImage)
                             .font(.system(size: 20))
                             .foregroundColor(.white)
@@ -133,8 +141,6 @@ struct CardView: View {
                     
                     // Text content
                     VStack(alignment: .leading, spacing: 8) {
-
-                        
                         Text(card.subtitle)
                             .font(.body)
                             .foregroundColor(.white.opacity(0.9))
@@ -154,7 +160,6 @@ struct CardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }
-
 
 struct AutoSlidingCardsView_Previews: PreviewProvider {
     static var previews: some View {
