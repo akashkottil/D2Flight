@@ -44,24 +44,20 @@ struct LoginView: View {
             Spacer()
             
             VStack(spacing: 16) {
-                // Google Sign In Button
+                // Google Sign In Button (unchanged)
                 SignInButton(
                     text: "continue.with.google".localized,
                     imageName: "GoogleIcon"
                 ) {
-                    Task {
-                        await authManager.signInWithGoogle()
-                    }
+                    Task { await authManager.signInWithGoogle() }
                 }
-                
-                // Apple Sign In Button
+
+                // Apple Sign In Button (FIXED)
                 SignInButton(
                     text: "continue.with.apple".localized,
                     imageName: "AppleIcon"
                 ) {
-                    Task {
-                        await authManager.signInWithFacebook()
-                    }
+                    authManager.signInWithApple()
                 }
                 
                 // Show loading indicator if authenticating

@@ -484,7 +484,7 @@
 				CODE_SIGN_ENTITLEMENTS = D2Flight/D2FlightDebug.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J48UCV8X2N;
+				DEVELOPMENT_TEAM = 756N4HCWVK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = D2Flight/Info.plist;
@@ -499,7 +499,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lascade.D2Flight;
+				PRODUCT_BUNDLE_IDENTIFIER = com.swalih.test.AllFlights2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
