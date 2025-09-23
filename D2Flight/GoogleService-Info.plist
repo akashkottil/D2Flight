@@ -3,21 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>782806364424-ks0n0546g6hasd623govo9ce2slflhl6.apps.googleusercontent.com</string>
+	<string>350893640191-j0lgqthhnmtvt65poq83j20gvnj2v9b9.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.782806364424-ks0n0546g6hasd623govo9ce2slflhl6</string>
+	<string>com.googleusercontent.apps.350893640191-j0lgqthhnmtvt65poq83j20gvnj2v9b9</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCtLPpRJ6OYHQ_Ck3GlQs736VlpKTM2UO8</string>
+	<string>AIzaSyDnleS2esLns9X7TsB9lqNcqdBIkqTwz8o</string>
 	<key>GCM_SENDER_ID</key>
-	<string>782806364424</string>
+	<string>350893640191</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.lascade.D2Flight</string>
+	<string>com.swalih.test.AllFlights2</string>
 	<key>PROJECT_ID</key>
-	<string>d2flight-22e92</string>
+	<string>all-flights-853fc</string>
 	<key>STORAGE_BUCKET</key>
-	<string>d2flight-22e92.firebasestorage.app</string>
+	<string>all-flights-853fc.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:782806364424:ios:7b89e9ff5bcc13b12bbcbd</string>
+	<string>1:350893640191:ios:50e2ebcc6c95192659bfca</string>
 </dict>
 </plist>
