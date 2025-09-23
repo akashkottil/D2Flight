@@ -311,6 +311,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate, ASAuthorizat
         }
     }
     
+    
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         self.errorMessage = "Apple Sign In failed: \(error.localizedDescription)"
         print("Apple Sign In error: \(error)")
