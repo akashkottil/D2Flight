@@ -174,10 +174,10 @@ class FlightSearchViewModel: ObservableObject {
         searchId = response.search_id
         isLoading = false
         
-        // Track successful search
-        await Task.detached(priority: .background) {
-            UserManager.shared.trackFlightSearch()
-        }.value
+//        // Track successful search
+//        await Task.detached(priority: .background) {
+//            UserManager.shared.trackFlightSearch()
+//        }.value
     }
     
     // MARK: - Error Handling

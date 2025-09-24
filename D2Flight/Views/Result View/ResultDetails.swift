@@ -356,6 +356,13 @@ struct BookingPlatformRow: View {
                                                                 error: URLError(.unsupportedURL))
                         return
                     }
+                    
+                    UserManager.shared.createSession(
+                            eventType: .bookingAttempt,
+                            vertical: .flight,
+                            tag: "view_deal",
+                            additionalData: ["provider": platform.name]
+                        )
 
                     print("✅ Valid URL created: \(url.absoluteString)")
                     onTapViewDeal(url)  // bubble up to parent (item-driven sheet)
